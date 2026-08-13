@@ -42,8 +42,6 @@ jobs:
 
       - name: 构建 Windows x64 注入包
         shell: pwsh
-        env:
-          CMAKE_GENERATOR: "Visual Studio 17 2022"
         run: .\gradlew.bat prepareInjectionBundle -PtargetRelease=8 "-PnativeJavaHome=$env:JAVA_HOME" --stacktrace
 
       - name: 运行原生组件测试

@@ -232,6 +232,35 @@ def nativeJavaHome = providers.gradleProperty('nativeJavaHome')
         .orElse(providers.environmentVariable('JAVA_HOME'))
         .orElse('C:/Program Files/Java/jdk1.8.0_301')
 
+def resolveVsGenerator() {
+    if (!System.getProperty('os.name').toLowerCase().contains('windows')) {
+        return System.getenv('CMAKE_GENERATOR')
+    }
+    def programFilesX86 = System.getenv('ProgramFiles(x86)')
+    def vswhere = programFilesX86 == null ? null
+            : new File(programFilesX86,
+                    'Microsoft Visual Studio/Installer/vswhere.exe')
+    if (vswhere == null || !vswhere.isFile()) {
+        return System.getenv('CMAKE_GENERATOR')
+    }
+    def output = new ByteArrayOutputStream()
+    exec {
+        commandLine vswhere.absolutePath, '-latest', '-products', '*',
+                '-property', 'installationVersion'
+        standardOutput = output
+        errorOutput = output
+        ignoreExitValue = true
+    }
+    def version = output.toString().trim()
+    if (version.startsWith('18.')) {
+        return 'Visual Studio 18 2026'
+    }
+    if (version.startsWith('17.')) {
+        return 'Visual Studio 17 2022'
+    }
+    return System.getenv('CMAKE_GENERATOR')
+}
+
 tasks.register('configureNative', Exec) {
     group = 'injection'
     description = 'Configures the x64 self-contained native injection DLL.'
@@ -243,12 +272,19 @@ tasks.register('configureNative', Exec) {
     })
     outputs.file(nativeBuildDirectory.map { it.file('CMakeCache.txt') })
     doFirst {
-        commandLine 'cmake',
+        def cmakeArgs = [
+            'cmake',
                 '-S', nativeSourceDirectory.absolutePath,
                 '-B', nativeBuildDirectory.get().asFile.absolutePath,
                 '-A', 'x64',
                 "-DVAPE421_JAVA_HOME=${nativeJavaHome.get()}",
                 "-DVAPE421_PRODUCT_JAR=${recoveredProductJar.get().asFile.absolutePath}"
+        ]
+        def generator = resolveVsGenerator()
+        if (generator != null && !generator.trim().isEmpty()) {
+            cmakeArgs.addAll(['-G', generator])
+        }
+        commandLine cmakeArgs
     }
 }
 
