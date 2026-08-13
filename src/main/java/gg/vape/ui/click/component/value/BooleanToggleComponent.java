@@ -305,4 +305,3 @@ implements BooleanStateAdapter<BooleanToggleComponent> {
         this(booleanValue != null ? booleanValue.getDisplayName() : null, 0.9, booleanValue);
     }
 }
-

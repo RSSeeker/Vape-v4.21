@@ -14,7 +14,11 @@ implements ClientLifecycleCallback {
         File clientDirectory = new File(clientDirectoryPath);
         if (clientDirectory.exists()) {
             for (File child : clientDirectory.listFiles()) {
-                if (child.getName().equals("cache")) continue;
+                if (child.getName().equals("cache")
+                        || child.getName().equals("config.json")
+                        || child.getName().equals("vape421-native.log")) {
+                    continue;
+                }
                 child.delete();
             }
         }
@@ -25,4 +29,3 @@ implements ClientLifecycleCallback {
     public void close() {
     }
 }
-

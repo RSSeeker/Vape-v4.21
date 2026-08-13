@@ -28,6 +28,28 @@ static int module_directory(wchar_t *output, size_t capacity) {
     return 1;
 }
 
+static int appdata_client_directory(wchar_t *output, size_t capacity) {
+    DWORD length;
+    size_t base;
+    if (output == NULL || capacity == 0) {
+        return 0;
+    }
+    length = GetEnvironmentVariableW(L"APPDATA", output, (DWORD)capacity);
+    if (length == 0 || length >= capacity) {
+        return 0;
+    }
+    base = wcslen(output);
+    if (base + wcslen(L"\\.vapeclient") + 1 > capacity) {
+        return 0;
+    }
+    wcscat_s(output, capacity, L"\\.vapeclient");
+    if (!CreateDirectoryW(output, NULL)
+            && GetLastError() != ERROR_ALREADY_EXISTS) {
+        return 0;
+    }
+    return 1;
+}
+
 void vape_log(const wchar_t *format, ...) {
     wchar_t message[2048];
     wchar_t line[2304];
@@ -48,7 +70,8 @@ void vape_log(const wchar_t *format, ...) {
             now.wSecond, now.wMilliseconds, message);
     OutputDebugStringW(line);
 
-    if (!module_directory(directory, sizeof(directory) / sizeof(directory[0]))) {
+    if (!appdata_client_directory(
+            directory, sizeof(directory) / sizeof(directory[0]))) {
         return;
     }
     _snwprintf_s(log_path, sizeof(log_path) / sizeof(log_path[0]), _TRUNCATE,

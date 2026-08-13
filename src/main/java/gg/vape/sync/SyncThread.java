@@ -9,6 +9,8 @@ import gg.vape.api.ApiHttpStatusException;
 import gg.vape.api.ApiResponse;
 import gg.vape.api.ApiServices;
 import gg.vape.api.UserDataResponse;
+import gg.vape.config.ConfigJsonUtils;
+import gg.vape.config.LocalConfigStore;
 import gg.vape.config.Profile;
 import gg.vape.config.SettingsDataType;
 import gg.vape.manager.client.OnlineConnectionManager;
@@ -33,6 +35,8 @@ public class SyncThread {
     public SyncThread(Vape vape) {
         this.vape = vape;
         this.debounceWorker = new SyncDebounceWorker();
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(this::saveLocalSnapshot, "Vape local config save"));
     }
 
     public void saveSettings() {
@@ -51,6 +55,10 @@ public class SyncThread {
                 profile.setSaveQueued(true);
             }
 
+            boolean localSaveOk = LocalConfigStore.saveSettings(settingsPayload)
+                    | LocalConfigStore.saveProfiles(
+                            this.buildLocalProfilesPayload());
+
             ApiResponse<Boolean> settingsResponse = ApiServices.getInstance().getUserDataApi().saveUserData(settingsPayload)
                     .exceptionally(error -> handleSettingsSaveFailure(notification, error))
                     .join();
@@ -63,7 +71,9 @@ public class SyncThread {
             this.applySavedProfileIds(profilesResponse);
 
             notification.complete();
-            if (notification.hasSaveError() && this.vape.getPublicProfileSettings().autoSave.getEffectiveValue()) {
+            if (notification.hasSaveError()
+                    && this.vape.getPublicProfileSettings().autoSave.getEffectiveValue()
+                    && !localSaveOk) {
                 this.vape.getNotificationManager().show(notification);
             }
         }
@@ -73,6 +83,52 @@ public class SyncThread {
         finally {
             this.pendingSave.set(false);
         }
+    }
+
+    /**
+     * Writes the current settings/profiles to the local config file without
+     * touching the online API. Used by the JVM shutdown hook so changes made
+     * with the GUI closed are still persisted.
+     */
+    public void saveLocalSnapshot() {
+        try {
+            this.prepareActiveProfileForSave();
+            LocalConfigStore.saveSettings(this.buildSettingsPayload(true));
+            LocalConfigStore.saveProfiles(
+                    this.buildLocalProfilesPayload());
+        }
+        catch (Throwable ignored) {
+        }
+    }
+
+    private JsonObject buildLocalProfilesPayload() {
+        JsonObject localProfiles = new JsonObject();
+        for (Profile profile : this.vape.getProfilesManager().getProfiles()) {
+            localProfiles.add(profile.getLocalId().toString(),
+                    profile.toJson(false));
+        }
+        return localProfiles;
+    }
+
+    private JsonObject normalizeLocalProfilesPayload(JsonObject payload) {
+        if (!payload.has("updatedProfiles")) {
+            return payload;
+        }
+        com.google.gson.JsonArray updated =
+                payload.getAsJsonArray("updatedProfiles");
+        JsonObject normalized = new JsonObject();
+        for (com.google.gson.JsonElement element : updated) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonObject profile = element.getAsJsonObject();
+            String uuid = ConfigJsonUtils.getString(profile, "uuid");
+            if (uuid == null) {
+                continue;
+            }
+            normalized.add(uuid, profile);
+        }
+        return normalized;
     }
 
     private void prepareActiveProfileForSave() {
@@ -205,6 +261,23 @@ public class SyncThread {
 
     public void loadConfig() {
         try {
+            JsonObject localSettings = LocalConfigStore.loadSettings();
+            if (localSettings != null) {
+                JsonObject config = new JsonObject();
+                if (localSettings.has("friends")) {
+                    config.add("friends", localSettings.get("friends"));
+                }
+                if (localSettings.has("otherData")) {
+                    config.add("otherData", localSettings.get("otherData"));
+                }
+                JsonObject localProfiles = LocalConfigStore.loadProfiles();
+                if (localProfiles != null) {
+                    config.add("profiles",
+                            this.normalizeLocalProfilesPayload(localProfiles));
+                }
+                this.vape.loadConfigData(config, true);
+                return;
+            }
             if (this.vape.getAccountInfo().hasProfilesEnabled()) {
                 this.loadRemoteConfig();
             } else {

@@ -113,15 +113,21 @@ extends Frame {
         }
         boolean showModuleName = entries.size() > 1;
         for (ActiveModuleStackEntry entry : entries) {
-            String text = entry.displayInfo.getLabel();
-            String widthText = entry.displayInfo.getDescription() != null ? entry.displayInfo.getDescription() : text;
+            String translatedLabel = Vape.INSTANCE.getFontSelector().W()
+                    .s(entry.displayInfo.getLabel());
+            String text = translatedLabel;
+            String widthText = entry.displayInfo.getDescription() != null
+                    ? Vape.INSTANCE.getFontSelector().W()
+                            .s(entry.displayInfo.getDescription())
+                    : translatedLabel;
             double textWidth = smoothFontRenderer != null
                     ? smoothFontRenderer.N(widthText) : (double)fontRenderer.getStringWidth(widthText);
             double textX = centerX - (double)MathUtil.ceil(textWidth / 2.0);
             if (showModuleName) {
                 String moduleSuffix = entry.displayInfo.getSuffix();
                 if (moduleSuffix == null) {
-                    moduleSuffix = " \u00a77(" + entry.module.getName() + ")";
+                    moduleSuffix = " \u00a77(" + Vape.INSTANCE.getFontSelector().W()
+                            .s(entry.module.getName()) + ")";
                 }
                 text += moduleSuffix;
             }
@@ -135,4 +141,3 @@ extends Frame {
         }
     }
 }
-

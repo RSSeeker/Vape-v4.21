@@ -1,7 +1,11 @@
 package gg.vape.manager.client;
 
+import com.google.gson.JsonObject;
+import gg.vape.Vape;
+import gg.vape.api.ApiHttpClient;
 import gg.vape.api.ApiResponse;
 import gg.vape.api.ApiServices;
+import gg.vape.config.LocalConfigStore;
 import gg.vape.config.GlobalSettingsPayload;
 import gg.vape.config.SettingsDataType;
 import gg.vape.value.BooleanValue;
@@ -24,22 +28,35 @@ public class GlobalSettingsController {
         this.settings.setCacheEnabled(this.cacheData.getEffectiveValue());
         this.settings.setFirstRun(false);
         try {
-            ApiServices.getInstance().getSettingsApi().saveSettings(SettingsDataType.GLOBAL, this.settings);
+            JsonObject localGlobal = ApiHttpClient.GSON
+                    .toJsonTree(this.settings).getAsJsonObject();
+            LocalConfigStore.saveGlobal(localGlobal);
         }
         catch (Exception exception) {
-            throw new RuntimeException(exception);
+            Vape.logThrowable(exception);
         }
     }
 
     public void load() {
         try {
-            ApiResponse apiResponse = ApiServices.getInstance().getSettingsApi().loadSettings(SettingsDataType.GLOBAL);
             this.loadFailed = false;
-            if (apiResponse == null || !apiResponse.isSuccessful()) {
-                this.settings = new GlobalSettingsPayload();
-                this.settings.initializeDefaults();
+            JsonObject localGlobal = LocalConfigStore.loadGlobal();
+            if (localGlobal != null) {
+                this.settings = (GlobalSettingsPayload)ApiHttpClient.GSON
+                        .fromJson(localGlobal, GlobalSettingsPayload.class);
+                if (this.settings == null) {
+                    this.settings = new GlobalSettingsPayload();
+                    this.settings.initializeDefaults();
+                }
             } else {
-                this.settings = (GlobalSettingsPayload)apiResponse.getData();
+                ApiResponse apiResponse = ApiServices.getInstance()
+                        .getSettingsApi().loadSettings(SettingsDataType.GLOBAL);
+                if (apiResponse == null || !apiResponse.isSuccessful()) {
+                    this.settings = new GlobalSettingsPayload();
+                    this.settings.initializeDefaults();
+                } else {
+                    this.settings = (GlobalSettingsPayload)apiResponse.getData();
+                }
             }
         }
         catch (Exception exception) {

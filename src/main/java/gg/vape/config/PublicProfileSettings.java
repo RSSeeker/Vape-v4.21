@@ -58,7 +58,7 @@ public class PublicProfileSettings {
         this.autoLoadModuleStates = BooleanValue.create(this, "Auto-load module states", true, "Automatically enable saved module states upon loading, and when selecting profiles");
         this.alternateAccounts = new PublicProfileSecondaryDirtyStringValue(this, this, "alts", "");
         this.selectedProfileId = (StringValue)((StringValue)new PublicProfileSelectedProfileStringValue(this, this, "selectedprofile_uuid", "").setBase64Encoded(true)).addAlias("selectedprofile");
-        this.autoSave = BooleanValue.create(this, "Auto save", false, "Automatically sync your settings");
+        this.autoSave = BooleanValue.create(this, "Auto save", true, "Automatically sync your settings");
         this.framePositionsPerProfile = BooleanValue.create(this, "Frame positions per profile", false, "Saves the positions of your GUI frames per profile");
         this.language = (ModeValue)ModeValue.create((Object)this, "Language", FontSelector.c, FontSelector.j, FontSelector.S, FontSelector.c, FontSelector.a, FontSelector.P).setResettable(false);
         this.volume = NumberValue.create(this, "Volume", "#", "%", 0.0, 50.0, 100.0);
