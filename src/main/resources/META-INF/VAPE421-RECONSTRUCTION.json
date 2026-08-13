@@ -1,0 +1,55 @@
+{
+  "source_file": "sample.dll",
+  "source_sha256": "32aa9efccbaac85ed9686dab7f5f6618a3e3dd6d7541908d99a5f237a74d71ed",
+  "format": "reconstructed JAR from sample.dll embedded Zstandard containers",
+  "class_count": 3247,
+  "resource_count": 228,
+  "entry_count_excluding_meta_inf": 3475,
+  "windows_case_collision_groups": 987,
+  "windows_case_colliding_entries": 3204,
+  "windows_case_collision_examples": [
+    [
+      "a/A.class",
+      "a/a.class"
+    ],
+    [
+      "a/B.class",
+      "a/b.class"
+    ],
+    [
+      "a/C.class",
+      "a/c.class"
+    ],
+    [
+      "a/C1.class",
+      "a/c1.class"
+    ],
+    [
+      "a/VC.class",
+      "a/Vc.class",
+      "a/vC.class",
+      "a/vc.class"
+    ],
+    [
+      "a/R7.class",
+      "a/r7.class"
+    ],
+    [
+      "a/A0.class",
+      "a/a0.class"
+    ],
+    [
+      "a/A1.class",
+      "a/a1.class"
+    ],
+    [
+      "a/A2.class",
+      "a/a2.class"
+    ],
+    [
+      "a/A3.class",
+      "a/a3.class"
+    ]
+  ],
+  "warning": "This JAR is reconstructed offline and is not an original/vendor-signed JAR."
+}

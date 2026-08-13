@@ -1,0 +1,291 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'gg.vape.recovery'
+version = '4.21-recovered'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ['src/main/java']
+        resources.srcDirs = ['src/main/resources']
+    }
+}
+
+dependencies {
+    implementation 'org.javassist:javassist:3.29.2-GA'
+    implementation 'org.ow2.asm:asm:9.7.1'
+    implementation 'org.ow2.asm:asm-tree:9.7.1'
+    implementation 'org.ow2.asm:asm-analysis:9.7.1'
+    implementation 'org.ow2.asm:asm-util:9.7.1'
+    implementation 'org.ow2.asm:asm-commons:9.7.1'
+    implementation 'com.google.guava:guava:17.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'io.netty:netty-all:4.0.23.Final'
+    implementation 'commons-io:commons-io:2.4'
+    implementation 'org.lwjgl.lwjgl:lwjgl:2.9.3'
+    implementation 'org.lwjgl.lwjgl:lwjgl_util:2.9.3'
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+}
+
+configurations.configureEach {
+    withDependencies { declared ->
+        def localFiles = declared.findAll {
+            it instanceof org.gradle.api.artifacts.SelfResolvingDependency
+        }
+        if (!localFiles.isEmpty()) {
+            throw new GradleException(
+                    "local file dependencies are forbidden; use repository coordinates: ${localFiles}")
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    // The recovered source contains CFR-emitted private interface helpers.
+    // Java 17 accepts these while retaining Java 8 bytecode compatibility as
+    // far as the source permits; the product is a recovery workspace, not a
+    // runtime distribution constrained to a Java 8 compiler.
+    // Product default is 17; pass -PtargetRelease=8 to prove Java 8 (MC 1.8.9) compatibility.
+    options.release = (project.findProperty('targetRelease') ?: '17') as int
+    options.compilerArgs += ['-Xmaxerrs', '10000', '-Xdiags:verbose']
+}
+
+tasks.register('verifyRecoveredSources') {
+    inputs.files(fileTree('src/main/java') { include '**/*.java' })
+    doLast {
+        def sampleSources = fileTree('src/main/java') {
+            include 'gg/**/*.java', 'func/**/*.java'
+        }.files
+        for (String forbiddenRoot : ['javassist', 'org']) {
+            if (file("src/main/java/${forbiddenRoot}").exists()) {
+                throw new GradleException(
+                        "third-party source root must not exist: src/main/java/${forbiddenRoot}")
+            }
+        }
+        println("recovered source coverage: sample=${sampleSources.size()}, "
+                + 'third-party sources=0')
+    }
+}
+
+tasks.register('verifyRecoveredSourceQuality') {
+    inputs.files(fileTree('src/main/java') { include '**/*.java' })
+    doLast {
+        def forbiddenMarkers = [
+                'Decompilation failed',
+                'Unable to fully structure code',
+                'loose catch block',
+                'cfr_ignored'
+        ]
+        def violations = []
+        fileTree('src/main/java') {
+            include '**/*.java'
+        }.files.sort().each { source ->
+            source.eachLine('UTF-8') { line, lineNumber ->
+                forbiddenMarkers.each { marker ->
+                    if (line.contains(marker)) {
+                        violations << "${source}:${lineNumber}: ${marker}"
+                    }
+                }
+            }
+        }
+        if (!violations.isEmpty()) {
+            throw new GradleException(
+                    "fatal recovered-source markers remain:\n${violations.join('\n')}")
+        }
+        println('recovered source quality: fatal CFR markers=0')
+    }
+}
+
+tasks.named('check') {
+    dependsOn(tasks.named('verifyRecoveredSources'))
+    dependsOn(tasks.named('verifyRecoveredSourceQuality'))
+}
+
+idea {
+    module {
+        sourceDirs += file('src/main/java')
+        resourceDirs += file('src/main/resources')
+    }
+}
+
+tasks.register('injectionJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    group = 'injection'
+    description = 'Builds the self-contained Java payload embedded in the native DLL.'
+    archiveClassifier = 'injection'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn(tasks.named('classes'))
+    from(sourceSets.main.output)
+    configurations = [project.configurations.runtimeClasspath]
+    // The original sample bundled its bytecode-manipulation library relocated
+    // into its own obfuscated namespace and loaded it via native defineClass, so
+    // it never crossed a classloader boundary. Our recovery uses stock javassist
+    // and asm; under Forge's LaunchClassLoader those packages resolve through a
+    // classloader that cannot see the injected jar (and Forge ships an
+    // incompatible ASM 5.x), so relocate them under the client namespace to load
+    // like the client's own classes.
+    relocate 'javassist', 'gg.vape.shaded.javassist'
+    relocate 'org.objectweb.asm', 'gg.vape.shaded.org.objectweb.asm'
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+    exclude 'module-info.class', 'META-INF/versions/**'
+    manifest {
+        attributes(
+                'Implementation-Title': 'Vape 4.21 recovered Java payload',
+                'Implementation-Version': project.version,
+                'Vape421-Target-Java': '8')
+    }
+}
+
+tasks.register('verifyInjectionPayload') {
+    group = 'verification'
+    description = 'Verifies that the embedded payload is complete and Java 8 loadable.'
+    dependsOn(tasks.named('injectionJar'))
+    inputs.file(tasks.named('injectionJar', Jar).flatMap { it.archiveFile })
+    doLast {
+        def payload = tasks.named('injectionJar', Jar).get().archiveFile.get().asFile
+        def requiredPrefixes = [
+                'gg/vape/shaded/javassist/',
+                'gg/vape/shaded/org/objectweb/asm/',
+                'com/google/gson/',
+                'com/google/common/',
+                'io/netty/',
+                'org/apache/commons/io/',
+                'org/lwjgl/'
+        ]
+        def prefixCounts = requiredPrefixes.collectEntries { [(it): 0] }
+        def tooNew = []
+        int classCount = 0
+        new java.util.jar.JarFile(payload).withCloseable { archive ->
+            def requiredClasses = [
+                    'gg/vape/runtime/NativeBridge.class',
+                    'gg/vape/runtime/ForgePayloadClassLoader.class',
+                    'gg/vape/reflect/Badlion189Mappings.class',
+                    'gg/vape/reflect/Fabric12111Mappings.class',
+                    'gg/vape/reflect/Fabric262Mappings.class',
+                    'gg/vape/reflect/Vanilla1122Mappings.class',
+                    'gg/vape/reflect/Vanilla1206Mappings.class',
+                    'gg/vape/reflect/Vanilla12111Mappings.class',
+                    'gg/vape/reflect/Vanilla1710Mappings.class',
+                    'gg/vape/reflect/Vanilla189Mappings.class',
+                    'gg/vape/reflect/Vanilla262Mappings.class',
+                    'gg/vape/reflect/VanillaSrgMappings.class',
+                    'gg/vape/mapping/runtime/ClassNameRemapTableV50.class',
+                    'gg/vape/mapping/runtime/MemberNameRemapTableV50.class',
+                    'gg/vape/event/impl/EventRenderWorldPassExecutorDrain.class'
+            ]
+            def missingClasses = requiredClasses.findAll {
+                archive.getEntry(it) == null
+            }
+            if (!missingClasses.isEmpty()) {
+                throw new GradleException(
+                        "injection payload is missing required classes: ${missingClasses}")
+            }
+            archive.entries().each { entry ->
+                if (!entry.name.endsWith('.class')) {
+                    return
+                }
+                classCount++
+                prefixCounts.keySet().each { prefix ->
+                    if (entry.name.startsWith(prefix)) {
+                        prefixCounts[prefix]++
+                    }
+                }
+                archive.getInputStream(entry).withCloseable { input ->
+                    byte[] header = new byte[8]
+                    if (input.read(header) != header.length) {
+                        throw new GradleException("truncated class entry: ${entry.name}")
+                    }
+                    int major = ((header[6] & 0xff) << 8) | (header[7] & 0xff)
+                    if (major > 52) {
+                        tooNew << "${entry.name} (major ${major})"
+                    }
+                }
+            }
+        }
+        def missingDependencies = prefixCounts.findAll { prefix, count -> count == 0 }
+        if (!missingDependencies.isEmpty()) {
+            throw new GradleException(
+                    "injection payload is missing runtime packages: ${missingDependencies.keySet()}")
+        }
+        if (!tooNew.isEmpty()) {
+            throw new GradleException(
+                    "injection payload contains Java 9+ classes:\n${tooNew.join('\n')}")
+        }
+        println("injection payload: classes=${classCount}, Java 9+ classes=0, "
+                + "runtime package families=${prefixCounts.size()}")
+    }
+}
+
+def nativeSourceDirectory = file('native')
+def nativeBuildDirectory = layout.buildDirectory.dir('native')
+def injectionBundleDirectory = layout.buildDirectory.dir('injection')
+def recoveredProductJar = tasks.named('injectionJar', Jar).flatMap { it.archiveFile }
+def nativeJavaHome = providers.gradleProperty('nativeJavaHome')
+        .orElse(providers.environmentVariable('JAVA_HOME'))
+        .orElse('C:/Program Files/Java/jdk1.8.0_301')
+
+tasks.register('configureNative', Exec) {
+    group = 'injection'
+    description = 'Configures the x64 self-contained native injection DLL.'
+    dependsOn(tasks.named('verifyInjectionPayload'))
+    inputs.file(recoveredProductJar)
+    inputs.files(fileTree(nativeSourceDirectory) {
+        include 'CMakeLists.txt', '*.c', '*.h', '*.rc.in'
+        exclude 'legacy_*'
+    })
+    outputs.file(nativeBuildDirectory.map { it.file('CMakeCache.txt') })
+    doFirst {
+        commandLine 'cmake',
+                '-S', nativeSourceDirectory.absolutePath,
+                '-B', nativeBuildDirectory.get().asFile.absolutePath,
+                '-A', 'x64',
+                "-DVAPE421_JAVA_HOME=${nativeJavaHome.get()}",
+                "-DVAPE421_PRODUCT_JAR=${recoveredProductJar.get().asFile.absolutePath}"
+    }
+}
+
+tasks.register('buildNative', Exec) {
+    group = 'injection'
+    description = 'Builds the DLL containing the recovered Java product and its injector.'
+    dependsOn(tasks.named('configureNative'))
+    inputs.file(recoveredProductJar)
+    inputs.files(fileTree(nativeSourceDirectory) {
+        include 'CMakeLists.txt', '*.c', '*.h', '*.rc.in'
+        exclude 'legacy_*'
+    })
+    outputs.files(
+            nativeBuildDirectory.map { it.file('dist/Vape421Native.dll') },
+            nativeBuildDirectory.map { it.file('dist/Vape421Injector.exe') })
+    doFirst {
+        commandLine 'cmake', '--build', nativeBuildDirectory.get().asFile.absolutePath,
+                '--config', 'Release'
+    }
+}
+
+tasks.register('prepareInjectionBundle', Sync) {
+    group = 'injection'
+    description = 'Creates the DLL-only injection bundle for an isolated 1.8.9 test.'
+    dependsOn(tasks.named('buildNative'))
+    from(nativeBuildDirectory.map { it.dir('dist') }) {
+        include 'Vape421Native.dll', 'Vape421Injector.exe'
+    }
+    from(file('native/README.md'))
+    into(injectionBundleDirectory)
+    doLast {
+        def dll = injectionBundleDirectory.get().file('Vape421Native.dll').asFile
+        def injector = injectionBundleDirectory.get().file('Vape421Injector.exe').asFile
+        if (!dll.isFile() || dll.length() == 0L
+                || !injector.isFile() || injector.length() == 0L) {
+            throw new GradleException('incomplete native injection bundle')
+        }
+        println("self-contained injection bundle: ${injectionBundleDirectory.get().asFile}")
+    }
+}

@@ -1,0 +1,77 @@
+name: 构建并发布
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-release:
+    name: 构建 Vape-v4.21.exe 并发布
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 校验 Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: 配置 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 缓存 Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+
+      - name: 构建 Java 载荷并校验
+        shell: pwsh
+        run: .\gradlew.bat build verifyInjectionPayload --stacktrace
+
+      - name: 构建 Windows x64 单文件注入包
+        shell: pwsh
+        env:
+          CMAKE_GENERATOR: "Visual Studio 17 2022"
+        run: .\gradlew.bat prepareInjectionBundle -PtargetRelease=8 "-PnativeJavaHome=$env:JAVA_HOME" --stacktrace
+
+      - name: 运行原生组件测试
+        shell: pwsh
+        run: ctest --test-dir build/native -C Release --output-on-failure
+
+      - name: 生成单文件产物 Vape-v4.21.exe
+        shell: pwsh
+        run: Copy-Item build\injection\Vape421Injector.exe build\injection\Vape-v4.21.exe -Force
+
+      - name: 发布 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Vape v4.21 ${{ github.ref_name }}
+          body: |
+            ## Vape 4.21 恢复版 ${{ github.ref_name }}
+
+            - 单文件注入器：`Vape-v4.21.exe`（内嵌完整 Java 载荷与原生桥接 DLL，直接运行即可选择窗口注入）
+            - 支持版本：1.7.10 / 1.8.9 / 1.12.2（原版/Forge）、1.21.11、26.1.2 / 26.2（原版/Forge/Fabric）、Lunar/Badlion 1.8.9
+            - 完全中文本地化（默认中文界面）
+            - 研究性恢复工程，仅限隔离环境测试
+          files: |
+            build/injection/Vape-v4.21.exe
+            build/injection/Vape421Native.dll
+            build/injection/README.md
+          prerelease: ${{ contains(github.ref_name, '-pre') }}
+          fail_on_unmatched_files: true

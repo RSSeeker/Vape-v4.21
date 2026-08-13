@@ -1,0 +1,67 @@
+name: 持续集成
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: 构建并测试 Java 与 Windows 原生组件
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+
+      - name: 校验 Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: 配置 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 配置 Gradle 缓存
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 校验恢复源码并构建 Java 载荷
+        shell: pwsh
+        run: .\gradlew.bat clean build verifyInjectionPayload --stacktrace
+
+      - name: 构建 Windows x64 注入包
+        shell: pwsh
+        env:
+          CMAKE_GENERATOR: "Visual Studio 17 2022"
+        run: .\gradlew.bat prepareInjectionBundle -PtargetRelease=8 "-PnativeJavaHome=$env:JAVA_HOME" --stacktrace
+
+      - name: 运行原生组件测试
+        shell: pwsh
+        run: ctest --test-dir build/native -C Release --output-on-failure
+
+      - name: 上传 Java 注入载荷
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-injection-payload
+          path: build/libs/*-injection.jar
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: 上传 Windows x64 注入包
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64-injection-bundle
+          path: build/injection/
+          if-no-files-found: error
+          retention-days: 14

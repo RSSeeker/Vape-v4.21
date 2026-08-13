@@ -1,0 +1,10 @@
+if(NOT DEFINED DLL_PATH OR NOT EXISTS "${DLL_PATH}")
+    message(FATAL_ERROR "DLL_PATH does not exist: ${DLL_PATH}")
+endif()
+if(NOT DEFINED RC_OUT)
+    message(FATAL_ERROR "RC_OUT is required")
+endif()
+
+file(TO_CMAKE_PATH "${DLL_PATH}" DLL_CMAKE_PATH)
+file(WRITE "${RC_OUT}" "422 RCDATA \"${DLL_CMAKE_PATH}\"\n")
+message(STATUS "Injector resource: ${DLL_CMAKE_PATH}")

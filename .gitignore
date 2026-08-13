@@ -1,0 +1,11 @@
+.gradle/
+build/
+out/
+*.log
+src/manual/
+tmp-*/
+*.iml
+*.ipr
+*.iws
+javap-*.txt
+.idea/workspace.xml

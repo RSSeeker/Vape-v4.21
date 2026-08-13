@@ -1,0 +1,23 @@
+import org.gradle.util.GradleVersion
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+    }
+}
+
+if (GradleVersion.current().version != '8.8') {
+    throw new GradleException("This recovery project requires Gradle 8.8; found "
+            + GradleVersion.current().version)
+}
+
+rootProject.name = 'vape421-product-recovery'

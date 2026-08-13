@@ -1,0 +1,13 @@
+/build/
+/build-direct/
+/.vs/
+/x64/
+/native/x64/
+*.user
+*.aps
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.log
+vape421-native.ini
