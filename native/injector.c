@@ -69,12 +69,13 @@ static int default_dll_path(wchar_t *output, DWORD capacity) {
             > capacity) {
         return 0;
     }
-    wcscpy(file_name, L"Vape421Native.dll");
+    wcscpy(file_name, L"Vape-v4.21Native.dll");
     attributes = GetFileAttributesW(output);
     return attributes != INVALID_FILE_ATTRIBUTES
             && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
 }
 
+#ifndef VAPE421_NO_EMBED
 static int materialize_embedded_dll(
         DWORD process_id, wchar_t *output, DWORD capacity) {
     HRSRC resource;
@@ -111,7 +112,7 @@ static int materialize_embedded_dll(
         return 0;
     }
     _snwprintf_s(output, capacity, _TRUNCATE,
-            L"%ls\\Vape421Native-%lu.dll", directory,
+            L"%ls\\Vape-v4.21Native-%lu.dll", directory,
             (unsigned long)process_id);
     file = CreateFileW(output, GENERIC_WRITE,
             FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, CREATE_ALWAYS,
@@ -137,6 +138,7 @@ cleanup:
     }
     return result;
 }
+#endif
 
 static int resolve_dll_path(const wchar_t *explicit_path, DWORD process_id,
         wchar_t *output, DWORD capacity) {
@@ -147,7 +149,11 @@ static int resolve_dll_path(const wchar_t *explicit_path, DWORD process_id,
     if (default_dll_path(output, capacity)) {
         return 1;
     }
+#ifndef VAPE421_NO_EMBED
     return materialize_embedded_dll(process_id, output, capacity);
+#else
+    return 0;
+#endif
 }
 
 static int is_java_process(const wchar_t *executable) {
@@ -486,13 +492,19 @@ cleanup:
 
 static void usage(const wchar_t *program) {
     fwprintf(stderr,
-            L"用法: %ls [Vape421Native.dll]\n"
-            L"      %ls <minecraft-pid> <Vape421Native.dll>\n"
+            L"用法: %ls [Vape-v4.21Native.dll]\n"
+            L"      %ls <minecraft-pid> <Vape-v4.21Native.dll>\n"
             L"不指定 PID 时，会显示自动刷新的 Java 窗口选择器。\n"
-            L"注入的 DLL 会自动加载并启动 Java 产品。\n"
-            L"当未提供 DLL 且可执行文件旁没有 DLL 时，会从自身内嵌资源\n"
-            L"解压 Vape421Native.dll 到 %%TEMP%%\\Vape421Recovery 后使用。\n",
+            L"注入的 DLL 会自动加载并启动 Java 产品。\n",
             program, program);
+#ifndef VAPE421_NO_EMBED
+    fwprintf(stderr,
+            L"当未提供 DLL 且可执行文件旁没有 DLL 时，会从自身内嵌资源\n"
+            L"解压 Vape-v4.21Native.dll 到 %%TEMP%%\\Vape421Recovery 后使用。\n");
+#else
+    fwprintf(stderr,
+            L"此版本不内嵌 DLL，请将 Vape-v4.21Native.dll 放在本程序旁。\n");
+#endif
 }
 
 int wmain(int argc, wchar_t **argv) {

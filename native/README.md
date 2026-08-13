@@ -49,10 +49,10 @@ implementation used controller command `0x269` over a persistent EXE socket.
 
 The Product design has two explicit launch modes:
 
-- Direct `Vape421Injector.exe` injection has no Loader bootstrap, so native
+- Direct `Vape-v4.21Injector.exe` injection has no Loader bootstrap, so native
   `gat()` returns the string `"0"`.
 - Loader startup obtains a long-lived token from the loopback Service by
-  username and exposes it to `Vape421Native.dll` through the temporary
+  username and exposes it to `Vape-v4.21Native.dll` through the temporary
   loopback controller socket. The DLL requests it with command `0x269`, caches
   it for `gat()`, reports `trs(step)` with `0x25c`, and reports completion with
   `0x25e`. The Loader remains open through the Finished Loading page.
@@ -92,18 +92,19 @@ cmake --build build --config Release
 
 Outputs are written to `build/dist`:
 
-- `Vape421Native.dll`
-- `Vape421Injector.exe`
+- `Vape-v4.21Native.dll`
+- `Vape-v4.21.exe` (single-file injector, embeds the DLL)
+- `Vape-v4.21Injector.exe` (standalone injector, does not embed the DLL)
 
 ## Direct injection
 
-`Vape421Native.dll` contains the recovered Java product as an `RCDATA`
+`Vape-v4.21Native.dll` contains the recovered Java product as an `RCDATA`
 resource. Start a supported Minecraft instance (including Minecraft 1.21.11
 or 26.2 Fabric), or a Forge-enabled Lunar Client instance, with a 64-bit JVM,
 then run the injector from the bundle directory:
 
 ```powershell
-Vape421Injector.exe
+Vape-v4.21.exe
 ```
 
 The injector refreshes its list of visible `java.exe` and `javaw.exe` windows
@@ -113,14 +114,15 @@ press Esc to quit. If the DLL is elsewhere, pass its path as the only
 argument. The original non-interactive form remains available for scripts:
 
 ```powershell
-Vape421Injector.exe <pid> Vape421Native.dll
+Vape-v4.21Injector.exe <pid> Vape-v4.21Native.dll
 ```
 
-`Vape421Injector.exe` also embeds `Vape421Native.dll` as an `RCDATA` resource.
-When no DLL path is supplied and no `Vape421Native.dll` sits beside the
-executable, the injector extracts the embedded copy to
-`%TEMP%\Vape421Recovery\Vape421Native-<pid>.dll` and injects that, so the
-bundle can be carried as a single file.
+`Vape-v4.21.exe` embeds `Vape-v4.21Native.dll` as an `RCDATA` resource. When
+no DLL path is supplied and no `Vape-v4.21Native.dll` sits beside the
+executable, it extracts the embedded copy to
+`%TEMP%\Vape421Recovery\Vape-v4.21Native-<pid>.dll` and injects that, so the
+bundle can be carried as a single file. `Vape-v4.21Injector.exe` is the
+non-embedded variant and requires `Vape-v4.21Native.dll` next to it.
 
 The injector only performs `LoadLibraryW`. Once loaded, the DLL worker waits
 for the JVM and Minecraft `Client thread`, materializes its embedded product
@@ -131,7 +133,9 @@ share one class identity. It then
 registers the nine authoritative methods plus the Product `gat()` compatibility
 native, and calls
 `NativeBridge.start()` automatically. No second command or start flag is
-required. Inspect `vape421-native.log` beside the DLL for the exact result.
+required. Inspect the per-injection log under
+`.vapeclient\log\vape421-native-<pid>-<timestamp>.log` next to the bundle for
+the exact result.
 
 The injection payload is compiled with `--release 8`; its project classes use
 class-file major version 52. Runtime dependencies are resolved from the

@@ -52,10 +52,6 @@ jobs:
         shell: pwsh
         run: ctest --test-dir build/native -C Release --output-on-failure
 
-      - name: 生成单文件产物 Vape-v4.21.exe
-        shell: pwsh
-        run: Copy-Item build\injection\Vape421Injector.exe build\injection\Vape-v4.21.exe -Force
-
       - name: 发布 GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -69,6 +65,7 @@ jobs:
             - 研究性恢复工程，仅限隔离环境测试
           files: |
             build/injection/Vape-v4.21.exe
-            build/injection/Vape421Native.dll
+            build/injection/Vape-v4.21Injector.exe
+            build/injection/Vape-v4.21Native.dll
           prerelease: ${{ contains(github.ref_name, '-pre') }}
           fail_on_unmatched_files: true

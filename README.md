@@ -7,7 +7,8 @@ Vape 4.21 Java 层与 Windows x64 原生桥接层的研究性恢复工程。
 > GitHub 仓库：[RSSeeker/Vape-v4.21](https://github.com/RSSeeker/Vape-v4.21) ·
 > 发布页：[Releases](https://github.com/RSSeeker/Vape-v4.21/releases)
 >
-> 单文件注入器产物名为 `Vape-v4.21.exe`，由 GitHub Actions 自动构建并在打标签时发布。
+> 主要产物：`Vape-v4.21.exe`（单文件注入器，内嵌 DLL）、
+> `Vape-v4.21Injector.exe`（不内嵌 DLL 的注入器）、`Vape-v4.21Native.dll`。
 
 > 源代码来源：[OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape)
 > （本项目基于该公开仓库的源代码进行恢复、整理与本地化）。
@@ -40,7 +41,6 @@ Vape 4.21 Java 层与 Windows x64 原生桥接层的研究性恢复工程。
 
 - CMake 自动探测 Visual Studio 生成器（vswhere），兼容 VS2022 / VS2026
 - MSVC `/utf-8` 编译选项；Release 产物不再附带 README
-- 新增 GitHub Actions 发布工作流（打 `v*` 标签自动构建发布，含 `-pre` 的标签为预发布）
 
 ### 它不是 Vape 官方源码、原始发布包或厂商签名产物，也不保证具备与原产品完全一致的行为。
 
@@ -112,8 +112,9 @@ Minecraft 1.16.5 的支持不佳，部分映射、渲染和模块功能可能无
 完整测试包输出到 `build/injection/`：
 
 ```text
-Vape421Native.dll
-Vape421Injector.exe
+Vape-v4.21.exe           单文件注入器（内嵌 DLL）
+Vape-v4.21Injector.exe   注入器（不内嵌 DLL）
+Vape-v4.21Native.dll
 README.md
 ```
 
@@ -127,14 +128,14 @@ DLL 将 Java injection JAR 作为 `RCDATA` 嵌入，不要求另行放置 payloa
 `build/injection/` 中执行：
 
 ```powershell
-.\Vape421Injector.exe <pid> .\Vape421Native.dll
+.\Vape-v4.21Injector.exe <pid> .\Vape-v4.21Native.dll
 ```
 
 注入器仅执行 `LoadLibraryW`。DLL 加载后会等待 JVM 与 Minecraft `Client thread`，通过其
 上下文 ClassLoader 加载内嵌 JAR；Fabric 实例会通过 Fabric Launcher API 将载荷加入 Knot
 ClassLoader。随后 DLL 注册九个 native 方法，并调用
 `gg.vape.runtime.NativeBridge.start()`。执行结果写入 DLL 同目录的
-`vape421-native.log`。
+`vape421-native.log`（每次注入的新日志位于 `.vapeclient\log\`）。
 
 ## 常用校验任务
 

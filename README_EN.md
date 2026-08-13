@@ -7,7 +7,9 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 > GitHub repository: [RSSeeker/Vape-v4.21](https://github.com/RSSeeker/Vape-v4.21) ·
 > Releases: [Releases](https://github.com/RSSeeker/Vape-v4.21/releases)
 >
-> The single-file injector is published as `Vape-v4.21.exe` and built automatically by GitHub Actions on tag pushes.
+> Main artifacts: `Vape-v4.21.exe` (single-file injector, embeds the DLL),
+> `Vape-v4.21Injector.exe` (injector without the embedded DLL), and
+> `Vape-v4.21Native.dll`.
 
 > Source code origin: [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape)
 > (This project recovers, reorganizes and localizes the source code from that public repository).
@@ -40,7 +42,6 @@ Main changes compared with [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/O
 
 - CMake auto-detects the Visual Studio generator via vswhere (VS2022 / VS2026)
 - MSVC `/utf-8` compile option; README is no longer attached to release assets
-- Added a GitHub Actions release workflow (`v*` tags auto-build and publish; tags containing `-pre` are pre-releases)
 
 ### It is NOT official Vape source code, an original release package, or a vendor-signed artifact, and it does not guarantee behavior identical to the original product.
 
@@ -111,8 +112,9 @@ Main Java artifacts are located in `build/libs/`. To generate IntelliJ IDEA proj
 The complete test bundle outputs to `build/injection/`:
 
 ```text
-Vape421Native.dll
-Vape421Injector.exe
+Vape-v4.21.exe           single-file injector (embeds the DLL)
+Vape-v4.21Injector.exe   injector (does not embed the DLL)
+Vape-v4.21Native.dll
 README.md
 ```
 
@@ -123,10 +125,10 @@ The DLL embeds the Java injection JAR as an `RCDATA` resource, so placing a payl
 After launching a supported Minecraft instance (including 1.21.11/26.2 Fabric) or Lunar Client instance using a 64-bit JVM, execute the following in `build/injection/`:
 
 ```powershell
-.\Vape421Injector.exe <pid> .\Vape421Native.dll
+.\Vape-v4.21Injector.exe <pid> .\Vape-v4.21Native.dll
 ```
 
-The injector only performs `LoadLibraryW`. Once loaded, the DLL waits for the JVM and Minecraft `Client thread`, and loads the embedded JAR via its context ClassLoader. Fabric instances add the payload to the Knot ClassLoader via the Fabric Launcher API. Subsequently, the DLL registers nine native methods and calls `gg.vape.runtime.NativeBridge.start()`. Execution results are written to `vape421-native.log` in the same directory as the DLL.
+The injector only performs `LoadLibraryW`. Once loaded, the DLL waits for the JVM and Minecraft `Client thread`, and loads the embedded JAR via its context ClassLoader. Fabric instances add the payload to the Knot ClassLoader via the Fabric Launcher API. Subsequently, the DLL registers nine native methods and calls `gg.vape.runtime.NativeBridge.start()`. A new per-injection `vape421-native-<pid>-<timestamp>.log` is written under `.vapeclient\log\`.
 
 ## Common Verification Tasks
 

@@ -77,6 +77,13 @@ target_compile_definitions(Vape421Injector PRIVATE
         _CRT_SECURE_NO_WARNINGS)
 target_compile_options(Vape421Injector PRIVATE /W4 /utf-8)
 
+add_executable(Vape421InjectorStandalone injector.c)
+target_compile_definitions(Vape421InjectorStandalone PRIVATE
+        WIN32_LEAN_AND_MEAN
+        _CRT_SECURE_NO_WARNINGS
+        VAPE421_NO_EMBED)
+target_compile_options(Vape421InjectorStandalone PRIVATE /W4 /utf-8)
+
 include(CTest)
 if(BUILD_TESTING)
     add_executable(Vape421BootstrapTest
@@ -96,14 +103,24 @@ if(BUILD_TESTING)
             COMMAND Vape421BootstrapTest invalid)
 endif()
 
-set_property(TARGET Vape421Native Vape421Injector PROPERTY
+set_property(TARGET Vape421Native Vape421Injector Vape421InjectorStandalone
+        PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
-set_target_properties(Vape421Native Vape421Injector PROPERTIES
+set_target_properties(Vape421Native PROPERTIES
+        OUTPUT_NAME "Vape-v4.21Native")
+set_target_properties(Vape421Injector PROPERTIES
+        OUTPUT_NAME "Vape-v4.21")
+set_target_properties(Vape421InjectorStandalone PROPERTIES
+        OUTPUT_NAME "Vape-v4.21Injector")
+
+set_target_properties(Vape421Native Vape421Injector
+        Vape421InjectorStandalone PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
 foreach(configuration Debug Release RelWithDebInfo MinSizeRel)
     string(TOUPPER "${configuration}" configuration_upper)
-    set_target_properties(Vape421Native Vape421Injector PROPERTIES
+    set_target_properties(Vape421Native Vape421Injector
+            Vape421InjectorStandalone PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY_${configuration_upper}
             "${CMAKE_BINARY_DIR}/dist")
 endforeach()
