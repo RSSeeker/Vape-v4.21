@@ -9,6 +9,9 @@ Vape 4.21 Java 层与 Windows x64 原生桥接层的研究性恢复工程。
 >
 > 单文件注入器产物名为 `Vape-v4.21.exe`，由 GitHub Actions 自动构建并在打标签时发布。
 
+> 源代码来源：[OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape)
+> （本项目基于该公开仓库的源代码进行恢复、整理与本地化）。
+
 ### 它不是 Vape 官方源码、原始发布包或厂商签名产物，也不保证具备与原产品完全一致的行为。
 
 > 本项目用于软件恢复、兼容性分析和自有环境测试。仅应在你拥有并获准测试的隔离实例中

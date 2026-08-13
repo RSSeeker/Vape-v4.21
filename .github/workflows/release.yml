@@ -70,6 +70,5 @@ jobs:
           files: |
             build/injection/Vape-v4.21.exe
             build/injection/Vape421Native.dll
-            build/injection/README.md
           prerelease: ${{ contains(github.ref_name, '-pre') }}
           fail_on_unmatched_files: true

@@ -9,6 +9,9 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 >
 > The single-file injector is published as `Vape-v4.21.exe` and built automatically by GitHub Actions on tag pushes.
 
+> Source code origin: [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape)
+> (This project recovers, reorganizes and localizes the source code from that public repository).
+
 ### It is NOT official Vape source code, an original release package, or a vendor-signed artifact, and it does not guarantee behavior identical to the original product.
 
 > This project is intended for software recovery, compatibility analysis, and testing in self-owned environments. It should only be used in isolated instances that you own and are authorized to test, and you are responsible for verifying local laws, software licenses, and server rules.
