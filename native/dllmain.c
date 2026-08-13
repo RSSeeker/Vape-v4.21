@@ -7,6 +7,8 @@
 #include <wchar.h>
 
 static volatile LONG g_loaded_by_jni = 0;
+static wchar_t g_log_file[MAX_PATH];
+static LONG g_log_path_ready = 0;
 
 #define VAPE421_PRODUCT_JAR_RESOURCE_ID 421
 
@@ -28,15 +30,18 @@ static int module_directory(wchar_t *output, size_t capacity) {
     return 1;
 }
 
-static int appdata_client_directory(wchar_t *output, size_t capacity) {
+static int client_directory(wchar_t *output, size_t capacity) {
     DWORD length;
     size_t base;
     if (output == NULL || capacity == 0) {
         return 0;
     }
-    length = GetEnvironmentVariableW(L"APPDATA", output, (DWORD)capacity);
-    if (length == 0 || length >= capacity) {
-        return 0;
+    if (!module_directory(output, capacity)) {
+        length = GetEnvironmentVariableW(L"APPDATA", output,
+                (DWORD)capacity);
+        if (length == 0 || length >= capacity) {
+            return 0;
+        }
     }
     base = wcslen(output);
     if (base + wcslen(L"\\.vapeclient") + 1 > capacity) {
@@ -50,11 +55,70 @@ static int appdata_client_directory(wchar_t *output, size_t capacity) {
     return 1;
 }
 
+static void ensure_log_path(void) {
+    wchar_t directory[MAX_PATH];
+    wchar_t log_directory[MAX_PATH];
+    SYSTEMTIME now;
+    DWORD process_id;
+    if (InterlockedCompareExchange(&g_log_path_ready, 0, 0) != 0) {
+        return;
+    }
+    if (!client_directory(directory,
+            sizeof(directory) / sizeof(directory[0]))) {
+        return;
+    }
+    _snwprintf_s(log_directory,
+            sizeof(log_directory) / sizeof(log_directory[0]), _TRUNCATE,
+            L"%ls\\log", directory);
+    if (!CreateDirectoryW(log_directory, NULL)
+            && GetLastError() != ERROR_ALREADY_EXISTS) {
+        return;
+    }
+    process_id = GetCurrentProcessId();
+    GetLocalTime(&now);
+    _snwprintf_s(g_log_file, MAX_PATH, _TRUNCATE,
+            L"%ls\\vape421-native-%lu-%04u%02u%02u-%02u%02u%02u.log",
+            log_directory, (unsigned long)process_id,
+            now.wYear, now.wMonth, now.wDay,
+            now.wHour, now.wMinute, now.wSecond);
+    InterlockedExchange(&g_log_path_ready, 1);
+}
+
+static void set_vape_directory_property(JNIEnv *env) {
+    wchar_t directory[MAX_PATH];
+    char utf8[MAX_PATH * 2];
+    jclass system_class;
+    jmethodID set_property;
+    jstring key;
+    jstring value;
+    if (env == NULL
+            || !module_directory(directory,
+                    sizeof(directory) / sizeof(directory[0]))) {
+        return;
+    }
+    if (WideCharToMultiByte(CP_UTF8, 0, directory, -1,
+            utf8, (int)sizeof(utf8), NULL, NULL) == 0) {
+        return;
+    }
+    system_class = (*env)->FindClass(env, "java/lang/System");
+    if (system_class == NULL) {
+        return;
+    }
+    set_property = (*env)->GetStaticMethodID(env, system_class,
+            "setProperty",
+            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
+    if (set_property == NULL) {
+        return;
+    }
+    key = (*env)->NewStringUTF(env, "vape.directory");
+    value = (*env)->NewStringUTF(env, utf8);
+    (*env)->CallStaticObjectMethod(env, system_class, set_property,
+            key, value);
+}
+
 void vape_log(const wchar_t *format, ...) {
     wchar_t message[2048];
     wchar_t line[2304];
-    wchar_t directory[MAX_PATH];
-    wchar_t log_path[MAX_PATH];
     SYSTEMTIME now;
     FILE *file = NULL;
     va_list arguments;
@@ -70,13 +134,11 @@ void vape_log(const wchar_t *format, ...) {
             now.wSecond, now.wMilliseconds, message);
     OutputDebugStringW(line);
 
-    if (!appdata_client_directory(
-            directory, sizeof(directory) / sizeof(directory[0]))) {
+    ensure_log_path();
+    if (g_log_path_ready == 0 || g_log_file[0] == L'\0') {
         return;
     }
-    _snwprintf_s(log_path, sizeof(log_path) / sizeof(log_path[0]), _TRUNCATE,
-            L"%ls\\vape421-native.log", directory);
-    if (_wfopen_s(&file, log_path, L"a, ccs=UTF-8") == 0 && file != NULL) {
+    if (_wfopen_s(&file, g_log_file, L"a, ccs=UTF-8") == 0 && file != NULL) {
         fputws(line, file);
         fclose(file);
     }
@@ -887,6 +949,7 @@ static DWORD WINAPI bootstrap_thread(LPVOID parameter) {
         goto cleanup;
     }
     attached = 1;
+    set_vape_directory_property(env);
     if (vape_initialize_jvmti(vm) != JNI_OK) {
         goto cleanup;
     }
@@ -962,6 +1025,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
             || env == NULL) {
         return JNI_ERR;
     }
+    set_vape_directory_property(env);
     if (vape_initialize_jvmti(vm) != JNI_OK) {
         return JNI_ERR;
     }

@@ -1,5 +1,6 @@
 package gg.vape.lifecycle;
 
+import gg.vape.config.LocalConfigStore;
 import java.io.File;
 
 public class ClientDirectoryCleanupCallback
@@ -9,14 +10,12 @@ implements ClientLifecycleCallback {
     }
 
     public ClientDirectoryCleanupCallback() {
-        String appDataDirectory = System.getenv("APPDATA");
-        String clientDirectoryPath = appDataDirectory + File.separator + ".vapeclient";
-        File clientDirectory = new File(clientDirectoryPath);
+        File clientDirectory = LocalConfigStore.baseDirectory();
         if (clientDirectory.exists()) {
             for (File child : clientDirectory.listFiles()) {
                 if (child.getName().equals("cache")
                         || child.getName().equals("config.json")
-                        || child.getName().equals("vape421-native.log")) {
+                        || child.getName().equals("log")) {
                     continue;
                 }
                 child.delete();

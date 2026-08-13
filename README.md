@@ -12,6 +12,36 @@ Vape 4.21 Java 层与 Windows x64 原生桥接层的研究性恢复工程。
 > 源代码来源：[OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape)
 > （本项目基于该公开仓库的源代码进行恢复、整理与本地化）。
 
+## 与上游源代码的改动
+
+相对 [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape) 源码的主要改动：
+
+**功能**
+
+- 新增 26.1.x / 26.2.x 运行时版本探测（按 `version.json` 家族匹配，协议 100/110），26.1.2 实测通过
+- 配置本地持久化：写入 `.vapeclient\config.json`（位于 EXE/DLL 同目录）——模块设置、配置、好友、框架位置本地保存，自动保存 + 退出兜底，加载本地优先；`autoSave` 默认开启
+- 原生日志与 Java 日志统一到 `.vapeclient\log\`，每次注入生成新的日志文件
+- 单文件注入器：`Vape-v4.21.exe` 内嵌完整 DLL 与 Java 载荷，无需附带文件即可使用
+- 注入器控制台中文化并启用 UTF-8 输出（中文窗口标题正常显示）
+
+**汉化**
+
+- 语言包由 798 键扩充至 2600+ 键（选项、提示、教程、确认框、药水/物品名等全覆盖）
+- 默认语言改为中文
+- 修复多行提示换行被压平、颜色码 § 丢失导致的翻译不匹配
+- HUD 模块栈（26.x 多模块及旧版 MC 字体路径）补上翻译
+
+**字体与显示**
+
+- `noto.ttf` 替换为覆盖全部翻译字符的 Noto Sans SC 子集（700 粗体，0 缺字）
+- 自定义圆角图标嵌入 `Vape-v4.21.exe`
+
+**构建与工程**
+
+- CMake 自动探测 Visual Studio 生成器（vswhere），兼容 VS2022 / VS2026
+- MSVC `/utf-8` 编译选项；Release 产物不再附带 README
+- 新增 GitHub Actions 发布工作流（打 `v*` 标签自动构建发布，含 `-pre` 的标签为预发布）
+
 ### 它不是 Vape 官方源码、原始发布包或厂商签名产物，也不保证具备与原产品完全一致的行为。
 
 > 本项目用于软件恢复、兼容性分析和自有环境测试。仅应在你拥有并获准测试的隔离实例中

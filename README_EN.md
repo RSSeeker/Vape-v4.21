@@ -12,6 +12,36 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 > Source code origin: [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape)
 > (This project recovers, reorganizes and localizes the source code from that public repository).
 
+## Changes relative to the upstream source
+
+Main changes compared with [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape):
+
+**Features**
+
+- Added runtime detection for the 26.1.x / 26.2.x family (matched by `version.json`, protocol 100/110); verified on 26.1.2
+- Local configuration persistence: written to `.vapeclient\config.json` next to the EXE/DLL — module settings, profiles, friends and frame positions are saved locally, auto-saved plus shutdown fallback, and local data is loaded first; `autoSave` is enabled by default
+- Native and Java logs are unified under `.vapeclient\log\`, with a new log file per injection
+- Single-file injector: `Vape-v4.21.exe` embeds the complete DLL and Java payload, no extra files required
+- Chinese-localized injector console with UTF-8 output
+
+**Localization**
+
+- Language pack expanded from 798 keys to 2600+ keys (options, tooltips, tutorials, dialogs, potion/item names, etc.)
+- Chinese is the default language
+- Fixed multi-line tooltip newline flattening and lost § color codes that broke exact matching
+- HUD module stack (26.x multi-module and legacy MC-font paths) now translates
+
+**Fonts & visuals**
+
+- `noto.ttf` replaced with a Noto Sans SC subset covering every translated character (700 bold, zero missing glyphs)
+- Custom rounded-corner icon embedded into `Vape-v4.21.exe`
+
+**Build & tooling**
+
+- CMake auto-detects the Visual Studio generator via vswhere (VS2022 / VS2026)
+- MSVC `/utf-8` compile option; README is no longer attached to release assets
+- Added a GitHub Actions release workflow (`v*` tags auto-build and publish; tags containing `-pre` are pre-releases)
+
 ### It is NOT official Vape source code, an original release package, or a vendor-signed artifact, and it does not guarantee behavior identical to the original product.
 
 > This project is intended for software recovery, compatibility analysis, and testing in self-owned environments. It should only be used in isolated instances that you own and are authorized to test, and you are responsible for verifying local laws, software licenses, and server rules.

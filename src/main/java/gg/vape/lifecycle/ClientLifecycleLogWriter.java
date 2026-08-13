@@ -1,6 +1,7 @@
 package gg.vape.lifecycle;
 
 import gg.vape.Vape;
+import gg.vape.config.LocalConfigStore;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,16 +21,12 @@ implements ClientLifecycleCallback {
 
     public ClientLifecycleLogWriter() {
         try {
-            String baseDirectoryPath = System.getenv("APPDATA");
-            if (baseDirectoryPath == null) {
-                baseDirectoryPath = System.getProperty("user.home");
-            }
-            String clientDirectoryPath = baseDirectoryPath + File.separator + ".vapeclient";
-            File clientDirectory = new File(clientDirectoryPath);
+            File clientDirectory = new File(
+                    LocalConfigStore.baseDirectory(), "log");
             if (!clientDirectory.exists()) {
                 clientDirectory.mkdirs();
             }
-            String logFilePath = clientDirectoryPath + File.separator + "log-"
+            String logFilePath = clientDirectory + File.separator + "log-"
                     + this.timestampFormat.format(new Date()).replace(":", "-") + ".txt";
             Vape.debugLog("Creating log file at: " + logFilePath);
             this.logFile = new File(logFilePath);

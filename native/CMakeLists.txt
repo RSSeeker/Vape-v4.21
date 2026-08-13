@@ -69,7 +69,9 @@ add_custom_command(
                 -P "${CMAKE_CURRENT_SOURCE_DIR}/embed_dll.cmake"
         DEPENDS Vape421Native
         COMMENT "Embedding Vape421Native.dll into the standalone injector")
-add_executable(Vape421Injector injector.c "${VAPE421_INJECTOR_RC}")
+add_executable(Vape421Injector injector.c
+        "${VAPE421_INJECTOR_RC}"
+        injector_icon.rc)
 target_compile_definitions(Vape421Injector PRIVATE
         WIN32_LEAN_AND_MEAN
         _CRT_SECURE_NO_WARNINGS)
