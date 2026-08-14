@@ -30,43 +30,84 @@ static int module_directory(wchar_t *output, size_t capacity) {
     return 1;
 }
 
+static void injector_diag(const wchar_t *format, ...) {
+    wchar_t message[512];
+    wchar_t line[640];
+    wchar_t path[MAX_PATH];
+    FILE *file;
+    va_list arguments;
+    DWORD length;
+    va_start(arguments, format);
+    _vsnwprintf_s(message, sizeof(message) / sizeof(message[0]),
+            _TRUNCATE, format, arguments);
+    va_end(arguments);
+    length = GetEnvironmentVariableW(L"TEMP", path, MAX_PATH);
+    if (length == 0 || length >= MAX_PATH) {
+        wcscpy(path, L".");
+    }
+    _snwprintf_s(line, sizeof(line) / sizeof(line[0]), _TRUNCATE,
+            L"%ls\\vape_injector_diag.txt", path);
+    _wfopen_s(&file, line, L"a, ccs=UTF-8");
+    if (file != NULL) {
+        fputws(message, file);
+        fputws(L"\r\n", file);
+        fclose(file);
+    }
+}
+
 static int injector_directory(wchar_t *output, size_t capacity) {
     wchar_t marker[MAX_PATH];
-    wchar_t *separator;
     HANDLE file;
     DWORD bytes_read;
-    if (output == NULL || capacity == 0
-            || !module_directory(marker,
-                    sizeof(marker) / sizeof(marker[0]))) {
+    DWORD length;
+    if (output == NULL || capacity == 0) {
+        injector_diag(L"injector_directory: null args");
         return 0;
     }
-    separator = wcsrchr(marker, L'\\');
-    if (separator == NULL
-            || (size_t)(separator - marker)
-                    + wcslen(L"\\injector_dir.txt") + 1
-                    > sizeof(marker) / sizeof(marker[0])) {
+    /* The injector writes injector_dir.txt to the shared TEMP root. Use the
+     * TEMP environment variable directly so this is independent of where the
+     * remote-injected DLL was extracted (GetModuleFileNameW of the injected
+     * module can report a different directory). */
+    length = GetEnvironmentVariableW(L"TEMP", marker, MAX_PATH);
+    if (length == 0 || length >= MAX_PATH) {
+        injector_diag(L"injector_directory: no TEMP env");
         return 0;
     }
-    wcscpy(separator + 1, L"injector_dir.txt");
+    if (marker[length - 1] != L'\\'
+            && wcslen(marker) + wcslen(L"\\injector_dir.txt") + 1 > MAX_PATH) {
+        injector_diag(L"injector_directory: marker path too long");
+        return 0;
+    }
+    if (marker[length - 1] != L'\\') {
+        wcscat(marker, L"\\");
+    }
+    wcscat(marker, L"injector_dir.txt");
     file = CreateFileW(marker, GENERIC_READ, FILE_SHARE_READ, NULL,
             OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
     if (file == INVALID_HANDLE_VALUE) {
+        injector_diag(L"injector_directory: cannot open %ls (err=%lu)",
+                marker, (unsigned long)GetLastError());
         return 0;
     }
     bytes_read = 0;
     if (!ReadFile(file, output, (DWORD)(capacity * sizeof(wchar_t)),
             &bytes_read, NULL)) {
+        injector_diag(L"injector_directory: ReadFile failed (err=%lu)",
+                (unsigned long)GetLastError());
         CloseHandle(file);
         return 0;
     }
     CloseHandle(file);
     if (bytes_read < 2 || bytes_read >= capacity * sizeof(wchar_t)) {
+        injector_diag(L"injector_directory: bad marker size %lu", bytes_read);
         return 0;
     }
     output[bytes_read / sizeof(wchar_t)] = L'\0';
     if (output[0] == L'\0' || output[0] == L'\r' || output[0] == L'\n') {
+        injector_diag(L"injector_directory: marker content invalid");
         return 0;
     }
+    injector_diag(L"injector_directory: resolved [%ls]", output);
     return 1;
 }
 

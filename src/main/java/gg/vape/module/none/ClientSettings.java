@@ -160,8 +160,7 @@ extends Mod {
 
     private void renderFrames() {
         for (Frame frame : allFrames) {
-            if (!frame.V$src$Z$1xhop3l()) continue;
-            if (!frame.y$src$Z$1f55jvh() && !(frame instanceof HudModuleFrameBase)) continue;
+            if (!frame.V$src$Z$1xhop3l() || !frame.y$src$Z$1f55jvh()) continue;
             frame.q$src$V$1x8c1kv();
         }
     }
@@ -612,7 +611,7 @@ extends Mod {
         ClientSettings.registerFrame(new CompassHudFrame().Y((double)(Minecraft.J() / 4 - 154), 38.0), hudEditorStack, mainStack);
         ClientSettings.registerFrame(new KeystrokesHudFrame().Y(40.0, 40.0), hudEditorStack, mainStack);
         ClientSettings.registerFrame(new ArmorStatusHudFrame().Y(40.0, 150.0), hudEditorStack, mainStack);
-        ClientSettings.registerFrame(new ClockHudFrame().Y((double)(Minecraft.J() / 2 - 90), 10.0), hudEditorStack, mainStack);
+        ClientSettings.registerFrame(new ClockHudFrame().Y((double)(Minecraft.J() / 2 - 90) / (2.0 * Vape.INSTANCE.getClientSettings().getGuiScaleFactor()), 10.0), hudEditorStack, mainStack);
         ClientSettings.registerFrame(new PotionEffectsHudFrame().Y(100.0, 150.0), hudEditorStack, mainStack);
         ClientSettings.registerFrame(new FpsDisplayHudFrame().Y(140.0, 40.0), hudEditorStack, mainStack);
         ClientSettings.registerFrame(new CoordinatesHudFrame().Y(140.0, 70.0), hudEditorStack, mainStack);
@@ -808,6 +807,9 @@ extends Mod {
 
     private void renderFrame(Frame frame, List<Frame> reverseRenderOrder) {
         if (!frame.V$src$Z$1xhop3l()) {
+            return;
+        }
+        if (frame instanceof HudModuleFrameBase && !HudModuleConfigFrameBase.isHudEditorContext()) {
             return;
         }
         frame.c();

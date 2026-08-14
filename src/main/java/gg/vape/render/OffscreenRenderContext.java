@@ -1,5 +1,6 @@
 package gg.vape.render;
 
+import gg.vape.Vape;
 import gg.vape.utils.TimerUtil;
 import gg.vape.utils.render.GlFramebuffer;
 import gg.vape.utils.render.GlImageTexture;
@@ -16,6 +17,7 @@ import gg.vape.wrapper.impl.GameSettings;
 import gg.vape.wrapper.impl.GlStateManager;
 import gg.vape.wrapper.impl.Minecraft;
 import java.awt.Color;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -38,6 +40,60 @@ public class OffscreenRenderContext {
     private final TimerUtil frameTimer;
     private boolean flipVertically;
     private int fieldOfView;
+    private long lastRenderDiagNanos;
+
+    private void logRenderDiag(Entity entity, int mainFramebufferId) {
+        long now = System.nanoTime();
+        if (now - this.lastRenderDiagNanos < 1000000000L) {
+            return;
+        }
+        this.lastRenderDiagNanos = now;
+        try {
+            StringBuilder sb = new StringBuilder("RearviewDiag render"
+                    + " cameraYaw=" + this.cameraYaw
+                    + " cameraPitch=" + this.cameraPitch
+                    + " camPos=" + this.cameraX + "," + this.cameraY + "," + this.cameraZ
+                    + " playerYaw=" + (entity == null ? "<null>" : entity.J())
+                    + " playerPitch=" + (entity == null ? "<null>" : entity.V())
+                    + " fbo=" + (this.modernFramebuffer == null ? "null" : this.modernFramebuffer.framebufferId)
+                    + " mainFbo=" + mainFramebufferId
+                    + " size=" + this.width + "x" + this.height
+                    + " frameReady=" + this.frameReady);
+            int bound = GL11.glGetInteger(36006);
+            if (this.modernFramebuffer != null && this.width > 0 && this.height > 0) {
+                GL30.glBindFramebuffer(36160, this.modernFramebuffer.framebufferId);
+                sb.append(" offscreenNonBlack=" + this.sampleFboRow() + "/16");
+            }
+            if (mainFramebufferId > 0) {
+                GL30.glBindFramebuffer(36160, mainFramebufferId);
+                sb.append(" mainNonBlack=" + this.sampleFboRow() + "/16");
+            }
+            GL30.glBindFramebuffer(36160, bound);
+            Vape.debugLog(sb.toString());
+        }
+        catch (Throwable throwable) {
+            Vape.debugLog("RearviewDiag error: " + throwable);
+        }
+    }
+
+    private int sampleFboRow() {
+        int samples = 16;
+        ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(4);
+        int nonBlack = 0;
+        for (int i = 0; i < samples; ++i) {
+            int px = (int)((long)this.width * (long)(2 * i + 1) / (long)(2 * samples));
+            int py = this.height / 2;
+            pixelBuffer.clear();
+            GL11.glReadPixels(px, py, 1, 1, 6408, 5121, pixelBuffer);
+            int r = pixelBuffer.get(0) & 0xFF;
+            int g = pixelBuffer.get(1) & 0xFF;
+            int b = pixelBuffer.get(2) & 0xFF;
+            if (r + g + b > 24) {
+                ++nonBlack;
+            }
+        }
+        return nonBlack;
+    }
 
     public Framebuffer getLegacyFramebuffer() {
         return this.legacyFramebuffer;
@@ -275,9 +331,12 @@ public class OffscreenRenderContext {
                             GL11.glClear((int)16640);
                             this.bindFramebuffer(true);
                             framebufferBound = true;
+                            GL11.glClearColor((float)0.0f, (float)0.0f, (float)0.0f, (float)1.0f);
+                            GL11.glClear((int)16640);
                             RenderBatchManager.getInstance().setFramebufferOverride(this.modernFramebuffer.framebufferId);
                             entityRenderer.D(Minecraft.getTimer().renderPartialTicks(), 0L);
                             RenderBatchManager.getInstance().restoreFramebufferOverride();
+                            this.logRenderDiag(entity, previousFramebuffer);
                             int sourceWidth = Minecraft.p().getDeltaX();
                             int sourceHeight = Minecraft.p().e();
                             this.modernFramebuffer.clear();
@@ -309,6 +368,11 @@ public class OffscreenRenderContext {
             this.frameReady = true;
         }
         catch (Exception exception) {
+            long now = System.nanoTime();
+            if (now - this.lastRenderDiagNanos >= 1000000000L) {
+                this.lastRenderDiagNanos = now;
+                Vape.debugLog("RearviewDiag exception: " + exception);
+            }
             Object ignored = Minecraft.vapeInstance;
             return;
         }
@@ -410,7 +474,7 @@ public class OffscreenRenderContext {
             float maxV = this.flipVertically ? 0.0f : 1.0f;
             float maxU = 1.0f;
             float minU = 0.0f;
-            RenderBatchBuilder renderBatchBuilder = new RenderBatchBuilder().setTexture(new GlImageTexture(this.modernFramebuffer.colorTextureId)).addTexturedRect(renderX, renderY, renderWidth, renderHeight, renderWidth, renderHeight, minV, maxU, maxV, minU, color);
+            RenderBatchBuilder renderBatchBuilder = new RenderBatchBuilder().setTexture(new GlImageTexture(this.modernFramebuffer.colorTextureId)).addTexturedRect(renderX, renderY, renderWidth, renderHeight, renderWidth, renderHeight, minU, minV, maxU, maxV, color);
             RenderBatchManager.getInstance().queueGuiBatch(renderBatchBuilder);
             return;
         }

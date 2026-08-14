@@ -77,6 +77,23 @@ extends Frame {
         return Math.floor((double)Minecraft.h() / Vape.INSTANCE.getClientSettings().getGuiScaleFactor() / 2.0 - this.L() - 2.5);
     }
 
+    public void clampToVisibleScreen() {
+        double maxX = this.getMaximumX();
+        double maxY = this.getMaximumY();
+        double minX = 2.0;
+        double minY = 2.0;
+        double x = this.G$src$D$1b2f02a();
+        double y = this.n();
+        double clampedX = Math.max(minX, Math.min(maxX, x));
+        double clampedY = Math.max(minY, Math.min(maxY, y));
+        if (clampedX != x) {
+            this.K(clampedX);
+        }
+        if (clampedY != y) {
+            this.S(clampedY);
+        }
+    }
+
     public double getMaximumX() {
         return Math.floor((double)Minecraft.J() / Vape.INSTANCE.getClientSettings().getGuiScaleFactor() / 2.0 - this.A() - 2.5);
     }
@@ -224,6 +241,7 @@ extends Frame {
         if ((d = ConfigJsonUtils.getDouble(jsonObject, "height")) != null) {
             this.Y(d);
         }
+        this.clampToVisibleScreen();
     }
 
     public Color getEditorForegroundColor() {

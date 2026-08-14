@@ -411,17 +411,20 @@ static int write_injector_dir_marker(const wchar_t *dll_path) {
     wchar_t *separator;
     HANDLE file;
     DWORD written;
+    DWORD length;
     int result = 0;
-    if (dll_path == NULL
-            || wcslen(dll_path) + wcslen(L"\\injector_dir.txt") + 1 > MAX_PATH) {
+    (void)dll_path;
+    /* Write the injector EXE directory to the shared TEMP root so the DLL can
+     * find it via GetEnvironmentVariableW("TEMP"), independent of where the
+     * remote-injected DLL was extracted. */
+    length = GetTempPathW(MAX_PATH, marker);
+    if (length == 0 || length >= MAX_PATH) {
         return 0;
     }
-    wcscpy(marker, dll_path);
-    separator = wcsrchr(marker, L'\\');
-    if (separator == NULL) {
+    if (wcslen(marker) + wcslen(L"injector_dir.txt") + 1 > MAX_PATH) {
         return 0;
     }
-    wcscpy(separator + 1, L"injector_dir.txt");
+    wcscat(marker, L"injector_dir.txt");
     if (GetModuleFileNameW(NULL, injector_path, MAX_PATH) == 0
             || injector_path[0] == L'\0') {
         return 0;

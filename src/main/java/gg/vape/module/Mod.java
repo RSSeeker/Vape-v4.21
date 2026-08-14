@@ -16,6 +16,7 @@ import gg.vape.notification.ReusableTextNotification;
 import gg.vape.module.render.hud.HudModule;
 import gg.vape.module.none.ClientSettings;
 import gg.vape.ui.click.frame.Frame;
+import gg.vape.ui.click.frame.impl.hud.HudModuleFrameBase;
 import gg.vape.ui.click.frame.impl.main.ClickGuiModuleCardRenderState;
 import gg.vape.unmap.Bendable;
 import gg.vape.unmap.INamed;
@@ -310,6 +311,9 @@ EventListener {
         if (frame != null) {
             frame.setVisible(enabled);
             frame.c(enabled);
+            if (enabled && frame instanceof HudModuleFrameBase) {
+                ((HudModuleFrameBase)frame).clampToVisibleScreen();
+            }
         } else {
             Vape.debugLog("HUD frame not registered: " + frameClass.getSimpleName());
         }
