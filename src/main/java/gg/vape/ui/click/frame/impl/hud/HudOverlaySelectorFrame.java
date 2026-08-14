@@ -15,6 +15,7 @@ import gg.vape.ui.click.frame.Frame;
 import gg.vape.ui.click.frame.impl.main.ClickGuiLayer;
 import gg.vape.ui.click.frame.impl.target.TargetInfoSettingsFrame;
 import gg.vape.utils.render.GuiRenderPrimitives;
+import gg.vape.wrapper.impl.ForgeVersion;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -196,9 +197,11 @@ extends Frame {
 
     private List<HudOverlayEntrySpec> getDefaultEntries() {
         ArrayList<HudOverlayEntrySpec> arrayList = new ArrayList<HudOverlayEntrySpec>();
+        arrayList.add(HudOverlayEntrySpec.forFrame("Text GUI", "newtextgui", TextGuiSettingsFrame.class));
+        if (!ForgeVersion.MC_1_16_5.d()) {
+            arrayList.add(HudOverlayEntrySpec.forFrame("Rearview", "newrearview", OnlinePlayerPreviewSettingsFrame.class));
+        }
         arrayList.addAll(Arrays.asList(
-                HudOverlayEntrySpec.forFrame("Text GUI", "newtextgui", TextGuiSettingsFrame.class),
-                HudOverlayEntrySpec.forFrame("Rearview", "newrearview", OnlinePlayerPreviewSettingsFrame.class),
                 HudOverlayEntrySpec.forFrame("Duel Info", "newduelinfo", OnlineCombatStatsSettingsFrame.class),
                 HudOverlayEntrySpec.forFrame("Target Info", "newtargetinfo", TargetInfoSettingsFrame.class),
                 HudOverlayEntrySpec.forFrame("Radar", "newradar", OnlineRadarSettingsFrame.class),

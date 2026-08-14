@@ -18,6 +18,7 @@ import gg.vape.ui.click.frame.impl.online.OnlineConnectionSettingsFrame;
 import gg.vape.ui.click.frame.impl.target.TargetInfoSettingsFrame;
 import gg.vape.unmap.ColorUtil;
 import gg.vape.utils.render.GuiRenderPrimitives;
+import gg.vape.wrapper.impl.ForgeVersion;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +55,9 @@ extends GuiComponent {
         this.i.w("Favorites");
         this.addChildren(this.O, this.i, this.Q);
         this.v.add(new ClickGuiQuickActionActiveFrameIndicator("newtextgui", ClientSettings.getFrame(TextGuiSettingsFrame.class), 5));
-        this.v.add(new ClickGuiQuickActionActiveFrameIndicator("newrearview", ClientSettings.getFrame(OnlinePlayerPreviewSettingsFrame.class), 6));
+        if (!ForgeVersion.MC_1_16_5.d()) {
+            this.v.add(new ClickGuiQuickActionActiveFrameIndicator("newrearview", ClientSettings.getFrame(OnlinePlayerPreviewSettingsFrame.class), 6));
+        }
         this.v.add(new ClickGuiQuickActionActiveFrameIndicator("newduelinfo", ClientSettings.getFrame(OnlineCombatStatsSettingsFrame.class), 6));
         this.v.add(new ClickGuiQuickActionActiveFrameIndicator("newtargetinfo", ClientSettings.getFrame(TargetInfoSettingsFrame.class), 7));
         this.v.add(new ClickGuiQuickActionActiveFrameIndicator("newradar", ClientSettings.getFrame(OnlineRadarSettingsFrame.class), 7));

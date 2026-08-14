@@ -22,6 +22,9 @@ extends GuiComponent {
     public static OnlinePlayerPreviewComponent instance;
 
     public void onPreRenderTick(EventPreRenderTick eventPreRenderTick) {
+        if (ForgeVersion.MC_1_16_5.d()) {
+            return;
+        }
         if (!this.settingsFrame.y$src$Z$1f55jvh() || !this.settingsFrame.V$src$Z$1xhop3l()) {
             return;
         }

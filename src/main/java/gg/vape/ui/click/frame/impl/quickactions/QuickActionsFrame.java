@@ -17,6 +17,7 @@ import gg.vape.ui.click.frame.impl.quickactions.QuickActionRowComponent;
 import gg.vape.ui.click.frame.impl.quickactions.QuickActionsHeaderCloseCallback;
 import gg.vape.ui.click.frame.impl.target.TargetInfoSettingsFrame;
 import gg.vape.utils.render.GuiRenderPrimitives;
+import gg.vape.wrapper.impl.ForgeVersion;
 import java.awt.Color;
 
 public class QuickActionsFrame
@@ -59,7 +60,11 @@ extends Frame {
         this.mW.setTargetFrameClass(OnlineRadarSettingsFrame.class);
         this.Y(publicProfilesFrameHeaderActionComponent);
         this.h(new ColorDividerComponent(QuickActionsFrame.J.l), new Object[0]);
-        this.addChildren(this.mF, this.mP, this.mX, this.mO, this.m0, this.mW);
+        if (ForgeVersion.MC_1_16_5.d()) {
+            this.addChildren(this.mF, this.mX, this.mO, this.m0, this.mW);
+        } else {
+            this.addChildren(this.mF, this.mP, this.mX, this.mO, this.m0, this.mW);
+        }
         this.setVisible(false);
         this.L(false, false);
     }
