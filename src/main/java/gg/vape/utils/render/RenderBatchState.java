@@ -5,6 +5,7 @@ import gg.vape.module.blatant.invwalk.InvWalkKeyLayout;
 import gg.vape.utils.render.RenderBatchManager;
 import gg.vape.utils.render.RenderBatchShaderProgram;
 import gg.vape.utils.render.RenderMatrix4f;
+import gg.vape.wrapper.impl.Minecraft;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
@@ -16,6 +17,7 @@ import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL33;
 
 public class RenderBatchState {
+    private int instanceCapacity = 4096;
     private FloatBuffer instanceDataBuffer = BufferUtils.createFloatBuffer((int)(this.instanceCapacity * INSTANCE_FLOAT_COUNT));
     private int cubeVertexBufferId;
     private int instanceBufferId;
@@ -25,7 +27,6 @@ public class RenderBatchState {
     private int previousFramebufferId;
     private int instanceCount;
     private int previousElementArrayBufferId;
-    private int instanceCapacity = 4096;
     private static final int INSTANCE_FLOAT_COUNT;
     private int previousArrayBufferId;
     private int previousVertexArrayId;
@@ -76,11 +77,8 @@ public class RenderBatchState {
         if (shaderProgram == null) {
             return;
         }
+        GL11.glViewport(0, 0, Minecraft.J(), Minecraft.h());
         this.captureGlBindings();
-        int targetFramebufferId = RenderBatchManager.getInstance().getTargetFramebufferId();
-        if (targetFramebufferId != -1) {
-            GL30.glBindFramebuffer((int)36160, (int)targetFramebufferId);
-        }
         if (cullFaceEnabled = GL11.glIsEnabled((int)2884)) {
             GL11.glDisable((int)2884);
             GL30.glBindVertexArray((int)this.vertexArrayId);

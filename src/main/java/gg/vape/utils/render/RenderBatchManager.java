@@ -39,6 +39,7 @@ public class RenderBatchManager {
     private int savedElementArrayBufferId;
     private RenderBatchBuilder lastWorldBuilder;
     private int targetFramebufferId = 999;
+    private boolean skipWorldFramebufferBind;
     private int savedArrayBufferId;
     private int savedFramebufferId;
     private int savedReadFramebufferId;
@@ -340,6 +341,8 @@ public class RenderBatchManager {
         this.saveAndPrepareGlState();
         try {
             LocalPlayerRotationUtil.updateProjectionMatrix(partialTicks);
+            GL11.glViewport(0, 0, Minecraft.J(), Minecraft.h());
+            this.skipWorldFramebufferBind = true;
             for (RenderBatch renderBatch : this.worldBatches) {
                 this.ensureBatchResourcesBound();
                 renderBatch.getCapabilityState().apply();
@@ -359,6 +362,7 @@ public class RenderBatchManager {
             }
         }
         finally {
+            this.skipWorldFramebufferBind = false;
             this.lastWorldBuilder = null;
             this.worldBatches.clear();
             this.unbindBatchVertexArray();
@@ -375,7 +379,7 @@ public class RenderBatchManager {
     }
 
     private void bindBatchResources() {
-        int targetFramebufferId = this.getTargetFramebufferId();
+        int targetFramebufferId = this.skipWorldFramebufferBind ? -1 : this.getTargetFramebufferId();
         if (targetFramebufferId != -1) {
             GL30.glBindFramebuffer((int)36160, (int)targetFramebufferId);
         }

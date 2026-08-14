@@ -19,6 +19,6 @@ extends JavassistMappingTask {
     public void transform() {
         MappingMethod mappingMethod = Vape.INSTANCE.getMappings().renderGlobal.renderLevelMethod;
         this.k(mappingMethod, EventRender3DCallback.class,
-                ForgeVersion.MC_26_2.d() ? "$5" : c);
+                ForgeVersion.MC_26_1.d() ? "$5" : c);
     }
 }

@@ -69,7 +69,7 @@ implements InsertedEventCallback {
     }
 
     public EventRender3DCallback(Object object) {
-        if (ForgeVersion.MC_26_2.d()) {
+        if (ForgeVersion.MC_26_1.d()) {
             this.y = MatrixStack.A();
             this.y.i(new Matrix4f(object));
         } else {

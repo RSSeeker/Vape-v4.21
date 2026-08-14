@@ -31,8 +31,10 @@ public class LocalPlayerRotationUtil {
             BufferedGuiRenderPrimitives.viewMatrix = new RenderMatrix4f().setIdentity();
             return;
         }
-        projectionMatrix.a(viewMatrix);
-        BufferedGuiRenderPrimitives.projectionMatrix = projectionMatrix.m$src$Lgg_vape_utils_render_RenderMatrix4f_$1hodrum();
+        Matrix4f combinedMatrix = Matrix4f.G();
+        combinedMatrix.a(projectionMatrix);
+        combinedMatrix.a(viewMatrix);
+        BufferedGuiRenderPrimitives.projectionMatrix = combinedMatrix.m$src$Lgg_vape_utils_render_RenderMatrix4f_$1hodrum();
         BufferedGuiRenderPrimitives.viewMatrix = new RenderMatrix4f().setIdentity();
     }
 
@@ -47,4 +49,3 @@ public class LocalPlayerRotationUtil {
         BufferedGuiRenderPrimitives.viewMatrix = new RenderMatrix4f().setIdentity();
     }
 }
-
