@@ -405,6 +405,45 @@ static int require_x64_target(HANDLE process) {
     }
 }
 
+static int write_injector_dir_marker(const wchar_t *dll_path) {
+    wchar_t marker[MAX_PATH];
+    wchar_t injector_path[MAX_PATH];
+    wchar_t *separator;
+    HANDLE file;
+    DWORD written;
+    int result = 0;
+    if (dll_path == NULL
+            || wcslen(dll_path) + wcslen(L"\\injector_dir.txt") + 1 > MAX_PATH) {
+        return 0;
+    }
+    wcscpy(marker, dll_path);
+    separator = wcsrchr(marker, L'\\');
+    if (separator == NULL) {
+        return 0;
+    }
+    wcscpy(separator + 1, L"injector_dir.txt");
+    if (GetModuleFileNameW(NULL, injector_path, MAX_PATH) == 0
+            || injector_path[0] == L'\0') {
+        return 0;
+    }
+    separator = wcsrchr(injector_path, L'\\');
+    if (separator != NULL) {
+        *separator = L'\0';
+    }
+    file = CreateFileW(marker, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+            FILE_ATTRIBUTE_TEMPORARY, NULL);
+    if (file == INVALID_HANDLE_VALUE) {
+        return 0;
+    }
+    if (WriteFile(file, injector_path,
+            (DWORD)(wcslen(injector_path) * sizeof(wchar_t)), &written, NULL)
+            && written == wcslen(injector_path) * sizeof(wchar_t)) {
+        result = 1;
+    }
+    CloseHandle(file);
+    return result;
+}
+
 static int inject_library(DWORD process_id, const wchar_t *dll_path) {
     HANDLE process = NULL;
     HANDLE thread = NULL;
@@ -434,6 +473,9 @@ static int inject_library(DWORD process_id, const wchar_t *dll_path) {
     if (!require_x64_target(process)) {
         fwprintf(stderr, L"目标进程不是 x64；已拒绝注入。\n");
         goto cleanup;
+    }
+    if (!write_injector_dir_marker(dll_path)) {
+        fwprintf(stderr, L"警告: 无法写入配置目录标记文件。\n");
     }
     remote_path = VirtualAllocEx(process, NULL, path_bytes,
             MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);

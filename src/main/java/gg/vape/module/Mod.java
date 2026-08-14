@@ -14,6 +14,8 @@ import gg.vape.input.BindActivationMode;
 import gg.vape.notification.NotificationType;
 import gg.vape.notification.ReusableTextNotification;
 import gg.vape.module.render.hud.HudModule;
+import gg.vape.module.none.ClientSettings;
+import gg.vape.ui.click.frame.Frame;
 import gg.vape.ui.click.frame.impl.main.ClickGuiModuleCardRenderState;
 import gg.vape.unmap.Bendable;
 import gg.vape.unmap.INamed;
@@ -290,8 +292,24 @@ EventListener {
             }
         }
         this.syncSubModuleStates(enabled, bypassVisibilityCheck);
+        this.syncHudModuleFrame(enabled);
         if (stateChanged && (this.category != Category.NONE || this instanceof HudModule)) {
             Vape.INSTANCE.saveAndStop();
+        }
+    }
+
+    private void syncHudModuleFrame(boolean enabled) {
+        if (!(this instanceof HudModule)) {
+            return;
+        }
+        Class<? extends Frame> frameClass = ((HudModule)this).getConfigFrameClass();
+        if (frameClass == null) {
+            return;
+        }
+        Frame frame = ClientSettings.getFrame(frameClass);
+        if (frame != null) {
+            frame.setVisible(enabled);
+            frame.c(enabled);
         }
     }
 

@@ -160,7 +160,8 @@ extends Mod {
 
     private void renderFrames() {
         for (Frame frame : allFrames) {
-            if (!frame.V$src$Z$1xhop3l() || !frame.y$src$Z$1f55jvh()) continue;
+            if (!frame.V$src$Z$1xhop3l()) continue;
+            if (!frame.y$src$Z$1f55jvh() && !(frame instanceof HudModuleFrameBase)) continue;
             frame.q$src$V$1x8c1kv();
         }
     }

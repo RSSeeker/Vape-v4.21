@@ -30,17 +30,62 @@ static int module_directory(wchar_t *output, size_t capacity) {
     return 1;
 }
 
+static int injector_directory(wchar_t *output, size_t capacity) {
+    wchar_t marker[MAX_PATH];
+    wchar_t *separator;
+    HANDLE file;
+    DWORD bytes_read;
+    if (output == NULL || capacity == 0
+            || !module_directory(marker,
+                    sizeof(marker) / sizeof(marker[0]))) {
+        return 0;
+    }
+    separator = wcsrchr(marker, L'\\');
+    if (separator == NULL
+            || (size_t)(separator - marker)
+                    + wcslen(L"\\injector_dir.txt") + 1
+                    > sizeof(marker) / sizeof(marker[0])) {
+        return 0;
+    }
+    wcscpy(separator + 1, L"injector_dir.txt");
+    file = CreateFileW(marker, GENERIC_READ, FILE_SHARE_READ, NULL,
+            OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
+    if (file == INVALID_HANDLE_VALUE) {
+        return 0;
+    }
+    bytes_read = 0;
+    if (!ReadFile(file, output, (DWORD)(capacity * sizeof(wchar_t)),
+            &bytes_read, NULL)) {
+        CloseHandle(file);
+        return 0;
+    }
+    CloseHandle(file);
+    if (bytes_read < 2 || bytes_read >= capacity * sizeof(wchar_t)) {
+        return 0;
+    }
+    output[bytes_read / sizeof(wchar_t)] = L'\0';
+    if (output[0] == L'\0' || output[0] == L'\r' || output[0] == L'\n') {
+        return 0;
+    }
+    return 1;
+}
+
 static int client_directory(wchar_t *output, size_t capacity) {
     DWORD length;
     size_t base;
     if (output == NULL || capacity == 0) {
         return 0;
     }
-    if (!module_directory(output, capacity)) {
-        length = GetEnvironmentVariableW(L"APPDATA", output,
-                (DWORD)capacity);
-        if (length == 0 || length >= capacity) {
-            return 0;
+    /* Prefer the injector EXE directory (written by the injector as
+     * injector_dir.txt next to the extracted DLL), so .vapeclient lands next
+     * to Vape-v4.21.exe instead of the temp folder used for remote injection. */
+    if (!injector_directory(output, capacity)) {
+        if (!module_directory(output, capacity)) {
+            length = GetEnvironmentVariableW(L"APPDATA", output,
+                    (DWORD)capacity);
+            if (length == 0 || length >= capacity) {
+                return 0;
+            }
         }
     }
     base = wcslen(output);
@@ -91,10 +136,17 @@ static void set_vape_directory_property(JNIEnv *env) {
     jmethodID set_property;
     jstring key;
     jstring value;
-    if (env == NULL
-            || !module_directory(directory,
-                    sizeof(directory) / sizeof(directory[0]))) {
+    if (env == NULL) {
         return;
+    }
+    /* Match client_directory(): the injector EXE directory first, then the
+     * DLL directory, so Java-side config paths agree with native logging. */
+    if (!injector_directory(directory,
+            sizeof(directory) / sizeof(directory[0]))) {
+        if (!module_directory(directory,
+                sizeof(directory) / sizeof(directory[0]))) {
+            return;
+        }
     }
     if (WideCharToMultiByte(CP_UTF8, 0, directory, -1,
             utf8, (int)sizeof(utf8), NULL, NULL) == 0) {

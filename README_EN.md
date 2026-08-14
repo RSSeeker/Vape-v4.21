@@ -21,7 +21,7 @@ Main changes compared with [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/O
 **Features**
 
 - Added runtime detection for the 26.1.x / 26.2.x family (matched by `version.json`, protocol 100/110); verified on 26.1.2
-- Local configuration persistence: written to `.vapeclient\config.json` next to the EXE/DLL — module settings, profiles, friends and frame positions are saved locally, auto-saved plus shutdown fallback, and local data is loaded first; `autoSave` is enabled by default
+- Local configuration persistence: written to `.vapeclient\config.json` (preferring the injector EXE directory, then the DLL directory, then `%APPDATA%`) — module settings, profiles, friends and frame positions are saved locally, auto-saved plus shutdown fallback, and local data is loaded first; `autoSave` is enabled by default
 - Native and Java logs are unified under `.vapeclient\log\`, with a new log file per injection
 - Single-file injector: `Vape-v4.21.exe` embeds the complete DLL and Java payload, no extra files required
 - Chinese-localized injector console with UTF-8 output

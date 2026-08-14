@@ -3,6 +3,8 @@ package gg.vape.ui.click.frame.impl.hud;
 import gg.vape.Vape;
 import gg.vape.module.render.hud.CoordinatesHudModule;
 import gg.vape.ui.click.frame.impl.hud.HudModuleConfigFrameBase;
+import gg.vape.ui.font.FontFamily;
+import gg.vape.ui.font.NotoFontOption;
 import gg.vape.ui.font.SmoothFontRenderer;
 import gg.vape.unmap.ColorUtil;
 import gg.vape.utils.render.GuiRenderPrimitives;
@@ -33,6 +35,10 @@ extends HudModuleConfigFrameBase {
     private void renderVerticalLayout() {
         SmoothFontRenderer labelFont = Vape.INSTANCE.getFontManager().K(0.7, true);
         SmoothFontRenderer valueFont = Vape.INSTANCE.getFontManager().K(1.1, true);
+        if (Vape.INSTANCE.getFontSelector().W() instanceof NotoFontOption) {
+            labelFont = Vape.INSTANCE.getFontManager().b(FontFamily.NOTO, 0.7f, false);
+            valueFont = Vape.INSTANCE.getFontManager().b(FontFamily.NOTO, 1.1f, false);
+        }
         double rowHeight = this.L() / 4.0;
         double leftPadding = 8.0;
         Color dividerColor = ColorUtil.withAlpha(Color.WHITE, 51);
@@ -100,6 +106,10 @@ extends HudModuleConfigFrameBase {
     private void renderHorizontalLayout() {
         SmoothFontRenderer labelFont = Vape.INSTANCE.getFontManager().K(0.75, true);
         SmoothFontRenderer valueFont = Vape.INSTANCE.getFontManager().K(1.2, true);
+        if (Vape.INSTANCE.getFontSelector().W() instanceof NotoFontOption) {
+            labelFont = Vape.INSTANCE.getFontManager().b(FontFamily.NOTO, 0.75f, false);
+            valueFont = Vape.INSTANCE.getFontManager().b(FontFamily.NOTO, 1.2f, false);
+        }
         double halfHeight = this.L() / 2.0;
         Color dividerColor = ColorUtil.withAlpha(Color.WHITE, 51);
         EntityPlayerSP player = Minecraft.thePlayer();

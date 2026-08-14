@@ -294,6 +294,7 @@ public class OffscreenRenderContext {
                         } else {
                             this.bindFramebuffer(true);
                             framebufferBound = true;
+                            GL11.glViewport(0, 0, this.width, this.height);
                             this.legacyFramebuffer.bindFramebufferTexture();
                             entityRenderer.D(Minecraft.getTimer().renderPartialTicks(), 0L);
                             FloatBuffer floatBuffer = BufferUtils.createFloatBuffer((int)16);
