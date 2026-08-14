@@ -5,6 +5,7 @@ import gg.vape.ui.click.component.GuiClickListener;
 import gg.vape.ui.click.component.GuiComponent;
 import gg.vape.ui.click.component.SquareIconButtonComponent;
 import gg.vape.ui.click.component.TruncatedTextComponent;
+import gg.vape.ui.font.FontOption;
 import gg.vape.ui.font.SmoothFontRenderer;
 import gg.vape.utils.render.GuiRenderPrimitives;
 import gg.vape.value.ToggleableListEntry;
@@ -93,6 +94,19 @@ extends GuiComponent {
         this.rowTextLabel = new TruncatedTextComponent(this.getText(), "...", this.A() - 30.0, 0.9, SelectableTextRowComponent.J.Z, false);
         this.rowTextLabel.setAcceptsMouseInput(false);
         this.addChildren(this.rowTextLabel, this.deleteButton);
+    }
+
+    @Override
+    public void c() {
+        // List entries are user-configured values; render them verbatim
+        // instead of passing them through the GUI translation table.
+        FontOption.setTranslationDisabled(true);
+        try {
+            super.c();
+        }
+        finally {
+            FontOption.setTranslationDisabled(false);
+        }
     }
 
     @Override

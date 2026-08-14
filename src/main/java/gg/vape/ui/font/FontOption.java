@@ -18,6 +18,11 @@ extends ModeSelection {
     private String C;
     private Properties g;
     private HashMap<String, String> N = new HashMap();
+    private static boolean translationDisabled;
+
+    public static void setTranslationDisabled(boolean disabled) {
+        FontOption.translationDisabled = disabled;
+    }
 
     public SmoothFontRenderer k(float f, boolean bl) {
         return Vape.INSTANCE.getFontManager().b(this.b(), f, bl);
@@ -83,6 +88,9 @@ extends ModeSelection {
 
 
     public String s(String string) {
+        if (FontOption.translationDisabled) {
+            return string;
+        }
         return this.N.getOrDefault(string, string);
     }
 

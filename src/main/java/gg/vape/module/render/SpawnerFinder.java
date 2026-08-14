@@ -14,6 +14,7 @@ import gg.vape.value.NumberValue;
 import gg.vape.value.OptionalLimitValue;
 import gg.vape.wrapper.impl.EntityPlayerSP;
 import gg.vape.wrapper.impl.ForgeVersion;
+import gg.vape.wrapper.impl.I18n;
 import gg.vape.wrapper.impl.MatrixStack;
 import gg.vape.wrapper.impl.Minecraft;
 import gg.vape.wrapper.impl.RenderManager;
@@ -28,6 +29,49 @@ extends Mod {
     private final BooleanValue showDistance;
     private final NumberValue scale = NumberValue.create((Object)this, "Scale", "#.#", "", 0.1, 1.0, 1.5, 0.1);
     private static final long moduleId = -5031384321297466627L;
+
+    private static String normalizeEntityName(String entityName) {
+        if (entityName == null) {
+            return "";
+        }
+        int colonIndex = entityName.lastIndexOf(':');
+        if (colonIndex >= 0 && colonIndex < entityName.length() - 1) {
+            return entityName.substring(colonIndex + 1);
+        }
+        return entityName;
+    }
+
+    private boolean matchesSpawner(String spawnerName) {
+        if (spawnerName == null) {
+            return false;
+        }
+        if (this.spawnerWhitelist.getValue().isEmpty()) {
+            return true;
+        }
+        if (this.spawnerWhitelist.matches(spawnerName, false)) {
+            return true;
+        }
+        String normalized = SpawnerFinder.normalizeEntityName(spawnerName);
+        if (this.spawnerWhitelist.matches(normalized, false)) {
+            return true;
+        }
+        for (String entry : this.spawnerWhitelist.getEnabledValues()) {
+            if (entry == null || entry.isEmpty()) continue;
+            String entryName = SpawnerFinder.normalizeEntityName(entry);
+            String descriptionKey = "entity.minecraft." + entryName.toLowerCase();
+            if (descriptionKey.equalsIgnoreCase(spawnerName) || descriptionKey.equalsIgnoreCase(normalized)) {
+                return true;
+            }
+            if (("minecraft:" + entryName.toLowerCase()).equalsIgnoreCase(spawnerName)) {
+                return true;
+            }
+            String localizedEntry = I18n.format(descriptionKey, new Object[0]);
+            if (localizedEntry.equalsIgnoreCase(spawnerName) || localizedEntry.equalsIgnoreCase(normalized)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     public SpawnerFinder() {
@@ -53,16 +97,17 @@ extends Mod {
             double d3 = RenderManager.getInterpolatedRenderPosZ();
             EntityPlayerSP entityPlayerSP = Minecraft.thePlayer();
             MatrixStack matrixStack = ForgeVersion.MC_1_16_5.d() ? MatrixStack.A() : null;
-            for (Object e : Minecraft.theWorld().R$src$Ljava_util_List_$1ycbpra()) {
+            java.util.List tileEntities = Minecraft.theWorld().R$src$Ljava_util_List_$1ycbpra();
+            for (Object e : tileEntities) {
                 TileEntityMobSpawner tileEntityMobSpawner;
                 String string;
-                if (!MappedClasses.MOB_SPAWNER_TILE_ENTITY.isInstance(e) || !this.spawnerWhitelist.matches(string = (tileEntityMobSpawner = new TileEntityMobSpawner(e)).getSpawnerBaseLogic().getEntityName(), true)) continue;
+                if (!MappedClasses.MOB_SPAWNER_TILE_ENTITY.isInstance(e) || !this.matchesSpawner(string = (tileEntityMobSpawner = new TileEntityMobSpawner(e)).getSpawnerBaseLogic().getEntityName())) continue;
                 String string2 = "";
                 if (this.showDistance.getEffectiveValue().booleanValue()) {
                     String string3 = ClientSettings.FORMAT_CODE + "a[" + ClientSettings.FORMAT_CODE + "f" + (int)entityPlayerSP.i((double)tileEntityMobSpawner.getX(), (double)tileEntityMobSpawner.getY(), (double)tileEntityMobSpawner.getZ()) + ClientSettings.FORMAT_CODE + "a]" + ClientSettings.FORMAT_CODE + "r";
                     string2 = string2 + string3 + " ";
                 }
-                string2 = string2 + string + " spawner";
+                string2 = string2 + string + " 刷怪笼";
                 RenderUtil.U(string2, (double)tileEntityMobSpawner.getX() - d + 0.5, (double)tileEntityMobSpawner.getY() - d2 - 1.0, (double)tileEntityMobSpawner.getZ() - d3 + 0.5, (Double)this.scale.getValue(), RotationUtil.p(entityPlayerSP, tileEntityMobSpawner.getX(), tileEntityMobSpawner.getY(), tileEntityMobSpawner.getZ()), -1, this.backgroundColor, 1.4, matrixStack);
             }
             GL11.glDepthMask((boolean)true);
@@ -89,13 +134,13 @@ extends Mod {
         for (Object e : Minecraft.theWorld().R$src$Ljava_util_List_$1ycbpra()) {
             TileEntityMobSpawner tileEntityMobSpawner;
             String string;
-            if (!MappedClasses.MOB_SPAWNER_TILE_ENTITY.isInstance(e) || !this.spawnerWhitelist.matches(string = (tileEntityMobSpawner = new TileEntityMobSpawner(e)).getSpawnerBaseLogic().getEntityName(), true)) continue;
+            if (!MappedClasses.MOB_SPAWNER_TILE_ENTITY.isInstance(e) || !this.matchesSpawner(string = (tileEntityMobSpawner = new TileEntityMobSpawner(e)).getSpawnerBaseLogic().getEntityName())) continue;
             String string4 = "";
             if (this.showDistance.getEffectiveValue().booleanValue()) {
                 String string5 = ClientSettings.FORMAT_CODE + "a[" + ClientSettings.FORMAT_CODE + "f" + (int)entityPlayerSP.i((double)tileEntityMobSpawner.getX(), (double)tileEntityMobSpawner.getY(), (double)tileEntityMobSpawner.getZ()) + ClientSettings.FORMAT_CODE + "a]" + ClientSettings.FORMAT_CODE + "r";
                 string4 = string4 + string5 + " ";
             }
-            string4 = string4 + string + " spawner";
+            string4 = string4 + string + " 刷怪笼";
             RenderUtil.U(string4, (double)tileEntityMobSpawner.getX() - d + 0.5, (double)tileEntityMobSpawner.getY() - d4 - 1.0, (double)tileEntityMobSpawner.getZ() - d5 + 0.5, (Double)this.scale.getValue(), RotationUtil.p(entityPlayerSP, tileEntityMobSpawner.getX(), tileEntityMobSpawner.getY(), tileEntityMobSpawner.getZ()), -1, this.backgroundColor, 1.4, matrixStack);
         }
         GL11.glDepthMask((boolean)true);

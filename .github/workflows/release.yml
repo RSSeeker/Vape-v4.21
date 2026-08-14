@@ -63,13 +63,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Vape ${{ github.ref_name }}
-          body: |
-            ## Vape 4.21 恢复版 ${{ github.ref_name }}
-
-            - 单文件注入器：`Vape-v4.21.exe`（内嵌完整 Java 载荷与原生桥接 DLL，直接运行即可选择窗口注入）
-            - 支持版本：1.7.10 / 1.8.9 / 1.12.2（原版/Forge）、1.21.11、26.1.2 / 26.2（原版/Forge/Fabric）、Lunar/Badlion 1.8.9
-            - 完全中文本地化（默认中文界面）
-            - 研究性恢复工程，仅限隔离环境测试
+          body_path: CHANGELOG.md
           files: |
             build/injection/Vape-v4.21.exe
             build/injection/Vape-v4.21Injector.exe
