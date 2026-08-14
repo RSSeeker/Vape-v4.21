@@ -1,5 +1,6 @@
 package gg.vape.ui.click.component.value;
 
+import gg.vape.Vape;
 import gg.vape.module.none.ClientSettings;
 import gg.vape.ui.click.component.PanelComponent;
 import gg.vape.ui.click.component.value.AbstractListValueComponent;
@@ -77,37 +78,37 @@ extends AbstractListValueComponent {
         GuiRenderPrimitives.d(this.G$src$D$1b2f02a() + 5.0, this.n() + 2.5, this.A() - 10.0, this.L() - 5.0, this.isExpanded() ? J.z() : this.getHoverAnimation().getInterpolatedColor());
         GuiRenderPrimitives.d(this.G$src$D$1b2f02a() + 5.0 + 0.5, this.n() + 2.5 + 0.5, this.A() - 10.0 - 1.0, this.L() - 5.0 - 1.0, backgroundColor);
         double textX = this.G$src$D$1b2f02a() + 10.0 - 2.0;
-        String targetSummary = "Target: ";
+        String targetSummary = Vape.INSTANCE.getFontSelector().W().s("Target") + ": ";
         if (this.targetFilterValue.getPlayersValue().getEffectiveValue().booleanValue()) {
-            targetSummary = targetSummary + "Players, ";
+            targetSummary = targetSummary + Vape.INSTANCE.getFontSelector().W().s("Players") + ", ";
         }
         if (this.targetFilterValue.getMobsValue().getEffectiveValue().booleanValue()) {
-            targetSummary = targetSummary + "Mobs, ";
+            targetSummary = targetSummary + Vape.INSTANCE.getFontSelector().W().s("Mobs") + ", ";
         }
         if (this.targetFilterValue.getPeacefulValue().getEffectiveValue().booleanValue()) {
-            targetSummary = targetSummary + "Peaceful, ";
+            targetSummary = targetSummary + Vape.INSTANCE.getFontSelector().W().s("Peaceful") + ", ";
         }
         if (targetSummary.endsWith(", ")) {
             targetSummary = targetSummary.substring(0, targetSummary.length() - 2);
         }
-        if (targetSummary.equals("Target: ")) {
-            targetSummary = targetSummary + "Nothing";
+        if (targetSummary.equals(Vape.INSTANCE.getFontSelector().W().s("Target") + ": ")) {
+            targetSummary = targetSummary + Vape.INSTANCE.getFontSelector().W().s("Nothing");
             primaryFontRenderer.d(targetSummary, textX, primaryTextY + 1.0, EntityTargetFilterComponent.J.d);
         } else {
             primaryFontRenderer.d(targetSummary, textX, primaryTextY + 1.0, primaryTextColor);
         }
         StringBuilder ignoredTargets = new StringBuilder();
         if (this.targetFilterValue.getIgnoreInvisibleValue().getEffectiveValue().booleanValue()) {
-            ignoredTargets.append("invisible, ");
+            ignoredTargets.append(Vape.INSTANCE.getFontSelector().W().s("invisible")).append(", ");
         }
         if (this.targetFilterValue.getIgnoreNakedValue().getEffectiveValue().booleanValue()) {
-            ignoredTargets.append("naked, ");
+            ignoredTargets.append(Vape.INSTANCE.getFontSelector().W().s("naked")).append(", ");
         }
         if (this.targetFilterValue.getIgnoreBehindWallsValue().getEffectiveValue().booleanValue()) {
-            ignoredTargets.append("behind walls, ");
+            ignoredTargets.append(Vape.INSTANCE.getFontSelector().W().s("behind walls")).append(", ");
         }
-        String ignoredTargetSummary = ignoredTargets.length() < 1 ? "none" : ignoredTargets.substring(0, ignoredTargets.length() - 2);
-        secondaryFontRenderer.d("Ignore " + ignoredTargetSummary, this.G$src$D$1b2f02a() + 10.0 - 2.0, secondaryTextY, EntityTargetFilterComponent.J.Z);
+        String ignoredTargetSummary = ignoredTargets.length() < 1 ? Vape.INSTANCE.getFontSelector().W().s("none") : ignoredTargets.substring(0, ignoredTargets.length() - 2);
+        secondaryFontRenderer.d(Vape.INSTANCE.getFontSelector().W().s("Ignore") + " " + ignoredTargetSummary, this.G$src$D$1b2f02a() + 10.0 - 2.0, secondaryTextY, EntityTargetFilterComponent.J.Z);
     }
 
     private void openEditor() {

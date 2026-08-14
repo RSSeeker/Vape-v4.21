@@ -31,6 +31,8 @@ Vape 4.21 Java 层与 Windows x64 原生桥接层的研究性恢复工程。
 - 默认语言改为中文
 - 修复多行提示换行被压平、颜色码 § 丢失导致的翻译不匹配
 - HUD 模块栈（26.x 多模块及旧版 MC 字体路径）补上翻译
+- 修复下拉框与目标过滤器等运行时拼串的翻译（先查整串、未命中再逐段翻译；如 `Mode - Simple`、`Target: Players`、`Ignore none`）
+- 修复语言包中 `ignore`/`ignoring`/`mobs`/`peaceful` 键值尾随空格导致的查表失效，并补齐 `target`/`invisible`/`naked`/小写 `none` 等单词键
 
 **字体与显示**
 
@@ -41,6 +43,7 @@ Vape 4.21 Java 层与 Windows x64 原生桥接层的研究性恢复工程。
 
 - CMake 自动探测 Visual Studio 生成器（vswhere），兼容 VS2022 / VS2026
 - MSVC `/utf-8` 编译选项；Release 产物不再附带 README
+- GitHub Actions（ci / release）使用 JDK 17 编译 Java 层（`--release 8` 输出 Java 8 字节码），并安装 JDK 8 提供 JNI/JVMTI 头文件构建 x64 原生桥接层
 
 ### 它不是 Vape 官方源码、原始发布包或厂商签名产物，也不保证具备与原产品完全一致的行为。
 

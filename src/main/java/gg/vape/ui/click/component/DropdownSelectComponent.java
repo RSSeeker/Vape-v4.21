@@ -1,5 +1,6 @@
 package gg.vape.ui.click.component;
 
+import gg.vape.Vape;
 import gg.vape.module.none.ClientSettings;
 import gg.vape.ui.click.GuiMouseEvent;
 import gg.vape.ui.click.animation.ColorAnimation;
@@ -90,7 +91,14 @@ implements FocusableComponent {
         Object currentValue = this.modeValue != null ? this.modeValue.getValue() : this.selectedValue;
         String displayText = currentValue != null ? this.optionFormatter.format(this.modeValue != null ? (T)this.modeValue.getValue() : this.selectedValue) : (this.emptyText != null ? this.emptyText : "");
         if (this.showLabelPrefix && !this.label.isEmpty()) {
-            displayText = this.label + " - " + displayText;
+            String combined = this.label + " - " + displayText;
+            String translatedCombined = Vape.INSTANCE.getFontSelector().W().s(combined);
+            if (translatedCombined.equals(combined)) {
+                translatedCombined = Vape.INSTANCE.getFontSelector().W().s(this.label) + " - " + Vape.INSTANCE.getFontSelector().W().s(displayText);
+            }
+            displayText = translatedCombined;
+        } else {
+            displayText = Vape.INSTANCE.getFontSelector().W().s(displayText);
         }
         double textHeight = fontRenderer.d(displayText);
         double centeredTextY = this.n() + this.L() / 2.0 - textHeight / 2.0;

@@ -32,6 +32,8 @@ Main changes compared with [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/O
 - Chinese is the default language
 - Fixed multi-line tooltip newline flattening and lost § color codes that broke exact matching
 - HUD module stack (26.x multi-module and legacy MC-font paths) now translates
+- Fixed runtime-composed strings in dropdowns and the target filter (whole-string lookup first, per-part translation fallback; e.g. `Mode - Simple`, `Target: Players`, `Ignore none`)
+- Fixed trailing-space corruption on the `ignore`/`ignoring`/`mobs`/`peaceful` key values that broke lookup, and added word keys such as `target`, `invisible`, `naked` and lowercase `none`
 
 **Fonts & visuals**
 
@@ -42,6 +44,7 @@ Main changes compared with [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/O
 
 - CMake auto-detects the Visual Studio generator via vswhere (VS2022 / VS2026)
 - MSVC `/utf-8` compile option; README is no longer attached to release assets
+- GitHub Actions (ci / release) compile the Java layer with JDK 17 (`--release 8` produces Java 8 bytecode) and install JDK 8 to provide JNI/JVMTI headers for building the x64 native bridge layer
 
 ### It is NOT official Vape source code, an original release package, or a vendor-signed artifact, and it does not guarantee behavior identical to the original product.
 

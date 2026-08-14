@@ -1,5 +1,6 @@
 package gg.vape.ui.click.component.value;
 
+import gg.vape.Vape;
 import gg.vape.ui.click.component.FlowLayoutComponent;
 import gg.vape.ui.click.component.PopupSelectorComponent;
 import gg.vape.ui.click.component.SpacerComponent;
@@ -39,33 +40,33 @@ extends PopupSelectorComponent {
         GuiRenderPrimitives.d(this.G$src$D$1b2f02a() + 44.0, this.n() + 8.0, 5.0, 1.0f, EntityTargetFilterPopupComponent.J.l);
         String targetSummary = "";
         if (this.targetFilterValue.getPlayersValue().getEffectiveValue().booleanValue()) {
-            targetSummary = targetSummary + "Players, ";
+            targetSummary = targetSummary + Vape.INSTANCE.getFontSelector().W().s("Players") + ", ";
         }
         if (this.targetFilterValue.getMobsValue().getEffectiveValue().booleanValue()) {
-            targetSummary = targetSummary + "Mobs, ";
+            targetSummary = targetSummary + Vape.INSTANCE.getFontSelector().W().s("Mobs") + ", ";
         }
         if (this.targetFilterValue.getPeacefulValue().getEffectiveValue().booleanValue()) {
-            targetSummary = targetSummary + "Peaceful, ";
+            targetSummary = targetSummary + Vape.INSTANCE.getFontSelector().W().s("Peaceful") + ", ";
         }
         boolean hasExplicitTargets = !targetSummary.isEmpty();
         String ignoredTargetSummary = "";
         if (this.targetFilterValue.getIgnoreInvisibleValue().getEffectiveValue().booleanValue()) {
-            ignoredTargetSummary = ignoredTargetSummary + "invisible, ";
+            ignoredTargetSummary = ignoredTargetSummary + Vape.INSTANCE.getFontSelector().W().s("invisible") + ", ";
         }
         if (this.targetFilterValue.getIgnoreNakedValue().getEffectiveValue().booleanValue()) {
-            ignoredTargetSummary = ignoredTargetSummary + "naked, ";
+            ignoredTargetSummary = ignoredTargetSummary + Vape.INSTANCE.getFontSelector().W().s("naked") + ", ";
         }
         if (this.targetFilterValue.getIgnoreBehindWallsValue().getEffectiveValue().booleanValue()) {
-            ignoredTargetSummary = ignoredTargetSummary + "behind walls, ";
+            ignoredTargetSummary = ignoredTargetSummary + Vape.INSTANCE.getFontSelector().W().s("behind walls") + ", ";
         }
         if (!ignoredTargetSummary.isEmpty()) {
-            ignoredTargetSummary = "Ignoring " + ignoredTargetSummary;
+            ignoredTargetSummary = Vape.INSTANCE.getFontSelector().W().s("Ignoring") + " " + ignoredTargetSummary;
         }
         if ((targetSummary = targetSummary + ignoredTargetSummary).endsWith(", ")) {
             targetSummary = targetSummary.substring(0, targetSummary.length() - 2);
         }
         if (!hasExplicitTargets) {
-            targetSummary = "None";
+            targetSummary = Vape.INSTANCE.getFontSelector().W().s("None");
         }
         TruncatedTextComponent summaryText = new TruncatedTextComponent(targetSummary, "...", 105.0, 0.8, EntityTargetFilterPopupComponent.J.A, false);
         summaryText.renderAt(this.G$src$D$1b2f02a() + 52.0, this.n() + 7.0);

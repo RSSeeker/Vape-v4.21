@@ -27,11 +27,18 @@ jobs:
       - name: 校验 Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v4
 
-      - name: 配置 JDK 17
+      - name: 配置 JDK 17（编译 Java 载荷）
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: 配置 JDK 8（原生 JNI/JVMTI 头文件）
+        id: setup-jdk8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
 
       - name: 配置 Gradle 缓存
         uses: gradle/actions/setup-gradle@v4
@@ -40,9 +47,9 @@ jobs:
         shell: pwsh
         run: .\gradlew.bat clean build verifyInjectionPayload --stacktrace
 
-      - name: 构建 Windows x64 注入包
+      - name: 构建 Windows x64 注入包（JDK 8 头文件）
         shell: pwsh
-        run: .\gradlew.bat prepareInjectionBundle -PtargetRelease=8 "-PnativeJavaHome=$env:JAVA_HOME" --stacktrace
+        run: .\gradlew.bat prepareInjectionBundle -PtargetRelease=8 "-PnativeJavaHome=${{ steps.setup-jdk8.outputs.path }}" --stacktrace
 
       - name: 运行原生组件测试
         shell: pwsh
