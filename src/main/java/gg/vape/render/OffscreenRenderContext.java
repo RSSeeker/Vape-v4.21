@@ -41,6 +41,7 @@ public class OffscreenRenderContext {
     private boolean flipVertically;
     private int fieldOfView;
     private long lastRenderDiagNanos;
+    private long lastFboGridDiagNanos;
 
     private void logRenderDiag(Entity entity, int mainFramebufferId) {
         long now = System.nanoTime();
@@ -60,13 +61,14 @@ public class OffscreenRenderContext {
                     + " size=" + this.width + "x" + this.height
                     + " frameReady=" + this.frameReady);
             int bound = GL11.glGetInteger(36006);
-            if (this.modernFramebuffer != null && this.width > 0 && this.height > 0) {
-                GL30.glBindFramebuffer(36160, this.modernFramebuffer.framebufferId);
-                sb.append(" offscreenNonBlack=" + this.sampleFboRow() + "/16");
-            }
+            int viewportX = GL11.glGetInteger(2978);
+            int viewportY = GL11.glGetInteger(2979);
+            int viewportW = GL11.glGetInteger(2978 + 1);
+            int viewportH = GL11.glGetInteger(2979 + 1);
+            sb.append(" viewport=" + viewportX + "," + viewportY + "," + viewportW + "x" + viewportH);
             if (mainFramebufferId > 0) {
                 GL30.glBindFramebuffer(36160, mainFramebufferId);
-                sb.append(" mainNonBlack=" + this.sampleFboRow() + "/16");
+                sb.append(" mainGrid=" + this.sampleGrid4x4());
             }
             GL30.glBindFramebuffer(36160, bound);
             Vape.debugLog(sb.toString());
@@ -76,23 +78,47 @@ public class OffscreenRenderContext {
         }
     }
 
-    private int sampleFboRow() {
-        int samples = 16;
+    private void logFboGridAfterBlit() {
+        long now = System.nanoTime();
+        if (now - this.lastFboGridDiagNanos < 500000000L) {
+            return;
+        }
+        this.lastFboGridDiagNanos = now;
+        try {
+            if (this.modernFramebuffer == null || this.width <= 0 || this.height <= 0) {
+                return;
+            }
+            int bound = GL11.glGetInteger(36006);
+            GL30.glBindFramebuffer(36160, this.modernFramebuffer.framebufferId);
+            Vape.debugLog("RearviewDiag fboGrid=" + this.sampleGrid4x4());
+            GL30.glBindFramebuffer(36160, bound);
+        }
+        catch (Throwable throwable) {
+            Vape.debugLog("RearviewDiag fboGrid error: " + throwable);
+        }
+    }
+
+    private String sampleGrid4x4() {
+        int cols = 4;
+        int rows = 4;
+        StringBuilder bitmap = new StringBuilder();
         ByteBuffer pixelBuffer = BufferUtils.createByteBuffer(4);
-        int nonBlack = 0;
-        for (int i = 0; i < samples; ++i) {
-            int px = (int)((long)this.width * (long)(2 * i + 1) / (long)(2 * samples));
-            int py = this.height / 2;
-            pixelBuffer.clear();
-            GL11.glReadPixels(px, py, 1, 1, 6408, 5121, pixelBuffer);
-            int r = pixelBuffer.get(0) & 0xFF;
-            int g = pixelBuffer.get(1) & 0xFF;
-            int b = pixelBuffer.get(2) & 0xFF;
-            if (r + g + b > 24) {
-                ++nonBlack;
+        for (int row = rows - 1; row >= 0; --row) {
+            for (int col = 0; col < cols; ++col) {
+                int px = (int)((long)this.width * (long)(2 * col + 1) / (long)(2 * cols));
+                int py = (int)((long)this.height * (long)(2 * row + 1) / (long)(2 * rows));
+                pixelBuffer.clear();
+                GL11.glReadPixels(px, py, 1, 1, 6408, 5121, pixelBuffer);
+                int r = pixelBuffer.get(0) & 0xFF;
+                int g = pixelBuffer.get(1) & 0xFF;
+                int b = pixelBuffer.get(2) & 0xFF;
+                bitmap.append(r + g + b > 24 ? '1' : '0');
+            }
+            if (row > 0) {
+                bitmap.append('/');
             }
         }
-        return nonBlack;
+        return bitmap.toString();
     }
 
     public Framebuffer getLegacyFramebuffer() {
@@ -348,6 +374,7 @@ public class OffscreenRenderContext {
                             GL11.glClearColor((float)0.0f, (float)0.0f, (float)0.0f, (float)1.0f);
                             GL11.glClear((int)16384);
                             GL11.glColorMask((boolean)true, (boolean)true, (boolean)true, (boolean)true);
+                            this.logFboGridAfterBlit();
                             GL30.glBindFramebuffer((int)36008, (int)previousDrawFramebuffer);
                             GL30.glBindFramebuffer((int)36009, (int)previousFramebuffer);
                         } else {

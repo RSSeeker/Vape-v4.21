@@ -262,7 +262,7 @@ static void render_selector(const process_candidate *candidates, size_t count,
         SetConsoleCursorPosition(output, home);
         previous_rows = rows;
     }
-    wprintf(L"Vape421 注入器\n");
+    wprintf(L"Vape 注入器\n");
     wprintf(L"DLL: %ls\n\n", dll_path);
     wprintf(L"选择一个 Java 游戏窗口（↑/↓ 选择，回车注入，Esc 退出）\n\n");
     if (count == 0) {

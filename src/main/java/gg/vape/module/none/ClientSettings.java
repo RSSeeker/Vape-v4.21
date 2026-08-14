@@ -809,7 +809,7 @@ extends Mod {
         if (!frame.V$src$Z$1xhop3l()) {
             return;
         }
-        if (frame instanceof HudModuleFrameBase && !HudModuleConfigFrameBase.isHudEditorContext()) {
+        if (frame instanceof HudModuleConfigFrameBase && !HudModuleConfigFrameBase.isHudEditorContext()) {
             return;
         }
         frame.c();

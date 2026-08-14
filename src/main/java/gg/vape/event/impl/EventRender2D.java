@@ -4,6 +4,7 @@ import gg.vape.Vape;
 import gg.vape.event.Event;
 import gg.vape.event.EventListeners;
 import gg.vape.module.none.ClientSettings;
+import gg.vape.render.OffscreenRenderContext;
 import gg.vape.runtime.NativeBridge;
 import gg.vape.ui.click.GuiScreenNativeCallbackBridge;
 import gg.vape.utils.render.GuiRenderPrimitives;
@@ -23,6 +24,9 @@ extends Event {
     }
 
     public static void create() {
+        if (OffscreenRenderContext.isRenderingOffscreen()) {
+            return;
+        }
         if (ForgeVersion.MC_1_17.d() && Minecraft.thePlayer().isNull()) {
             return;
         }
