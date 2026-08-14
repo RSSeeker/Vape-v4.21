@@ -310,6 +310,8 @@ EventListener {
         if (frame != null) {
             frame.setVisible(enabled);
             frame.c(enabled);
+        } else {
+            Vape.debugLog("HUD frame not registered: " + frameClass.getSimpleName());
         }
     }
 
