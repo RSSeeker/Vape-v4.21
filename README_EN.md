@@ -59,13 +59,14 @@ Main changes compared with [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/O
 | 1.12.2 | ✓ | ✓ | - |
 | 1.16.5 | | | |
 | 1.21.11 | ✓ | ✓ | ✓ |
+| 26.1.2 | ✓ | ✓ | ✓ |
 | 26.2 | ✓ | ✓ | ✓ |
 
 Injection into Lunar Client and Badlion Client 1.8.9 instances is also supported.
 
 Support for Minecraft 1.16.5 is poor; certain mappings, rendering, and module features may not function properly.
 
-**For version 26.2, please inject after joining a server or singleplayer world.**
+**For versions 26.1.2 and 26.2, please inject after joining a server or singleplayer world.**
 
 All target instances must use a 64-bit JVM.
 
@@ -73,7 +74,7 @@ All target instances must use a 64-bit JVM.
 
 Required only for compiling and verifying the Java layer:
 
-- JDK 17, used as the Gradle toolchain; target output is compiled via `--release 8` by default
+- JDK 17, used as the Gradle toolchain; the output defaults to Java 17 bytecode, and passing `-PtargetRelease=8` produces Java 8 bytecode (as the CI build does)
 - Project-bundled Gradle Wrapper; build script strictly requires Gradle 8.8
 - Internet connection with access to Maven Central and Gradle Plugin Portal
 
@@ -121,17 +122,19 @@ Vape-v4.21Native.dll
 README.md
 ```
 
-The DLL embeds the Java injection JAR as an `RCDATA` resource, so placing a payload separately is not required. The native bridge layer only implements interfaces recovered from the sample's nine-method `RegisterNatives` table; additional Java native declarations not registered in the sample will not be fabricated. For more details, see [`native/README.md`](native/README.md).
+The DLL embeds the Java injection JAR as an `RCDATA` resource, so placing a payload separately is not required. The native bridge layer recovers the sample's `RegisterNatives` interface table and additionally registers the sample's unimplemented native declarations as safe stubs to avoid `UnsatisfiedLinkError`. For more details, see [`native/README.md`](native/README.md).
 
 ## Running in an Isolated Environment
 
-After launching a supported Minecraft instance (including 1.21.11/26.2 Fabric) or Lunar Client instance using a 64-bit JVM, execute the following in `build/injection/`:
+The recommended way is to run the single-file injector `Vape-v4.21.exe` (which embeds the complete DLL and Java payload): after launching a supported Minecraft instance (including 1.21.11, 26.1.2, and 26.2 Fabric) or Lunar Client instance using a 64-bit JVM, run it directly from `build/injection/`; it shows an auto-refreshing Java game window picker (↑/↓ to select, Enter to inject, Esc to quit).
+
+You can also inject by process ID from the command line:
 
 ```powershell
 .\Vape-v4.21Injector.exe <pid> .\Vape-v4.21Native.dll
 ```
 
-The injector only performs `LoadLibraryW`. Once loaded, the DLL waits for the JVM and Minecraft `Client thread`, and loads the embedded JAR via its context ClassLoader. Fabric instances add the payload to the Knot ClassLoader via the Fabric Launcher API. Subsequently, the DLL registers nine native methods and calls `gg.vape.runtime.NativeBridge.start()`. A new per-injection `vape421-native-<pid>-<timestamp>.log` is written under `.vapeclient\log\`.
+The injector only performs `LoadLibraryW`. Once loaded, the DLL waits for the JVM and Minecraft `Client thread`, and loads the embedded JAR via its context ClassLoader. Fabric instances add the payload to the Knot ClassLoader via the Fabric Launcher API. Subsequently, the DLL registers the native bridge methods and calls `gg.vape.runtime.NativeBridge.start()`. A new per-injection `vape421-native-<pid>-<timestamp>.log` is written under `.vapeclient\log\`.
 
 ## Common Verification Tasks
 

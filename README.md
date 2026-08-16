@@ -59,13 +59,14 @@ Vape 4.21 Java 层与 Windows x64 原生桥接层的研究性恢复工程。
 | 1.12.2 | ✓ | ✓ | - |
 | 1.16.5 | | | |
 | 1.21.11 | ✓ | ✓ | ✓ |
+| 26.1.2 | ✓ | ✓ | ✓ |
 | 26.2 | ✓ | ✓ | ✓ |
 
 也支持 Lunar Client 与 Badlion Client 1.8.9 实例注入。
 
 Minecraft 1.16.5 的支持不佳，部分映射、渲染和模块功能可能无法正常工作。
 
-**对于26.2版本，请在进入服务器或单人世界后注入**。
+**对于 26.1.2 与 26.2 版本，请在进入服务器或单人世界后注入**。
 
 所有目标实例均须使用 64 位 JVM。
 
@@ -73,7 +74,8 @@ Minecraft 1.16.5 的支持不佳，部分映射、渲染和模块功能可能无
 
 仅编译和校验 Java 层需要：
 
-- JDK 17，用作 Gradle toolchain；输出默认通过 `--release 8` 编译
+- JDK 17，用作 Gradle toolchain；输出默认编译为 Java 17 字节码，传
+  `-PtargetRelease=8` 可输出 Java 8 字节码（CI 构建即采用该参数）
 - 项目自带的 Gradle Wrapper；构建脚本固定要求 Gradle 8.8
 - 可访问 Maven Central 和 Gradle Plugin Portal 的网络连接
 
@@ -121,14 +123,18 @@ Vape-v4.21Native.dll
 README.md
 ```
 
-DLL 将 Java injection JAR 作为 `RCDATA` 嵌入，不要求另行放置 payload。原生桥接层只实现
-从样本九项 `RegisterNatives` 表恢复出的接口；未在样本中注册的额外 Java native 声明
-不会被臆造实现。更多细节见 [`native/README.md`](native/README.md)。
+DLL 将 Java injection JAR 作为 `RCDATA` 嵌入，不要求另行放置 payload。原生桥接层恢复
+样本的 `RegisterNatives` 接口表，另将样本未实现声明的 native 方法注册为安全占位桩，
+避免 `UnsatisfiedLinkError`。更多细节见 [`native/README.md`](native/README.md)。
 
 ## 隔离环境运行
 
-启动使用 64 位 JVM 的受支持 Minecraft 实例（包括 1.21.11/26.2 Fabric）或 Lunar Client 实例后，在
-`build/injection/` 中执行：
+推荐直接运行单文件注入器 `Vape-v4.21.exe`（内嵌完整 DLL 与 Java 载荷）：启动使用 64 位
+JVM 的受支持 Minecraft 实例（包括 1.21.11、26.1.2、26.2 Fabric）或 Lunar Client 实例后，
+在 `build/injection/` 中直接运行，会出现自动刷新的 Java 游戏窗口选择器（↑/↓ 选择，
+回车注入，Esc 退出）。
+
+也可用命令行方式指定进程注入：
 
 ```powershell
 .\Vape-v4.21Injector.exe <pid> .\Vape-v4.21Native.dll
@@ -136,9 +142,9 @@ DLL 将 Java injection JAR 作为 `RCDATA` 嵌入，不要求另行放置 payloa
 
 注入器仅执行 `LoadLibraryW`。DLL 加载后会等待 JVM 与 Minecraft `Client thread`，通过其
 上下文 ClassLoader 加载内嵌 JAR；Fabric 实例会通过 Fabric Launcher API 将载荷加入 Knot
-ClassLoader。随后 DLL 注册九个 native 方法，并调用
-`gg.vape.runtime.NativeBridge.start()`。执行结果写入 DLL 同目录的
-`vape421-native.log`（每次注入的新日志位于 `.vapeclient\log\`）。
+ClassLoader。随后 DLL 注册原生方法，并调用
+`gg.vape.runtime.NativeBridge.start()`。每次注入的日志位于注入器 EXE 同目录的
+`.vapeclient\log\vape421-native-<pid>-<时间戳>.log`。
 
 ## 常用校验任务
 
