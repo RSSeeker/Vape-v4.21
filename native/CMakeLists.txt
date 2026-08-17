@@ -116,6 +116,21 @@ target_link_libraries(Vape421LoaderGui PRIVATE
 )
 target_include_directories(Vape421LoaderGui PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/loader_gui")
 
+# Embed Vape421Native.dll into the GUI loader for single-file operation.
+# The loader extracts resource 422 (RCDATA) to a temp file when no DLL sits
+# beside the exe (see ControllerModel::materializeEmbeddedDll).
+set(VAPE421_LOADER_GUI_DLL_RC
+        "${CMAKE_CURRENT_BINARY_DIR}/generated/loader_gui_dll.rc")
+add_custom_command(
+        OUTPUT "${VAPE421_LOADER_GUI_DLL_RC}"
+        COMMAND "${CMAKE_COMMAND}"
+                "-DDLL_PATH=$<TARGET_FILE:Vape421Native>"
+                "-DRC_OUT=${VAPE421_LOADER_GUI_DLL_RC}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/embed_dll.cmake"
+        DEPENDS Vape421Native
+        COMMENT "Embedding Vape421Native.dll into the GUI loader")
+target_sources(Vape421LoaderGui PRIVATE "${VAPE421_LOADER_GUI_DLL_RC}")
+
 include(CTest)
 if(BUILD_TESTING)
     add_executable(Vape421BootstrapTest

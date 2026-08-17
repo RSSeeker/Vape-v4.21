@@ -90,6 +90,62 @@ std::wstring executableDirectory() {
 }
 }
 
+// Extracts the embedded product DLL (resource 422, RCDATA) to the temporary
+// directory so it can be injected via LoadLibraryW. Mirrors the standalone
+// injector's materialize_embedded_dll() behaviour for single-file mode.
+bool ControllerModel::materializeEmbeddedDll(std::uint32_t processId,
+        std::wstring& output) {
+    const HRSRC resource = FindResourceW(nullptr,
+        MAKEINTRESOURCEW(422), MAKEINTRESOURCEW(10));
+    if (resource == nullptr) return false;
+    const DWORD size = SizeofResource(nullptr, resource);
+    const HGLOBAL loaded = LoadResource(nullptr, resource);
+    const auto* bytes = loaded == nullptr ? nullptr
+        : static_cast<const unsigned char*>(LockResource(loaded));
+    if (bytes == nullptr || size < 4) return false;
+
+    wchar_t tempRoot[MAX_PATH]{};
+    if (GetTempPathW(static_cast<DWORD>(std::size(tempRoot)), tempRoot) == 0) {
+        return false;
+    }
+    wchar_t directory[MAX_PATH]{};
+    _snwprintf_s(directory, std::size(directory), _TRUNCATE,
+        L"%lsVape421Recovery", tempRoot);
+    if (!CreateDirectoryW(directory, nullptr)
+            && GetLastError() != ERROR_ALREADY_EXISTS) {
+        return false;
+    }
+    wchar_t target[MAX_PATH]{};
+    _snwprintf_s(target, std::size(target), _TRUNCATE,
+        L"%ls\\Vape-v4.21Native-%lu.dll", directory,
+        static_cast<unsigned long>(processId));
+
+    HANDLE file = CreateFileW(target, GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS,
+        FILE_ATTRIBUTE_TEMPORARY, nullptr);
+    if (file == INVALID_HANDLE_VALUE) return false;
+
+    DWORD offset = 0;
+    bool ok = true;
+    while (offset < size) {
+        DWORD written = 0;
+        const DWORD remaining = size - offset;
+        if (!WriteFile(file, bytes + offset, remaining, &written, nullptr)
+                || written == 0) {
+            ok = false;
+            break;
+        }
+        offset += written;
+    }
+    CloseHandle(file);
+    if (!ok) {
+        DeleteFileW(target);
+        return false;
+    }
+    output = target;
+    return true;
+}
+
 ControllerModel::ControllerModel() {
     serviceHttpBase_ = onlineBaseUrl();
     const std::wstring setting = cacheDirectory() + L"cache.preference";
@@ -98,6 +154,9 @@ ControllerModel::ControllerModel() {
     if (input >> enabled) {
         cachePreference_ = enabled != 0;
     }
+    // Skip the login page: authenticate against the local loopback Service
+    // with an anonymous username and go straight to Minecraft selection.
+    autoLoginToService();
 }
 
 ControllerModel::~ControllerModel() {
@@ -184,13 +243,27 @@ bool ControllerModel::injectMinecraft(std::uint32_t processId) {
         return false;
     }
     std::wstring error;
-    const std::wstring dllPath = executableDirectory()
+    std::wstring dllPath = executableDirectory()
             + L"\\Vape-v4.21Native.dll";
     const std::wstring legacyDllPath = executableDirectory()
             + L"\\Vape421Native.dll";
-    const std::wstring resolvedDllPath = GetFileAttributesW(dllPath.c_str())
-            != INVALID_FILE_ATTRIBUTES ? dllPath : legacyDllPath;
-    if (!InjectionCoordinator::injectProductDll(processId, resolvedDllPath, service_.port(),
+    if (GetFileAttributesW(dllPath.c_str()) == INVALID_FILE_ATTRIBUTES
+            && GetFileAttributesW(legacyDllPath.c_str()) != INVALID_FILE_ATTRIBUTES) {
+        dllPath = legacyDllPath;
+    }
+    if (GetFileAttributesW(dllPath.c_str()) == INVALID_FILE_ATTRIBUTES) {
+        // Single-file mode: extract the embedded DLL resource (ID 422, RCDATA)
+        // next to the Loader so the product DLL can be injected from it.
+        std::wstring extracted;
+        if (materializeEmbeddedDll(processId, extracted)) {
+            dllPath = extracted;
+        } else {
+            setStatus(L"Vape-v4.21Native.dll was not found beside the Loader");
+            setPage(ControllerPage::Error);
+            return false;
+        }
+    }
+    if (!InjectionCoordinator::injectProductDll(processId, dllPath, service_.port(),
             serviceHttpBase, error)) {
         service_.stop();
         setStatus(error.empty() ? L"Failed to inject Vape421Native.dll" : error);
@@ -475,6 +548,28 @@ void ControllerModel::submitCredentialAuthentication() {
         std::lock_guard lock(mutex_);
         accessToken_ = token;
         status_.clear();
+    }
+    refreshMinecraftProcesses();
+    setPage(ControllerPage::MinecraftSelection);
+}
+
+void ControllerModel::autoLoginToService() {
+    // No login screen: register an anonymous account with the local Service.
+    // The Service auto-creates accounts on first use, so any username works.
+    const std::wstring usernameValue = L"Player" + std::to_wstring(
+        static_cast<unsigned long>(GetCurrentProcessId()));
+    const std::string usernameUtf8 = utf8(usernameValue);
+    const std::string response = httpPostJson(serviceHttpBase_, L"/loader/login",
+        "{\"username\":\"" + jsonEscape(usernameUtf8) + "\"}");
+    const std::string token = jsonString(response, "token");
+    {
+        std::lock_guard lock(mutex_);
+        if (!token.empty()) {
+            accessToken_ = token;
+            status_.clear();
+        } else {
+            status_ = L"Waiting for the in-game Service (start Minecraft first)";
+        }
     }
     refreshMinecraftProcesses();
     setPage(ControllerPage::MinecraftSelection);

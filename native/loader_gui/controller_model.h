@@ -54,6 +54,7 @@ public:
     double loadingElapsedSeconds() const;
     double stageElapsedSeconds() const;
     void submitCredentialAuthentication();
+    void autoLoginToService();
 
 private:
     static std::wstring makeHwid();
@@ -62,6 +63,7 @@ private:
     static std::string httpPostJson(const std::wstring& baseUrl,
         const wchar_t* path, const std::string& body);
     static std::string jsonString(const std::string& json, const char* key);
+    bool materializeEmbeddedDll(std::uint32_t processId, std::wstring& output);
 
     mutable std::mutex mutex_;
     ControllerPage page_{ControllerPage::Login};
