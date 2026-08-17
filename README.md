@@ -2,48 +2,55 @@
 
 # Vape 4.21 Product Recovery
 
-Vape 4.21 Java 层与 Windows x64 原生桥接层的研究性恢复工程。
+Vape 4.21 的 Java 层与 Windows x64 原生桥接层研究性恢复工程，附带完整中文本地化。
 
 > GitHub 仓库：[RSSeeker/Vape-v4.21](https://github.com/RSSeeker/Vape-v4.21) ·
 > 发布页：[Releases](https://github.com/RSSeeker/Vape-v4.21/releases)
 >
-> 主要产物：`Vape-v4.21.exe`（单文件注入器，内嵌 DLL）、
-> `Vape-v4.21Injector.exe`（不内嵌 DLL 的注入器）、`Vape-v4.21Native.dll`。
-
 > 源代码来源：[OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape)
 > （本项目基于该公开仓库的源代码进行恢复、整理与本地化）。
 
-## 与上游源代码的改动
+## 主要产物
 
-相对 [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape) 源码的主要改动：
+| 文件 | 说明 |
+| --- | --- |
+| `Vape-v4.21.exe` | 单文件注入器（内嵌完整 DLL 与 Java 载荷，免附带文件） |
+| `Vape-v4.21Injector.exe` | 注入器（不内嵌 DLL，需配合 Native DLL 使用） |
+| `Vape-v4.21Native.dll` | x64 原生桥接层 |
 
-**功能**
+## 特性
 
-- 新增 26.1.x / 26.2.x 运行时版本探测（按 `version.json` 家族匹配，协议 100/110），26.1.2 实测通过
-- 配置本地持久化：写入 `.vapeclient\config.json`（优先位于注入器 EXE 同目录，其次 DLL 同目录，最后 `%APPDATA%`）——模块设置、配置、好友、框架位置本地保存，自动保存 + 退出兜底，加载本地优先；`autoSave` 默认开启
-- 原生日志与 Java 日志统一到 `.vapeclient\log\`，每次注入生成新的日志文件
-- 单文件注入器：`Vape-v4.21.exe` 内嵌完整 DLL 与 Java 载荷，无需附带文件即可使用
-- 注入器控制台中文化并启用 UTF-8 输出（中文窗口标题正常显示）
+**功能集成（v4.21.8）**
 
-**汉化**
+- 合并上游新模块：**AutoMace**（自动狼牙棒，含狼牙棒选择 / 眩晕猛击 / 瞄准范围 / 自动卸下鞘翅 / 仅猛击 / 显示快捷栏）、**NoItemRelease**（不释放物品）、**PearlCatch**（接住珍珠）、**InventoryOverlay**（物品栏覆盖显示）
+- 合并 Badlion 旧版按键事件队列，Badlion 客户端按键兼容
+- 内嵌 **VapeService**（HTTP 8080 + Zeus TCP 8091 配套服务），游戏内自动后台启动：
+  - 账号 / 设置 / 配置档 / 好友 / 小队 / 位置共享等在线功能本地跑通
+  - 服务数据存于 `~/.vapeclient/vape-service.json`，与本地配置（`.vapeclient\config.json`）分离存储，互不冲突
+  - 端口占用自动向上探测空闲端口；启动失败静默降级，不影响游戏
+  - 支持环境变量配置（见下文「内嵌服务配置」）
 
-- 语言包由 798 键扩充至 2600+ 键（选项、提示、教程、确认框、药水/物品名等全覆盖）
-- 默认语言改为中文
-- 修复多行提示换行被压平、颜色码 § 丢失导致的翻译不匹配
-- HUD 模块栈（26.x 多模块及旧版 MC 字体路径）补上翻译
-- 修复下拉框与目标过滤器等运行时拼串的翻译（先查整串、未命中再逐段翻译；如 `Mode - Simple`、`Target: Players`、`Ignore none`）
-- 修复语言包中 `ignore`/`ignoring`/`mobs`/`peaceful` 键值尾随空格导致的查表失效，并补齐 `target`/`invisible`/`naked`/小写 `none` 等单词键
+**本地化**
+
+- 语言包扩充至 2600+ 键，模块名、值名、提示、教程、确认框、药水/物品名全覆盖
+- 默认语言为中文；语言选项精简为「中文 / English」
+- 修复多行提示换行被压平、颜色码 `§` 丢失导致的翻译不匹配
+- 下拉框 / 目标过滤器等运行时拼串的翻译（先查整串、未命中再逐段翻译）
+- 模块搜索同时匹配英文名与中文翻译名，中文可直接搜到模块
+- 分类导航显示「其他」分类，Other 分类模块（如不释放物品）可直接浏览
 
 **字体与显示**
 
-- `noto.ttf` 替换为覆盖全部翻译字符的 Noto Sans SC 子集（700 粗体，0 缺字）
+- `noto.ttf` 为覆盖全部翻译字符的 Noto Sans SC 静态子集（SemiBold 600 字重），经 stb（游戏实际渲染引擎）验证 0 缺字
 - 自定义圆角图标嵌入 `Vape-v4.21.exe`
+- 注入器控制台中文化并启用 UTF-8 输出
 
-**构建与工程**
+**工程**
 
-- CMake 自动探测 Visual Studio 生成器（vswhere），兼容 VS2022 / VS2026
-- MSVC `/utf-8` 编译选项；Release 产物不再附带 README
-- GitHub Actions（ci / release）使用 JDK 17 编译 Java 层（`--release 8` 输出 Java 8 字节码），并安装 JDK 8 提供 JNI/JVMTI 头文件构建 x64 原生桥接层
+- 新增 26.1.x / 26.2.x 运行时版本探测（按 `version.json` 家族匹配，协议 100/110），26.1.2 实测通过
+- 配置本地持久化：模块设置、配置档、好友、框架位置保存至 `.vapeclient\config.json`，自动保存 + 退出兜底
+- 原生日志与 Java 日志统一到 `.vapeclient\log\`，每次注入生成独立日志文件
+- 单文件注入器：`Vape-v4.21.exe` 内嵌完整 DLL 与 Java 载荷
 
 ### 它不是 Vape 官方源码、原始发布包或厂商签名产物，也不保证具备与原产品完全一致的行为。
 
@@ -66,9 +73,24 @@ Vape 4.21 Java 层与 Windows x64 原生桥接层的研究性恢复工程。
 
 Minecraft 1.16.5 的支持不佳，部分映射、渲染和模块功能可能无法正常工作。
 
-**对于 26.1.2 与 26.2 版本，请在进入服务器或单人世界后注入**。
+**对于 26.1.2 与 26.2 版本，请在进入服务器或单人世界后注入。**
 
 所有目标实例均须使用 64 位 JVM。
+
+## 内嵌服务配置
+
+VapeService 在游戏内自动启动，默认监听 `127.0.0.1:8080`（HTTP）与 `127.0.0.1:8091`（Zeus TCP）。
+可通过环境变量调整：
+
+| 环境变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `VAPE_BIND_ADDRESS` | `127.0.0.1` | 绑定地址；设为 `0.0.0.0` 可允许局域网访问 |
+| `VAPE_HTTP_PORT` | `8080` | HTTP 端口 |
+| `VAPE_ZEUS_PORT` | `8091` | Zeus TCP 端口 |
+| `VAPE_DATA_FILE` | `~/.vapeclient/vape-service.json` | 服务数据文件路径 |
+
+客户端侧已有 `VAPE_ONLINE_BASE_URL` / `VAPE_ZEUS_ADDRESS` 覆盖服务地址，与上述变量配合
+可实现局域网多端互联。
 
 ## 环境要求
 
@@ -164,28 +186,3 @@ ClassLoader。随后 DLL 注册原生方法，并调用
 ## 版本更新日志
 
 详见 [CHANGELOG.md](CHANGELOG.md)。
-
-### v4.21.8 (2026-08-17)
-
-- 合并上游新模块：AutoMace（自动狼牙棒）、NoItemRelease（不释放物品）、PearlCatch（接住珍珠）、InventoryOverlay（物品栏覆盖显示）
-- 内嵌 VapeService（HTTP + Zeus 服务）进单文件注入包，游戏内自动后台启动，数据存于 `~/.vapeclient/`；支持 `VAPE_BIND_ADDRESS` / `VAPE_HTTP_PORT` / `VAPE_ZEUS_PORT` / `VAPE_DATA_FILE` 环境变量配置
-- 修复中文界面缺字：noto.ttf 重新子集化并加粗（SemiBold），覆盖全部翻译字符（stb 验证 0 缺失）
-- VapeService 全部代码降级为 Java 8 字节码，通过 `verifyInjectionPayload` 检查
-- 补全翻译（PearlCatch / AutoMace / InventoryOverlay / KillAura 等）；模块搜索支持中文名；分类导航显示「其他」分类
-
-### v4.21.7 (2026-08-17)
-
-- 修复中文界面模块设置值名显示英文（语言初始化时序）与 English 语言下子选项文字不渲染
-- 语言选项精简为「中文 / English」
-- 大量补全翻译（模块值名/提示、在线状态页、设置导航标题等）
-- 按键显示（Keystrokes）WASD 等文字居中
-- 列表 / 白名单条目显示配置原文
-
-### v4.21.6 (2026-08-15)
-
-- 修复 26.1.2 查找矿物（Search）3D 方块轮廓不渲染与相机矩阵问题
-- 修复刷怪笼查找（SpawnerFinder）中文客户端白名单无法匹配（支持本地化名 / 资源键 / 英文名）
-- 刷怪笼渲染标签本地化：「僵尸 刷怪笼」
-- HUD 设置翻译「抬头显示」→「显示」
-- 列表 / 白名单条目不再经过 GUI 翻译表，显示配置原文；配置文件档按钮恢复英文（Classic PVP / Modern PVP）
-
