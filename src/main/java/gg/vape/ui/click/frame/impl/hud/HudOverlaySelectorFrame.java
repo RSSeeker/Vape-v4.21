@@ -205,6 +205,7 @@ extends Frame {
                 HudOverlayEntrySpec.forFrame("Duel Info", "newduelinfo", OnlineCombatStatsSettingsFrame.class),
                 HudOverlayEntrySpec.forFrame("Target Info", "newtargetinfo", TargetInfoSettingsFrame.class),
                 HudOverlayEntrySpec.forFrame("Radar", "newradar", OnlineRadarSettingsFrame.class),
+                HudOverlayEntrySpec.forFrame("Inventory", "inventory", InventoryOverlaySettingsFrame.class),
                 HudOverlayEntrySpec.forFrame("Party Overlay", "party hover@2x", OnlineActivitySettingsFrame.class)));
         arrayList.addAll(HudOverlaySelectorFrame.getHudModuleEntries());
         return arrayList;

@@ -65,6 +65,7 @@ import gg.vape.ui.click.frame.impl.hud.HudModuleFrameBase;
 import gg.vape.ui.click.frame.impl.hud.HudModuleOverviewFrame;
 import gg.vape.ui.click.frame.impl.hud.HudModuleSelectorFrame;
 import gg.vape.ui.click.frame.impl.hud.HudSettingsFrameBase;
+import gg.vape.ui.click.frame.impl.hud.InventoryOverlaySettingsFrame;
 import gg.vape.ui.click.frame.impl.hud.KeystrokesHudFrame;
 import gg.vape.ui.click.frame.impl.hud.PotionEffectsHudFrame;
 import gg.vape.ui.click.frame.impl.hud.ReachDisplayHudFrame;
@@ -674,6 +675,7 @@ extends Mod {
         ClientSettings.registerFrame((Frame)new TextGuiSettingsFrame(), mainStack);
         ClientSettings.registerFrame((Frame)new OnlineCombatStatsSettingsFrame(), mainStack);
         ClientSettings.registerFrame((Frame)new OnlineRadarSettingsFrame(), mainStack);
+        ClientSettings.registerFrame((Frame)new InventoryOverlaySettingsFrame(), mainStack);
         ClientSettings.registerFrame((Frame)new TargetInfoSettingsFrame(), mainStack);
         ClientSettings.registerFrame((Frame)new OnlineActivitySettingsFrame(), mainStack);
         ClientSettings.registerFrame((Frame)new EnemySettingsFrame(), mainStack);

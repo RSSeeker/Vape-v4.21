@@ -53,6 +53,14 @@ extends Wrapper {
         KeyBinding.vapeInstance.getMappings().hJ.g(keyBinding.getKeyCode(), bl);
     }
 
+    public static void setLegacyKeyBindState(int keyCode, boolean pressed) {
+        KeyBinding.vapeInstance.getMappings().hJ.g(keyCode, pressed);
+    }
+
+    public static void onLegacyTick(int keyCode) {
+        KeyBinding.vapeInstance.getMappings().hJ.s(keyCode);
+    }
+
     public boolean isPressed() {
         return KeyBinding.vapeInstance.getMappings().hJ.M(this.I);
     }

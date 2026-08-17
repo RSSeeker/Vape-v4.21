@@ -9,3 +9,7 @@ tmp-*/
 *.iws
 javap-*.txt
 .idea/workspace.xml
+# user-provided upstream source copies (not part of this repo)
+project/
+# backup of the previous subset font (replaced by full-coverage static subset)
+noto.old.ttf.backup

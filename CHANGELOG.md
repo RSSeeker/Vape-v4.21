@@ -1,5 +1,25 @@
 # 更新日志
 
+## v4.21.8 (2026-08-17)
+
+**上游新功能集成**
+
+- 合并上游 VapeV4.21 新模块：AutoMace（自动狼牙棒，含狼牙棒选择 / 眩晕猛击 / 瞄准范围 / 自动卸下鞘翅 / 仅猛击 / 显示快捷栏）、NoItemRelease（不释放物品）、PearlCatch（接住珍珠）
+- 合并 InventoryOverlay（物品栏覆盖显示）组件与其设置页，可在 HUD 设置页开启
+- 合并 Badlion 旧版按键事件队列（BadlionKeyBindingEventQueue / Badlion189InputQueueMappingTask），Badlion 客户端按键兼容
+- 移除与现有 Animations 模块重复的上游 BlockHit 模式文件（保留原 Animations 的 Manual / Predict / Auto / Lag 模式）
+
+**内嵌 VapeService（加载器配套服务）**
+
+- 将上游 VapeService（HTTP 8080 + Zeus TCP 8091）整体集成进单文件注入包，游戏内自动后台启动，无需单独运行服务 jar
+- VapeService 全部 14 个 Java 文件降级为 Java 8 语法（record / `Set.copyOf` / `.toList` / `String.isBlank` / `Optional.stream` / `Optional.isEmpty` / `HexFormat` / `Files.readString` / netty 4.1 API 等），通过 `verifyInjectionPayload`（major ≤ 52）检查
+- 服务数据存于 `~/.vapeclient/vape-service.json`；端口被占用时自动向上探测空闲端口，启动失败静默降级不影响游戏
+
+**字库修复（重要）**
+
+- 修复中文界面缺字：原 noto.ttf 为子集字体，缺少 释 / 猛 / 卸 / 鞘 / 翅 / 观 / 晋 / 房 / 址 / 订 / 资 / 料 / 钥 共 13 个字形，其中「不释放物品」「自动卸下鞘翅」「重新装备鞘翅」等新翻译会显示空白/方框
+- 使用系统 NotoSansSC 重新子集化生成静态 TTF（去除可变字体表），覆盖全部 1250 个翻译字符，经 stb（游戏实际渲染引擎）验证 0 缺失；旧字体备份于 `noto.old.ttf.backup`
+
 ## v4.21.7 (2026-08-17)
 
 **本地化与界面修复**

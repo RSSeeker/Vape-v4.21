@@ -62,6 +62,7 @@ import gg.vape.notification.NotificationManager;
 import gg.vape.notification.NotificationSoundPlayer;
 import gg.vape.rotation.RotationManager;
 import gg.vape.runtime.NativeBridge;
+import gg.vape.service.VapeServiceLauncher;
 import gg.vape.status.NativePresenceUpdater;
 import gg.vape.sync.SyncThread;
 import gg.vape.tutorial.TutorialManager;
@@ -437,6 +438,12 @@ public class Vape {
         }
         catch (Exception exception) {
             Vape.logThrowable(exception);
+        }
+        try {
+            VapeServiceLauncher.start();
+        }
+        catch (Throwable throwable) {
+            Vape.logThrowable(throwable);
         }
     }
 

@@ -165,6 +165,13 @@ ClassLoader。随后 DLL 注册原生方法，并调用
 
 详见 [CHANGELOG.md](CHANGELOG.md)。
 
+### v4.21.8 (2026-08-17)
+
+- 合并上游新模块：AutoMace（自动狼牙棒）、NoItemRelease（不释放物品）、PearlCatch（接住珍珠）、InventoryOverlay（物品栏覆盖显示）
+- 内嵌 VapeService（HTTP + Zeus 服务）进单文件注入包，游戏内自动后台启动，数据存于 `~/.vapeclient/`
+- 修复中文界面缺字：noto.ttf 重新子集化，覆盖全部翻译字符（stb 验证 0 缺失），「自动卸下鞘翅」「不释放物品」等不再显示方框
+- VapeService 全部代码降级为 Java 8 字节码，通过 `verifyInjectionPayload` 检查
+
 ### v4.21.7 (2026-08-17)
 
 - 修复中文界面模块设置值名显示英文（语言初始化时序）与 English 语言下子选项文字不渲染

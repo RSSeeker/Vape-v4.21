@@ -11,13 +11,13 @@ import gg.vape.wrapper.impl.CPacketPlayerDigging;
 import gg.vape.wrapper.impl.Minecraft;
 import gg.vape.wrapper.impl.Packet;
 
-public class BlockHit
+public class NoItemRelease
 extends Mod {
     public final LimitValue allowedItems = LimitValue.create(this, "noitemrelease-alloweditems", "Allowed items", LimitValue.ALLOW_LIST_COLOR, new ItemLimitData("swords"), new ItemLimitData("food"), new ItemLimitData("potions"));
     private static final long MODULE_ID = -2073545794591715018L;
 
 
-    public BlockHit() {
+    public NoItemRelease() {
         super("NoItemRelease", (int)MODULE_ID, Category.OTHER);
         this.addValue(this.allowedItems);
     }
@@ -40,4 +40,3 @@ extends Mod {
         }
     }
 }
-
