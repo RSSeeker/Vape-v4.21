@@ -312,7 +312,10 @@ implements InventoryActionModule {
         }
         int totemSlot = this.findTotemSlot();
         if (totemSlot != -1) {
-            if (this.openInventory.getEffectiveValue().booleanValue() && !guiScreen.isInstance(MappedClasses.YS) && !silentEquipping) {
+            if (this.openInventory.getEffectiveValue().booleanValue()
+                    && !guiScreen.isInstance(MappedClasses.YS)
+                    && !guiScreen.isInstance(MappedClasses.n)
+                    && !silentEquipping) {
                 if (this.isDelayElapsed()) {
                     this.openInventory();
                 }
