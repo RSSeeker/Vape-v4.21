@@ -25,7 +25,8 @@ extends ModuleCategoryFrame {
             if (mod.getCategory().equals(Category.NONE)) continue;
             String string2 = StringUtils.y(mod.getName());
             String string3 = StringUtils.y(string);
-            if (mod.getCategory().equals(Category.OTHER) ? !string2.equals(string3) : !string2.contains(string3)) continue;
+            String string4 = StringUtils.y(Vape.INSTANCE.getFontSelector().W().s(mod.getName()));
+            if (mod.getCategory().equals(Category.OTHER) ? (!string2.equals(string3) && !string4.equals(string3)) : (!string2.contains(string3) && !string4.contains(string3))) continue;
             ModuleComponent moduleComponent = new ModuleComponent(this, mod);
             this.h(moduleComponent, new Object[0]);
             moduleComponent.buildValueComponents();

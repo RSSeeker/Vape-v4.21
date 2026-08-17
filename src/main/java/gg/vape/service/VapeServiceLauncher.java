@@ -70,11 +70,12 @@ public final class VapeServiceLauncher {
             Path dataFile = dataFile();
             FileStore store = new FileStore(dataFile);
 
-            int httpPort = findFreePort(DEFAULT_HTTP_PORT);
-            int zeusPort = findFreePort(DEFAULT_ZEUS_PORT);
+            String bindAddress = env("VAPE_BIND_ADDRESS", "127.0.0.1");
+            int httpPort = findFreePort(bindAddress, port("VAPE_HTTP_PORT", DEFAULT_HTTP_PORT));
+            int zeusPort = findFreePort(bindAddress, port("VAPE_ZEUS_PORT", DEFAULT_ZEUS_PORT));
 
-            LegacyHttpServer http = new LegacyHttpServer("127.0.0.1", httpPort, store);
-            ZeusServer zeus = new ZeusServer("127.0.0.1", zeusPort, store);
+            LegacyHttpServer http = new LegacyHttpServer(bindAddress, httpPort, store);
+            ZeusServer zeus = new ZeusServer(bindAddress, zeusPort, store);
 
             http.start();
             try {
@@ -90,8 +91,8 @@ public final class VapeServiceLauncher {
 
             httpServer = http;
             zeusServer = zeus;
-            System.out.println("[Vape] experimental service started: http://127.0.0.1:" + http.port()
-                    + ", zeus://127.0.0.1:" + zeus.port() + ", data=" + dataFile.toAbsolutePath());
+            System.out.println("[Vape] experimental service started: http://" + bindAddress + ":" + http.port()
+                    + ", zeus://" + bindAddress + ":" + zeus.port() + ", data=" + dataFile.toAbsolutePath());
         } catch (Throwable failure) {
             httpServer = null;
             zeusServer = null;
@@ -100,17 +101,43 @@ public final class VapeServiceLauncher {
     }
 
     private static Path dataFile() {
+        String configured = env("VAPE_DATA_FILE", null);
+        if (configured != null && !configured.trim().isEmpty()) {
+            return Paths.get(configured);
+        }
         String home = System.getProperty("user.home", ".");
         return Paths.get(home, ".vapeclient", "vape-service.json");
     }
 
-    private static int findFreePort(int preferred) {
+    private static String env(String name, String fallback) {
+        String value = System.getenv(name);
+        return value == null || value.trim().isEmpty() ? fallback : value.trim();
+    }
+
+    private static int port(String name, int fallback) {
+        String value = System.getenv(name);
+        if (value == null || value.trim().isEmpty()) {
+            return fallback;
+        }
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            if (parsed >= 1 && parsed <= 65535) {
+                return parsed;
+            }
+        } catch (NumberFormatException ignored) {
+            // fall through to default
+        }
+        System.out.println("[Vape] invalid " + name + "=" + value + ", using default " + fallback);
+        return fallback;
+    }
+
+    private static int findFreePort(String bindAddress, int preferred) {
         for (int offset = 0; offset < PORT_PROBE_LIMIT; offset++) {
             int candidate = preferred + offset;
             if (candidate > 65535) {
                 break;
             }
-            if (canBind(candidate)) {
+            if (canBind(bindAddress, candidate)) {
                 return candidate;
             }
         }
@@ -118,10 +145,10 @@ public final class VapeServiceLauncher {
         return preferred;
     }
 
-    private static boolean canBind(int port) {
+    private static boolean canBind(String bindAddress, int port) {
         try (java.net.ServerSocket socket = new java.net.ServerSocket()) {
             socket.setReuseAddress(false);
-            socket.bind(new java.net.InetSocketAddress("127.0.0.1", port));
+            socket.bind(new java.net.InetSocketAddress(bindAddress, port));
             return true;
         } catch (IOException exception) {
             return false;

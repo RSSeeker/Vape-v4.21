@@ -74,9 +74,11 @@ extends ModuleCategoryFrame {
                 continue;
             }
             String normalizedModuleName = StringUtils.y(mod.getName());
+            String translatedModuleName = StringUtils.y(
+                    Vape.INSTANCE.getFontSelector().W().s(mod.getName()));
             boolean matchesQuery = mod.getCategory().equals(Category.OTHER)
-                    ? normalizedModuleName.equals(normalizedQuery)
-                    : normalizedModuleName.contains(normalizedQuery);
+                    ? normalizedModuleName.equals(normalizedQuery) || translatedModuleName.equals(normalizedQuery)
+                    : normalizedModuleName.contains(normalizedQuery) || translatedModuleName.contains(normalizedQuery);
             if (!matchesQuery) {
                 continue;
             }
