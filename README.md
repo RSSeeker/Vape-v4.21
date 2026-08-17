@@ -168,9 +168,10 @@ ClassLoader。随后 DLL 注册原生方法，并调用
 ### v4.21.8 (2026-08-17)
 
 - 合并上游新模块：AutoMace（自动狼牙棒）、NoItemRelease（不释放物品）、PearlCatch（接住珍珠）、InventoryOverlay（物品栏覆盖显示）
-- 内嵌 VapeService（HTTP + Zeus 服务）进单文件注入包，游戏内自动后台启动，数据存于 `~/.vapeclient/`
-- 修复中文界面缺字：noto.ttf 重新子集化，覆盖全部翻译字符（stb 验证 0 缺失），「自动卸下鞘翅」「不释放物品」等不再显示方框
+- 内嵌 VapeService（HTTP + Zeus 服务）进单文件注入包，游戏内自动后台启动，数据存于 `~/.vapeclient/`；支持 `VAPE_BIND_ADDRESS` / `VAPE_HTTP_PORT` / `VAPE_ZEUS_PORT` / `VAPE_DATA_FILE` 环境变量配置
+- 修复中文界面缺字：noto.ttf 重新子集化并加粗（SemiBold），覆盖全部翻译字符（stb 验证 0 缺失）
 - VapeService 全部代码降级为 Java 8 字节码，通过 `verifyInjectionPayload` 检查
+- 补全翻译（PearlCatch / AutoMace / InventoryOverlay / KillAura 等）；模块搜索支持中文名；分类导航显示「其他」分类
 
 ### v4.21.7 (2026-08-17)
 
