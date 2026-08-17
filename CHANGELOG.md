@@ -19,7 +19,8 @@
 
 **修复**
 
-- 修复 AutoTotem 创造模式无法装备副手图腾：创造模式改用 PICKUP 拿起→放下（ClickType.SWAP 在创造模式被新版拒绝），通过 `player.abilities.isCreativeMode` 检测
+- 修复 AutoTotem 创造模式无法装备副手图腾：根因是物品栏打开判断未识别创造物品栏（GuiContainerCreative），导致每 tick 重复开背包、点击永不执行；现识别创造物品栏并改用 PICKUP 拿起→放下（ClickType.SWAP 在创造模式被新版拒绝）
+- 修复进程选择器长标题显示不全：加宽标题绘制区域，超长标题用 GDI+ 实测宽度二分截断并追加省略号（中英文混排精确）
 - 修复注入报「产品 DLL 拒绝套接字引导块」：消除登录死锁（token 本地生成）
 - 兼容性审计：AutoTotem 等 ≥1.21.4 模块在老版本自动跳过，不会误加载或崩溃
 
