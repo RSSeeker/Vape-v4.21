@@ -616,7 +616,7 @@ void ControllerUi::drawLoading(Gdiplus::Graphics& graphics) {
 void ControllerUi::drawCachePrompt(Gdiplus::Graphics& graphics) {
     drawLogo(graphics, 179.0f - 80.0f * logoPosition_);
     drawText(graphics, L"是否缓存本地文件以加快加载速度？",
-        180, 190, 464, 48, 15, Gdiplus::Color(255, 210, 207, 211), true,
+        180, 232, 464, 48, 15, Gdiplus::Color(255, 210, 207, 211), true,
         Gdiplus::StringAlignmentCenter);
     drawText(graphics, L"文件将存储于", 250, 245, 324, 22, 12,
         Gdiplus::Color(255, 112, 109, 113), false, Gdiplus::StringAlignmentCenter);
