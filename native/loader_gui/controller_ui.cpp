@@ -422,6 +422,34 @@ void ControllerUi::drawRoundedRect(Gdiplus::Graphics& graphics, float x, float y
     }
 }
 
+// Truncates a string to fit the given pixel width, appending an ellipsis.
+// Uses GDI+ text measurement when available; falls back to a simple
+// character-count estimate otherwise.
+std::wstring ControllerUi::ellipsize(const std::wstring& text, float fontSize,
+                                     float maxWidth) const {
+    if (text.empty() || maxWidth <= 0.0f) return text;
+    Gdiplus::FontFamily loaded[4];
+    int found = 0;
+    fonts_.GetFamilies(4, loaded, &found);
+    const Gdiplus::FontFamily* family = Gdiplus::FontFamily::GenericSansSerif();
+    for (int index = 0; index < found; ++index) {
+        wchar_t familyName[LF_FACESIZE]{};
+        loaded[index].GetFamilyName(familyName);
+        if (std::wstring(familyName).find(L"Semi") != std::wstring::npos) {
+            family = &loaded[index];
+            break;
+        }
+    }
+    Gdiplus::Font font(family, fontSize, Gdiplus::FontStyleRegular,
+        Gdiplus::UnitPixel);
+    // Estimate: average glyph width is roughly 0.62 * font size for this font.
+    const float perChar = std::max(1.0f, fontSize * 0.62f);
+    const size_t maxChars = static_cast<size_t>(maxWidth / perChar);
+    if (text.size() <= maxChars) return text;
+    if (maxChars <= 1) return text.substr(0, 1);
+    return text.substr(0, maxChars - 1) + L"\u2026";
+}
+
 void ControllerUi::drawText(Gdiplus::Graphics& graphics, const std::wstring& text,
                             float x, float y, float width, float height, float size,
                             Gdiplus::Color color, bool semibold,
@@ -569,11 +597,14 @@ void ControllerUi::drawMinecraftSelection(Gdiplus::Graphics& graphics) {
             process.alreadyInjected ? Gdiplus::Color(255, 28, 27, 28)
                 : hovered ? Gdiplus::Color(255, 38, 37, 38) : Gdiplus::Color(255, 31, 30, 31),
             Gdiplus::Color(255, 43, 42, 43));
-        drawText(graphics, process.title, 268, y + 4, 210, 22, 13,
-            Gdiplus::Color(255, 202, 199, 203));
+        // Title box: from 268 to the button right edge (572), minus a small
+        // margin. The previous 210px box clipped long titles.
+        const float titleWidth = 560.0f - 268.0f;
+        drawText(graphics, ellipsize(process.title, 13.0f, titleWidth), 268, y + 4,
+            titleWidth, 22, 13, Gdiplus::Color(255, 202, 199, 203));
         drawText(graphics, (process.alreadyInjected ? L"Already Injected [" : L"PID ") +
             std::to_wstring(process.pid) + (process.alreadyInjected ? L"]" : L""),
-            268, y + 24, 210, 18, 11,
+            268, y + 24, titleWidth, 18, 11,
             Gdiplus::Color(255, 105, 102, 106));
         y += 58.0f;
         if (y > 410.0f) break;
