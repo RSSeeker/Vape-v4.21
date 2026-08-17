@@ -14,11 +14,22 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 
 | File | Description |
 | --- | --- |
-| `Vape-v4.21.exe` | Single-file injector (embeds the complete DLL and Java payload, no extra files required) |
-| `Vape-v4.21Injector.exe` | Injector (does not embed the DLL; requires the Native DLL) |
-| `Vape-v4.21Native.dll` | x64 native bridge layer |
+| `Vape-v4.21.exe` | **The only artifact**: GUI single-file loader (embeds the complete DLL, Java payload and icon; no extra files required) |
+
+**Usage**:
+
+- Double-click to run the GUI (window title "Vape v4"): pick a Minecraft process and inject directly, no login needed
+- Command-line injector: `Vape-v4.21.exe -nogui [pid]` — without a pid it opens the process picker; with a pid it injects directly
+- After injection, press RIGHT SHIFT (default) in-game to open the module GUI
 
 ## Features
+
+**GUI loader (v4.21.9)**
+
+- Integrated the upstream VapeLoader graphical UI (GDI+, fully Chinese): process selection / injection progress / loading complete
+- Removed the login page and cache prompt: start directly into process selection, token generated locally
+- Embedded-DLL only: both the GUI and `-nogui` command-line modes extract the DLL from the exe resource; no external DLL is loaded
+- Window title "Vape v4", icon matches the product
 
 **Feature integration (v4.21.8)**
 
@@ -135,9 +146,7 @@ Main Java artifacts are located in `build/libs/`. To generate IntelliJ IDEA proj
 The complete test bundle outputs to `build/injection/`:
 
 ```text
-Vape-v4.21.exe           single-file injector (embeds the DLL)
-Vape-v4.21Injector.exe   injector (does not embed the DLL)
-Vape-v4.21Native.dll
+Vape-v4.21.exe   GUI single-file loader (embeds the DLL and all resources)
 README.md
 ```
 
@@ -145,12 +154,15 @@ The DLL embeds the Java injection JAR as an `RCDATA` resource, so placing a payl
 
 ## Running in an Isolated Environment
 
-The recommended way is to run the single-file injector `Vape-v4.21.exe` (which embeds the complete DLL and Java payload): after launching a supported Minecraft instance (including 1.21.11, 26.1.2, and 26.2 Fabric) or Lunar Client instance using a 64-bit JVM, run it directly from `build/injection/`; it shows an auto-refreshing Java game window picker (↑/↓ to select, Enter to inject, Esc to quit).
+After launching a supported Minecraft instance (including 1.21.11, 26.1.2, and 26.2 Fabric) or Lunar Client instance using a 64-bit JVM, run `Vape-v4.21.exe` to open the GUI, pick the Minecraft process and click to inject (no login, no external DLL).
 
-You can also inject by process ID from the command line:
+You can also inject from the command line:
 
 ```powershell
-.\Vape-v4.21Injector.exe <pid> .\Vape-v4.21Native.dll
+# Inject a specific process ID
+.\Vape-v4.21.exe -nogui <pid>
+# Without a pid: opens the auto-refreshing Java window picker (↑/↓ to select, Enter to inject, Esc to quit)
+.\Vape-v4.21.exe -nogui
 ```
 
 The injector only performs `LoadLibraryW`. Once loaded, the DLL waits for the JVM and Minecraft `Client thread`, and loads the embedded JAR via its context ClassLoader. Fabric instances add the payload to the Knot ClassLoader via the Fabric Launcher API. Subsequently, the DLL registers the native bridge methods and calls `gg.vape.runtime.NativeBridge.start()`. A new per-injection `vape421-native-<pid>-<timestamp>.log` is written under `.vapeclient\log\`.

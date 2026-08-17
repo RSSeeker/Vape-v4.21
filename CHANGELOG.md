@@ -1,10 +1,33 @@
 # 更新日志
 
+## v4.21.9 (2026-08-17)
+
+**GUI 单文件加载器**
+
+- 上游 VapeLoader（GDI+ 图形界面）集成进主产物：登录 / 浏览器授权 / 进程选择 / 注入进度界面，全中文化
+- 去掉登录页：启动即进入 Minecraft 进程选择，本地生成 token，无需外部服务
+- 去掉缓存询问页：注入完成直接显示加载完成页
+- 窗口标题「Vape v4」；图标与产品一致（vape-v4.21.ico 嵌入）
+- 移除缓存询问与外部 DLL 加载：GUI 与命令行模式均从内嵌资源（ID 422 RCDATA）解压注入，不加载外部 DLL
+- 支持命令行模式：`Vape-v4.21.exe -nogui [pid]` 启动命令行注入器（进程选择器 / 指定 PID）
+- 错误页去掉「联系支持」按钮，「复制错误」居中
+
+**产物精简**
+
+- 移除 Vape421Injector / Vape421InjectorStandalone 目标与单独 DLL 产物
+- 最终构建产物仅保留一个单文件：`Vape-v4.21.exe`（内嵌 DLL + 图标 + 全部资源）
+
+**修复**
+
+- 修复 AutoTotem 创造模式无法装备副手图腾：创造模式改用 PICKUP 拿起→放下（ClickType.SWAP 在创造模式被新版拒绝），通过 `player.abilities.isCreativeMode` 检测
+- 修复注入报「产品 DLL 拒绝套接字引导块」：消除登录死锁（token 本地生成）
+- 兼容性审计：AutoTotem 等 ≥1.21.4 模块在老版本自动跳过，不会误加载或崩溃
+
 ## v4.21.8 (2026-08-17)
 
 **上游新功能集成**
 
-- 合并上游 VapeV4.21 新模块：AutoMace（自动狼牙棒，含狼牙棒选择 / 眩晕猛击 / 瞄准范围 / 自动卸下鞘翅 / 仅猛击 / 显示快捷栏）、NoItemRelease（不释放物品）、PearlCatch（接住珍珠）
+- 合并上游 VapeV4.21 新模块：AutoMace（自动重锤，含重锤选择 / 眩晕猛击 / 瞄准范围 / 自动卸下鞘翅 / 仅猛击 / 显示快捷栏）、NoItemRelease（不释放物品）、PearlCatch（接住珍珠）
 - 合并 InventoryOverlay（物品栏覆盖显示）组件与其设置页，可在 HUD 设置页开启
 - 合并 Badlion 旧版按键事件队列（BadlionKeyBindingEventQueue / Badlion189InputQueueMappingTask），Badlion 客户端按键兼容
 - 移除与现有 Animations 模块重复的上游 BlockHit 模式文件（保留原 Animations 的 Manual / Predict / Auto / Lag 模式）

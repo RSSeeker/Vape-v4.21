@@ -14,12 +14,22 @@ Vape 4.21 的 Java 层与 Windows x64 原生桥接层研究性恢复工程，附
 
 | 文件 | 说明 |
 | --- | --- |
-| `Vape-v4.21.exe` | 单文件注入器（内嵌完整 DLL 与 Java 载荷，免附带文件） |
-| `Vape-v4.21Injector.exe` | 注入器（不内嵌 DLL，需配合 Native DLL 使用） |
-| `Vape-v4.21Loader.exe` | **GUI 版加载器**（GDI+ 界面：登录 / 浏览器授权 / 进程选择 / 注入进度），需与 `Vape-v4.21Native.dll` 同目录 |
-| `Vape-v4.21Native.dll` | x64 原生桥接层 |
+| `Vape-v4.21.exe` | **唯一产物**：GUI 单文件加载器（内嵌完整 DLL 与 Java 载荷 + 图标，免附带文件） |
+
+**使用方式**：
+
+- 双击运行 → GUI 界面（窗口标题「Vape v4」），直接选择 Minecraft 进程注入，无需登录
+- 命令行注入器：`Vape-v4.21.exe -nogui [pid]` —— 不带 pid 弹出进程选择器，带 pid 直接注入
+- 注入完成后游戏中按 右Shift（默认）打开功能界面
 
 ## 特性
+
+**GUI 加载器（v4.21.9）**
+
+- 集成上游 VapeLoader 图形界面（GDI+ 自绘，全中文）：进程选择 / 注入进度 / 加载完成
+- 去掉登录页与缓存询问页：启动即选进程注入，本地生成 token
+- 只使用内嵌 DLL：GUI 与 `-nogui` 命令行模式均从 exe 内嵌资源解压注入，不加载外部 DLL
+- 窗口标题「Vape v4」，图标与产品一致
 
 **功能集成（v4.21.8）**
 
@@ -141,9 +151,7 @@ VapeService 在游戏内自动启动，默认监听 `127.0.0.1:8080`（HTTP）�
 完整测试包输出到 `build/injection/`：
 
 ```text
-Vape-v4.21.exe           单文件注入器（内嵌 DLL）
-Vape-v4.21Injector.exe   注入器（不内嵌 DLL）
-Vape-v4.21Native.dll
+Vape-v4.21.exe   GUI 单文件加载器（内嵌 DLL 与全部资源）
 README.md
 ```
 
@@ -153,15 +161,17 @@ DLL 将 Java injection JAR 作为 `RCDATA` 嵌入，不要求另行放置 payloa
 
 ## 隔离环境运行
 
-推荐直接运行单文件注入器 `Vape-v4.21.exe`（内嵌完整 DLL 与 Java 载荷）：启动使用 64 位
-JVM 的受支持 Minecraft 实例（包括 1.21.11、26.1.2、26.2 Fabric）或 Lunar Client 实例后，
-在 `build/injection/` 中直接运行，会出现自动刷新的 Java 游戏窗口选择器（↑/↓ 选择，
-回车注入，Esc 退出）。
+启动使用 64 位 JVM 的受支持 Minecraft 实例（包括 1.21.11、26.1.2、26.2 Fabric）或 Lunar
+Client 实例后，直接运行 `Vape-v4.21.exe` 打开 GUI，选择 Minecraft 进程点击注入（无登录、
+无外部 DLL）。
 
-也可用命令行方式指定进程注入：
+也可用命令行方式注入：
 
 ```powershell
-.\Vape-v4.21Injector.exe <pid> .\Vape-v4.21Native.dll
+# 指定进程 ID 注入
+.\Vape-v4.21.exe -nogui <pid>
+# 不带 pid：弹出自动刷新的 Java 窗口选择器（↑/↓ 选择，回车注入，Esc 退出）
+.\Vape-v4.21.exe -nogui
 ```
 
 注入器仅执行 `LoadLibraryW`。DLL 加载后会等待 JVM 与 Minecraft `Client thread`，通过其
