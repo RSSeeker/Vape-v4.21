@@ -79,13 +79,13 @@ extends HudModuleConfigFrameBase {
         if (iconName != null) {
             float iconSize = 4.4f;
             ImageRenderer.drawImage(this.applyDefaultEditorAlpha(key.getTextColorAnimation().getInterpolatedColor()),
-                    (float)(x + width / 2.5 - 4.0), (float)y + 2.0f,
+                    (float)(x + width / 2.0 - 4.0), (float)y + 2.0f,
                     iconName, iconSize, iconSize, false);
         } else {
             String label = key == this.leftMouseButton ? "LMB"
                     : (key == this.rightMouseButton ? "RMB"
                     : (key == this.spacebar ? "" : KeyboardInput.getKeyName(keyBinding.getKeyCode())));
-            smoothFontRenderer.d(label, x + width / 2.5 - smoothFontRenderer.N(label) / 2.0,
+            smoothFontRenderer.d(label, x + width / 2.0 - smoothFontRenderer.N(label) / 2.0,
                     y + 3.0, this.applyDefaultEditorAlpha(key.getTextColorAnimation().getInterpolatedColor()));
         }
     }

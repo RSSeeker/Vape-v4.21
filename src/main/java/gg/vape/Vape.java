@@ -384,6 +384,7 @@ public class Vape {
         this.searchManager = new SearchManager();
         this.clientSettings = new gg.vape.config.ClientSettings();
         this.publicProfileSettings = new PublicProfileSettings();
+        this.getFontSelector().N((FontOption)this.publicProfileSettings.language.getValue());
         this.modManager = new ModManager();
         this.modManager.init();
         this.clientSettings.antiBot = this.modManager.getMod(AntiBot.class);
@@ -614,7 +615,7 @@ public class Vape {
     private void showLoadCompleteNotification() {
         ClientSettings clientSettingsModule = INSTANCE.getModManager().getMod(ClientSettings.class);
         if (clientSettingsModule.guiBindIndicator.getEffectiveValue().booleanValue()) {
-            this.notificationManager.showInfo("Finished Loading", "Press " + clientSettingsModule.getBind().getBindText() + " to open GUI", 5000L);
+            this.notificationManager.showInfo("加载完成", "按 " + clientSettingsModule.getBind().getBindText() + " 打开 GUI", 5000L);
         }
     }
 

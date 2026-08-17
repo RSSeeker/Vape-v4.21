@@ -66,7 +66,7 @@ extends FrameHeaderComponent {
     }
 
     public void showSettingsNavigation(boolean hideAllActions) {
-        this.showBackNavigation(this.getDefaultTitle() + " settings", hideAllActions);
+        this.showBackNavigation(gg.vape.Vape.INSTANCE.getFontSelector().W().s(this.getDefaultTitle()) + " " + gg.vape.Vape.INSTANCE.getFontSelector().W().s("Settings"), hideAllActions);
     }
 
 
@@ -128,7 +128,7 @@ extends FrameHeaderComponent {
     public void showBackNavigation(String title, boolean hideAllActions) {
         this.navigationButton.setIconResource("moduleback");
         this.navigationButton.setIconScale(0.85f);
-        this.titleLabel.setText(title);
+        this.titleLabel.setText(gg.vape.Vape.INSTANCE.getFontSelector().W().s(title));
         if (hideAllActions) {
             this.closeActionLayout.setVisible(true);
         }

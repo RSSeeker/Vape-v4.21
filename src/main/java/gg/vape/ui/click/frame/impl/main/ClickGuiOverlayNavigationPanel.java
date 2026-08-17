@@ -1,5 +1,6 @@
 package gg.vape.ui.click.frame.impl.main;
 
+import gg.vape.Vape;
 import gg.vape.ui.click.frame.FrameHeaderComponent;
 import gg.vape.ui.click.frame.impl.main.ClickGuiContentPanel;
 import gg.vape.ui.click.frame.impl.main.ClickGuiMainFrame;
@@ -177,7 +178,7 @@ extends ClickGuiContentPanel {
             this.addChildren(this.sidecar);
         }
         Runnable runnable = this.specStack.size() > 1 ? this::pop : null;
-        this.sidecar.setTitle(clickGuiOverlaySpec.getTitle());
+        this.sidecar.setTitle(Vape.INSTANCE.getFontSelector().W().s(clickGuiOverlaySpec.getTitle()));
         this.sidecar.setLeadingIconKey(clickGuiOverlaySpec.getSidecarIcon());
         this.sidecar.setBackAction(runnable);
         this.contentPanel.removeMarkedChildren();

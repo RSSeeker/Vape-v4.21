@@ -292,7 +292,7 @@ implements FrameStateSerializable {
         this.n$src$V$1fa61rj();
         super.H();
         if (this.j$src$Lgg_vape_ui_click_frame_FrameHeaderComponent_$175vsfc() != null && this.IS.V$src$Z$1xhop3l()) {
-            this.IS.setLabelText(this.getName());
+            this.IS.setLabelText(gg.vape.Vape.INSTANCE.getFontSelector().W().s(this.getName()));
             this.IS.o(this.IS.A() + 10.0 + 6.0);
             this.IS.Y(12.0);
             this.IS.K(this.y$src$D$1fg7rv0() - this.IS.A() / 4.0);

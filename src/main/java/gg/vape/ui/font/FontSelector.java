@@ -23,16 +23,21 @@ public class FontSelector {
 
     public void N(FontOption fontOption) {
         this.r = fontOption;
-        ClientSettings.INSTANCE.requestFrameLayoutRefresh();
+        // ClientSettings may not be initialized yet when the language is
+        // applied early during Vape.initializeManagers(); skip the layout
+        // refresh in that case.
+        if (ClientSettings.INSTANCE != null) {
+            ClientSettings.INSTANCE.requestFrameLayoutRefresh();
+        }
     }
 
     static {
-        String[] stringArray = new String[]{"French", "English", "Portuguese", "Spanish", "Chinese"};
-        j = new IdentityFontOption(stringArray[1]);
-        S = new FontOptionVariantC(stringArray[3]);
-        c = new NotoFontOption(stringArray[4]);
-        a = new FontOptionVariantA(stringArray[2]);
-        P = new FontOptionVariantB(stringArray[0]);
+        String[] stringArray = new String[]{"English", "Chinese"};
+        j = new IdentityFontOption(stringArray[0]);
+        S = new FontOptionVariantC("Spanish");
+        c = new NotoFontOption(stringArray[1]);
+        a = new FontOptionVariantA("Portuguese");
+        P = new FontOptionVariantB("French");
     }
 
     public FontSelector() {

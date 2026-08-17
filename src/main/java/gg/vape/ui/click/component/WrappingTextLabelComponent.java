@@ -49,6 +49,7 @@ extends SimpleTextLabelComponent {
 
     private int renderParagraph(String text, double yOffset) {
         SmoothFontRenderer fontRenderer = Vape.INSTANCE.getFontManager().W(this.fontScale, false);
+        text = Vape.INSTANCE.getFontSelector().W().s(text);
         if (text.contains(" ")) {
             String[] words = text.split(" ");
             double currentLineWidth = 0.0;

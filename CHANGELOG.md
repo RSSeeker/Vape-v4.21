@@ -1,5 +1,22 @@
 # 更新日志
 
+## v4.21.7 (2026-08-17)
+
+**本地化与界面修复**
+
+- 修复中文界面下模块设置值名（如完美挥击、需要鼠标按下等）显示英文：语言初始化提前到启动阶段，不再受 GUI 渲染时序影响
+- 修复切换到 English 语言后模块子选项文字不渲染：值行换行缓存随语言切换失效重建
+- 语言选项精简为「中文 / English」两种
+- 大量补全翻译：SilentAura/各类模块值名与提示、AntiDebuff、MLG 水桶、BlockIn 黑名单、CrystalAura 效率/防自杀、完整性检查、NBT 标签、使用好友、重置角度、在线状态页（Error establishing / Registration offline / 重连倒计时）等
+- 换行提示文本整串翻译（`WrappingTextLabelComponent` 先翻译再换行）
+- 修复 Frame 设置导航标题（「Profiles settings / Friends settings」→「配置 设置 / 好友 设置」）与 Overlay 标题翻译
+- 列表 / 白名单条目不再经过 GUI 翻译表，显示配置原文（默认例子显示英文 Zombie / Skeleton / Creeper / Spider，输入什么显示什么）
+- 注入完成通知、在线重连文案中文化
+
+**按键显示（Keystrokes）**
+
+- WASD / LMB / RMB 等按键文字与图标在按键格内居中显示
+
 ## v4.21.6 (2026-08-15)
 
 **渲染修复**

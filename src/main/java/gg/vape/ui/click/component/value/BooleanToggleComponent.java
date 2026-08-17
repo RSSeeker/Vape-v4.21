@@ -31,6 +31,7 @@ implements BooleanStateAdapter<BooleanToggleComponent> {
     protected double fontScale;
     List<String> wrappedLabelLines;
     private String wrappedLabelSource;
+    private String wrappedLabelLanguage;
     private final float knobSize = 4.0f;
     private CompactListValueComponent compactListComponent;
     protected Color labelColor;
@@ -213,6 +214,15 @@ implements BooleanStateAdapter<BooleanToggleComponent> {
 
     private List<String> getWrappedLabelLines() {
         String currentLabel = this.getLabel();
+        String currentLanguage = Vape.INSTANCE.getFontSelector().W().getSerializedName();
+        if (this.wrappedLabelLanguage == null || !currentLanguage.equals(this.wrappedLabelLanguage)) {
+            // The cached wrapped lines were produced under a different
+            // language (e.g. switching to English renders ASCII labels);
+            // drop the cache so the label is re-translated with the new
+            // language instead of rendering stale text with the wrong font.
+            this.wrappedLabelSource = "";
+            this.wrappedLabelLanguage = currentLanguage;
+        }
         if (currentLabel.equals(this.wrappedLabelSource)) {
             return this.wrappedLabelLines;
         }
