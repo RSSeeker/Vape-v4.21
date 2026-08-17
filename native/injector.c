@@ -44,38 +44,6 @@ static void print_last_error(const wchar_t *operation) {
     }
 }
 
-static int absolute_existing_file(
-        const wchar_t *input, wchar_t *output, DWORD capacity) {
-    DWORD length = GetFullPathNameW(input, capacity, output, NULL);
-    DWORD attributes;
-    if (length == 0 || length >= capacity) {
-        return 0;
-    }
-    attributes = GetFileAttributesW(output);
-    return attributes != INVALID_FILE_ATTRIBUTES
-            && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
-}
-
-static int default_dll_path(wchar_t *output, DWORD capacity) {
-    DWORD length = GetModuleFileNameW(NULL, output, capacity);
-    DWORD attributes;
-    wchar_t *file_name;
-    if (length == 0 || length >= capacity) {
-        return 0;
-    }
-    file_name = wcsrchr(output, L'\\');
-    file_name = file_name == NULL ? output : file_name + 1;
-    if ((size_t)(file_name - output) + wcslen(L"Vape421Native.dll") + 1
-            > capacity) {
-        return 0;
-    }
-    wcscpy(file_name, L"Vape-v4.21Native.dll");
-    attributes = GetFileAttributesW(output);
-    return attributes != INVALID_FILE_ATTRIBUTES
-            && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
-}
-
-#ifndef VAPE421_NO_EMBED
 static int materialize_embedded_dll(
         DWORD process_id, wchar_t *output, DWORD capacity) {
     HRSRC resource;
@@ -137,23 +105,6 @@ cleanup:
         DeleteFileW(output);
     }
     return result;
-}
-#endif
-
-static int resolve_dll_path(const wchar_t *explicit_path, DWORD process_id,
-        wchar_t *output, DWORD capacity) {
-    if (explicit_path != NULL
-            && absolute_existing_file(explicit_path, output, capacity)) {
-        return 1;
-    }
-    if (default_dll_path(output, capacity)) {
-        return 1;
-    }
-#ifndef VAPE421_NO_EMBED
-    return materialize_embedded_dll(process_id, output, capacity);
-#else
-    return 0;
-#endif
 }
 
 static int is_java_process(const wchar_t *executable) {
@@ -537,58 +488,40 @@ cleanup:
 
 static void usage(const wchar_t *program) {
     fwprintf(stderr,
-            L"用法: %ls [Vape-v4.21Native.dll]\n"
-            L"      %ls <minecraft-pid> <Vape-v4.21Native.dll>\n"
+            L"用法: %ls\n"
+            L"      %ls <minecraft-pid>\n"
             L"不指定 PID 时，会显示自动刷新的 Java 窗口选择器。\n"
-            L"注入的 DLL 会自动加载并启动 Java 产品。\n",
+            L"本程序始终使用内嵌的 Vape-v4.21Native.dll，不加载外部 DLL。\n"
+            L"内嵌 DLL 会解压到 %%TEMP%%\\Vape421Recovery 后注入。\n",
             program, program);
-#ifndef VAPE421_NO_EMBED
-    fwprintf(stderr,
-            L"当未提供 DLL 且可执行文件旁没有 DLL 时，会从自身内嵌资源\n"
-            L"解压 Vape-v4.21Native.dll 到 %%TEMP%%\\Vape421Recovery 后使用。\n");
-#else
-    fwprintf(stderr,
-            L"此版本不内嵌 DLL，请将 Vape-v4.21Native.dll 放在本程序旁。\n");
-#endif
 }
 
-int wmain(int argc, wchar_t **argv) {
+int console_main(int argc, wchar_t **argv) {
     wchar_t dll_path[MAX_PATH];
     wchar_t *end = NULL;
     unsigned long process_id = 0;
-    const wchar_t *explicit_dll = NULL;
     /* Render window titles (often non-ASCII) as UTF-8 in the selector. */
     SetConsoleOutputCP(CP_UTF8);
     _setmode(_fileno(stdout), _O_U8TEXT);
     _setmode(_fileno(stderr), _O_U8TEXT);
     setlocale(LC_ALL, ".UTF-8");
-    if (argc < 1 || argc > 3) {
+    if (argc > 2) {
         usage(argv[0]);
         return 2;
     }
-    if (argc == 3) {
-        process_id = wcstoul(argv[1], &end, 10);
-        if (process_id == 0 || end == argv[1] || *end != L'\0') {
-            fwprintf(stderr, L"无效的进程 ID: %ls\n", argv[1]);
+    if (argc == 1) {
+        process_id = wcstoul(argv[0], &end, 10);
+        if (process_id == 0 || end == argv[0] || *end != L'\0') {
+            fwprintf(stderr, L"无效的进程 ID: %ls\n", argv[0]);
             return 2;
         }
-        if (!absolute_existing_file(argv[2], dll_path, MAX_PATH)) {
-            fwprintf(stderr, L"DLL 不存在: %ls\n", argv[2]);
-            return 2;
-        }
-    } else if (argc == 2) {
-        explicit_dll = argv[1];
     }
-    if (argc == 3) {
-        explicit_dll = argv[2];
-    }
-    if (!resolve_dll_path(explicit_dll, (DWORD)process_id,
-            dll_path, MAX_PATH)) {
-        fwprintf(stderr, L"注入器旁未找到 Vape421Native.dll。\n");
-        usage(argv[0]);
+    /* Always extract the embedded DLL; never load an external copy. */
+    if (!materialize_embedded_dll((DWORD)process_id, dll_path, MAX_PATH)) {
+        fwprintf(stderr, L"无法解压内嵌的 Vape-v4.21Native.dll。\n");
         return 2;
     }
-    if (argc != 3) {
+    if (argc != 1) {
         process_id = (unsigned long)select_process(dll_path);
         if (process_id == 0) {
             return 1;

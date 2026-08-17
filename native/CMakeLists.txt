@@ -72,6 +72,7 @@ file(GLOB VAPE421_LOADER_GUI_SOURCES
 )
 add_executable(Vape421LoaderGui WIN32
         ${VAPE421_LOADER_GUI_SOURCES}
+        "${CMAKE_CURRENT_SOURCE_DIR}/injector.c"
         "${VAPE421_LOADER_GUI_DIR}/assets.rc"
         "${VAPE421_LOADER_GUI_DIR}/icon.rc"
         "${VAPE421_LOADER_GUI_DIR}/app.manifest"

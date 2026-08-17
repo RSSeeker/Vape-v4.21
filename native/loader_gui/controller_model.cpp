@@ -261,25 +261,12 @@ bool ControllerModel::injectMinecraft(std::uint32_t processId) {
         return false;
     }
     std::wstring error;
-    std::wstring dllPath = executableDirectory()
-            + L"\\Vape-v4.21Native.dll";
-    const std::wstring legacyDllPath = executableDirectory()
-            + L"\\Vape421Native.dll";
-    if (GetFileAttributesW(dllPath.c_str()) == INVALID_FILE_ATTRIBUTES
-            && GetFileAttributesW(legacyDllPath.c_str()) != INVALID_FILE_ATTRIBUTES) {
-        dllPath = legacyDllPath;
-    }
-    if (GetFileAttributesW(dllPath.c_str()) == INVALID_FILE_ATTRIBUTES) {
-        // Single-file mode: extract the embedded DLL resource (ID 422, RCDATA)
-        // next to the Loader so the product DLL can be injected from it.
-        std::wstring extracted;
-        if (materializeEmbeddedDll(processId, extracted)) {
-            dllPath = extracted;
-        } else {
-            setStatus(L"加载器旁未找到 Vape-v4.21Native.dll");
-            setPage(ControllerPage::Error);
-            return false;
-        }
+    // Always use the embedded DLL resource; never load an external copy.
+    std::wstring dllPath;
+    if (!materializeEmbeddedDll(processId, dllPath)) {
+        setStatus(L"无法解压内嵌的 Vape-v4.21Native.dll");
+        setPage(ControllerPage::Error);
+        return false;
     }
     if (!InjectionCoordinator::injectProductDll(processId, dllPath, service_.port(),
             serviceHttpBase, error)) {
