@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <chrono>
 #include <fstream>
+#include <random>
 #include <sstream>
 #include <thread>
 #include <unordered_map>
@@ -571,25 +572,26 @@ void ControllerModel::submitCredentialAuthentication() {
 }
 
 bool ControllerModel::loginToService() {
-    // Register an anonymous account with the local Service. The Service
-    // auto-creates accounts on first use, so any username works. Returns
-    // whether a token was obtained; never changes the current page.
-    const std::wstring usernameValue = L"Player" + std::to_wstring(
-        static_cast<unsigned long>(GetCurrentProcessId()));
-    const std::string usernameUtf8 = utf8(usernameValue);
-    const std::string response = httpPostJson(serviceHttpBase_, L"/loader/login",
-        "{\"username\":\"" + jsonEscape(usernameUtf8) + "\"}");
-    const std::string token = jsonString(response, "token");
+    // Generate a local access token directly. The in-game Service used to be
+    // the token source, but it only exists after injection (which needs the
+    // token first), so depending on it created a chicken-and-egg deadlock.
+    // The bootstrap only requires a non-empty token; online features inside
+    // the game register their own account with the loopback Service.
+    std::string token;
+    token.reserve(48);
+    std::mt19937 generator(static_cast<unsigned int>(
+        std::chrono::steady_clock::now().time_since_epoch().count())
+        ^ static_cast<unsigned int>(GetCurrentProcessId()));
+    const char alphabet[] = "0123456789abcdef";
+    for (int i = 0; i < 48; ++i) {
+        token.push_back(alphabet[generator() % 16]);
+    }
     {
         std::lock_guard lock(mutex_);
-        if (!token.empty()) {
-            accessToken_ = token;
-            status_.clear();
-            return true;
-        }
-        status_ = L"等待游戏内服务（请先启动 Minecraft）";
-        return false;
+        accessToken_ = token;
+        status_.clear();
     }
+    return true;
 }
 
 void ControllerModel::autoLoginToService() {
