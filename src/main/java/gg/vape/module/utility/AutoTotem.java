@@ -35,6 +35,7 @@ import gg.vape.wrapper.impl.GuiScreen;
 import gg.vape.wrapper.impl.ItemStack;
 import gg.vape.wrapper.impl.KeyBinding;
 import gg.vape.wrapper.impl.Minecraft;
+import gg.vape.wrapper.impl.ModelPlayer;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Queue;
@@ -321,7 +322,19 @@ implements InventoryActionModule {
             if (inInventoryScreen && !this.inventoryOpen) {
                 this.inventoryOpen = true;
             }
-            this.queueClick(localPlayer.F$src$Lgg_vape_wrapper_impl_Container_$152y6lm().getWindowId(), totemSlot, 40, 2);
+            int windowId = localPlayer.F$src$Lgg_vape_wrapper_impl_Container_$152y6lm().getWindowId();
+            if (new ModelPlayer(localPlayer.getObject()).isCreativeMode()) {
+                // Creative mode rejects ClickType.SWAP to the offhand slot in
+                // newer versions (it copies instead of moving, and the offhand
+                // swap is not applied server side). Use a pickup/place pair:
+                // grab the totem, then place it into the offhand (45). In
+                // creative the source slot keeps its copy, so no third click
+                // is needed; the offhand is empty before equipping.
+                this.queueClick(windowId, totemSlot, 0, 0);
+                this.queueClick(windowId, 45, 0, 0);
+            } else {
+                this.queueClick(windowId, totemSlot, 40, 2);
+            }
             this.resetClickTimer();
         }
         if (this.inventoryOpen && this.clickQueue.isEmpty()) {
