@@ -332,10 +332,6 @@ implements InventoryActionModule {
             boolean creative = guiScreen.isInstance(MappedClasses.n)
                     || localPlayer.C$src$Lgg_vape_wrapper_impl_ModelPlayer_$19uhx86().isCreativeMode();
             if (creative) {
-                Vape.debugLog("AutoTotem creative equip: slot=" + totemSlot
-                        + " win=" + windowId + " gui="
-                        + (guiScreen.isNull() ? "none" : guiScreen.getObject().getClass().getName())
-                        + " offhand=" + itemStack.isNull());
                 this.queueClick(windowId, totemSlot, 0, 0);
                 this.queueClick(windowId, 45, 0, 0);
             } else {
