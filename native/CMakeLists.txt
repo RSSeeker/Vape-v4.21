@@ -59,34 +59,8 @@ target_compile_definitions(Vape421Native PRIVATE
 target_compile_options(Vape421Native PRIVATE /W4 /utf-8)
 target_link_libraries(Vape421Native PRIVATE user32 ws2_32)
 
-set(VAPE421_INJECTOR_RC
-        "${CMAKE_CURRENT_BINARY_DIR}/generated/injector_payload.rc")
-add_custom_command(
-        OUTPUT "${VAPE421_INJECTOR_RC}"
-        COMMAND "${CMAKE_COMMAND}"
-                "-DDLL_PATH=$<TARGET_FILE:Vape421Native>"
-                "-DRC_OUT=${VAPE421_INJECTOR_RC}"
-                -P "${CMAKE_CURRENT_SOURCE_DIR}/embed_dll.cmake"
-        DEPENDS Vape421Native
-        COMMENT "Embedding Vape421Native.dll into the standalone injector")
-add_executable(Vape421Injector injector.c
-        "${VAPE421_INJECTOR_RC}"
-        injector_icon.rc)
-target_compile_definitions(Vape421Injector PRIVATE
-        WIN32_LEAN_AND_MEAN
-        _CRT_SECURE_NO_WARNINGS)
-target_compile_options(Vape421Injector PRIVATE /W4 /utf-8)
-
-add_executable(Vape421InjectorStandalone injector.c)
-target_compile_definitions(Vape421InjectorStandalone PRIVATE
-        WIN32_LEAN_AND_MEAN
-        _CRT_SECURE_NO_WARNINGS
-        VAPE421_NO_EMBED)
-target_compile_options(Vape421InjectorStandalone PRIVATE /W4 /utf-8)
-
-# GUI loader (upstream VapeLoader): login -> process selection -> inject.
-# Talks to Vape421Native.dll through the Vape421BootstrapV2 shared-memory ABI
-# (byte-identical to loader_bootstrap.c on the DLL side).
+# GUI loader (upstream VapeLoader): process selection -> inject. The only
+# shipped artifact is this single-file exe with the product DLL embedded.
 # NOTE: sources are collected via file(GLOB) instead of being listed inside
 # add_executable(); a CMake 4.3 VS-generator quirk misclassifies .cpp sources
 # that share a target with configure_file()-generated .rc sources as <None>.
@@ -99,6 +73,7 @@ file(GLOB VAPE421_LOADER_GUI_SOURCES
 add_executable(Vape421LoaderGui WIN32
         ${VAPE421_LOADER_GUI_SOURCES}
         "${VAPE421_LOADER_GUI_DIR}/assets.rc"
+        "${VAPE421_LOADER_GUI_DIR}/icon.rc"
         "${VAPE421_LOADER_GUI_DIR}/app.manifest"
 )
 target_compile_features(Vape421LoaderGui PRIVATE cxx_std_17)
@@ -150,27 +125,20 @@ if(BUILD_TESTING)
             COMMAND Vape421BootstrapTest invalid)
 endif()
 
-set_property(TARGET Vape421Native Vape421Injector Vape421InjectorStandalone
-        Vape421LoaderGui
+set_property(TARGET Vape421Native Vape421LoaderGui
         PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
 set_target_properties(Vape421Native PROPERTIES
         OUTPUT_NAME "Vape-v4.21Native")
-set_target_properties(Vape421Injector PROPERTIES
-        OUTPUT_NAME "Vape-v4.21")
-set_target_properties(Vape421InjectorStandalone PROPERTIES
-        OUTPUT_NAME "Vape-v4.21Injector")
 set_target_properties(Vape421LoaderGui PROPERTIES
-        OUTPUT_NAME "Vape-v4.21Loader")
+        OUTPUT_NAME "Vape-v4.21")
 
-set_target_properties(Vape421Native Vape421Injector
-        Vape421InjectorStandalone Vape421LoaderGui PROPERTIES
+set_target_properties(Vape421Native Vape421LoaderGui PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
 foreach(configuration Debug Release RelWithDebInfo MinSizeRel)
     string(TOUPPER "${configuration}" configuration_upper)
-    set_target_properties(Vape421Native Vape421Injector
-            Vape421InjectorStandalone Vape421LoaderGui PROPERTIES
+    set_target_properties(Vape421Native Vape421LoaderGui PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY_${configuration_upper}
             "${CMAKE_BINARY_DIR}/dist")
 endforeach()

@@ -238,7 +238,7 @@ bool ControllerModel::injectMinecraft(std::uint32_t processId) {
         serviceHttpBase = utf8(serviceHttpBase_);
     }
     if (!service_.start(token, cachePreference_, true)) {
-        setStatus(L"Failed to create the Loader controller socket");
+        setStatus(L"无法创建加载器控制套接字");
         setPage(ControllerPage::Error);
         return false;
     }
@@ -258,7 +258,7 @@ bool ControllerModel::injectMinecraft(std::uint32_t processId) {
         if (materializeEmbeddedDll(processId, extracted)) {
             dllPath = extracted;
         } else {
-            setStatus(L"Vape-v4.21Native.dll was not found beside the Loader");
+            setStatus(L"加载器旁未找到 Vape-v4.21Native.dll");
             setPage(ControllerPage::Error);
             return false;
         }
@@ -266,7 +266,7 @@ bool ControllerModel::injectMinecraft(std::uint32_t processId) {
     if (!InjectionCoordinator::injectProductDll(processId, dllPath, service_.port(),
             serviceHttpBase, error)) {
         service_.stop();
-        setStatus(error.empty() ? L"Failed to inject Vape421Native.dll" : error);
+        setStatus(error.empty() ? L"注入 Vape421Native.dll 失败" : error);
         setPage(ControllerPage::Error);
         return false;
     }
@@ -408,7 +408,7 @@ void ControllerModel::beginBrowserAuthentication(void* windowHandle) {
             "edition=v4&hwid=" + narrowHwid);
         if (challenge.size() != 40 || cancelAuth_) {
             if (!cancelAuth_) {
-                setStatus(L"Unable to start browser login");
+                setStatus(L"无法启动浏览器登录");
                 setPage(ControllerPage::Login);
             }
             PostMessageW(window, WM_CONTROLLER_STATE, 0, 0);
@@ -436,7 +436,7 @@ void ControllerModel::beginBrowserAuthentication(void* windowHandle) {
                 break;
             }
             if (status == "timed out") {
-                setStatus(L"Browser login timed out");
+                setStatus(L"浏览器登录超时");
                 setPage(ControllerPage::Login);
                 break;
             }
@@ -508,7 +508,7 @@ void ControllerModel::tick() {
                                  : std::wstring(detail.begin(), detail.end()));
         setPage(ControllerPage::Error);
     } else if (loadingElapsedSeconds() >= 90.0) {
-        setStatus(L"Native loading timed out");
+        setStatus(L"原生加载超时");
         setPage(ControllerPage::Error);
     }
 }
@@ -534,14 +534,14 @@ void ControllerModel::submitCredentialAuthentication() {
     const std::wstring usernameValue = username_;
     const std::string usernameUtf8 = utf8(usernameValue);
     if (usernameUtf8.empty()) {
-        setStatus(L"Enter a username");
+        setStatus(L"请输入用户名");
         return;
     }
     const std::string response = httpPostJson(serviceHttpBase_, L"/loader/login",
         "{\"username\":\"" + jsonEscape(usernameUtf8) + "\"}");
     const std::string token = jsonString(response, "token");
     if (token.empty()) {
-        setStatus(L"Unable to log in to the local Service");
+        setStatus(L"无法登录本地服务");
         return;
     }
     {
@@ -568,7 +568,7 @@ void ControllerModel::autoLoginToService() {
             accessToken_ = token;
             status_.clear();
         } else {
-            status_ = L"Waiting for the in-game Service (start Minecraft first)";
+            status_ = L"等待游戏内服务（请先启动 Minecraft）";
         }
     }
     refreshMinecraftProcesses();

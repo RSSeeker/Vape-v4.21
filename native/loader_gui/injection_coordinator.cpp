@@ -106,22 +106,22 @@ bool InjectionCoordinator::injectProductDll(std::uint32_t processId,
     const std::wstring& dllPath, std::uint16_t controllerPort,
     const std::string& serviceHttpBase, std::wstring& error) {
     if (controllerPort == 0) {
-        error = L"Loader controller port is unavailable";
+        error = L"加载器控制端口不可用";
         return false;
     }
     if (serviceHttpBase.empty() ||
             serviceHttpBase.size() >= sizeof(Vape421BootstrapV2::serviceHttpBase)) {
-        error = L"VAPE_ONLINE_BASE_URL is too long for the bootstrap";
+        error = L"VAPE_ONLINE_BASE_URL 对引导块来说过长";
         return false;
     }
     std::string serviceZeusHost;
     std::uint16_t serviceZeusPort = 0;
     if (!zeusEndpoint(serviceZeusHost, serviceZeusPort)) {
-        error = L"VAPE_ZEUS_ADDRESS must use host:port format";
+        error = L"VAPE_ZEUS_ADDRESS 必须使用 host:port 格式";
         return false;
     }
     if (GetFileAttributesW(dllPath.c_str()) == INVALID_FILE_ATTRIBUTES) {
-        error = L"Vape421Native.dll was not found beside the Loader";
+        error = L"加载器旁未找到 Vape421Native.dll";
         return false;
     }
 
@@ -130,7 +130,7 @@ bool InjectionCoordinator::injectProductDll(std::uint32_t processId,
     HANDLE mapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE,
         0, sizeof(Vape421BootstrapV2), mappingName.c_str());
     if (!mapping || GetLastError() == ERROR_ALREADY_EXISTS) {
-        error = L"A Loader bootstrap already exists for this process";
+        error = L"该进程已存在加载器引导块";
         if (mapping) CloseHandle(mapping);
         return false;
     }
@@ -139,7 +139,7 @@ bool InjectionCoordinator::injectProductDll(std::uint32_t processId,
     HANDLE ack = CreateEventW(nullptr, TRUE, FALSE, ackName.c_str());
     const bool ackAlreadyExists = ack && GetLastError() == ERROR_ALREADY_EXISTS;
     if (!block || !ack || ackAlreadyExists) {
-        error = L"Failed to create the Loader bootstrap objects";
+        error = L"无法创建加载器引导对象";
         if (block) UnmapViewOfFile(block);
         if (ack) CloseHandle(ack);
         CloseHandle(mapping);
@@ -171,40 +171,40 @@ bool InjectionCoordinator::injectProductDll(std::uint32_t processId,
     process = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION |
         PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, processId);
     if (!process) {
-        error = L"Failed to open Minecraft process";
+        error = L"无法打开 Minecraft 进程";
         goto cleanup;
     }
     remotePath = VirtualAllocEx(process, nullptr, pathBytes,
         MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!remotePath || !WriteProcessMemory(process, remotePath, dllPath.c_str(),
             pathBytes, &written) || written != pathBytes) {
-        error = L"Failed to write the Product DLL path";
+        error = L"无法写入产品 DLL 路径";
         goto cleanup;
     }
     kernel32 = GetModuleHandleW(L"kernel32.dll");
     loadLibrary = kernel32 == nullptr ? nullptr
         : GetProcAddress(kernel32, "LoadLibraryW");
     if (!loadLibrary) {
-        error = L"Failed to resolve LoadLibraryW";
+        error = L"无法解析 LoadLibraryW";
         goto cleanup;
     }
     remoteThread = CreateRemoteThread(process, nullptr, 0,
         reinterpret_cast<LPTHREAD_START_ROUTINE>(loadLibrary), remotePath, 0, nullptr);
     if (!remoteThread) {
-        error = L"Failed to start Product DLL loading";
+        error = L"启动产品 DLL 加载失败";
         goto cleanup;
     }
     if (WaitForSingleObject(remoteThread, 30000) != WAIT_OBJECT_0) {
-        error = L"Product DLL loading timed out";
+        error = L"产品 DLL 加载超时";
         goto cleanup;
     }
     remoteThreadCompleted = true;
     if (WaitForSingleObject(ack, 30000) != WAIT_OBJECT_0) {
-        error = L"Product DLL did not acknowledge the socket bootstrap";
+        error = L"产品 DLL 未确认套接字引导块";
         goto cleanup;
     }
     if (block->status != VAPE421_BOOTSTRAP_STATUS_CONSUMED) {
-        error = L"Product DLL rejected the socket bootstrap";
+        error = L"产品 DLL 拒绝了套接字引导块";
         goto cleanup;
     }
     success = true;
@@ -226,20 +226,20 @@ bool InjectionCoordinator::injectReflectiveDll(std::uint32_t processId,
     const std::wstring& dllPath, std::uint16_t controllerPort, std::wstring& error) {
     std::ifstream input(dllPath, std::ios::binary);
     if (!input) {
-        error = L"vape_v4.dll was not found beside the controller";
+        error = L"控制器旁未找到 vape_v4.dll";
         return false;
     }
     std::vector<unsigned char> image((std::istreambuf_iterator<char>(input)), {});
     const DWORD loaderRva = reflectiveLoaderRva(image);
     if (!loaderRva) {
-        error = L"Reflective loader export was not found";
+        error = L"未找到反射加载器导出";
         return false;
     }
     enableDebugPrivilege();
     HANDLE process = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION |
         PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, processId);
     if (!process) {
-        error = L"Failed to open Minecraft process";
+        error = L"无法打开 Minecraft 进程";
         return false;
     }
     void* remote = VirtualAllocEx(process, nullptr, image.size(), MEM_COMMIT | MEM_RESERVE,
@@ -247,7 +247,7 @@ bool InjectionCoordinator::injectReflectiveDll(std::uint32_t processId,
     SIZE_T written = 0;
     if (!remote || !WriteProcessMemory(process, remote, image.data(), image.size(), &written) ||
         written != image.size()) {
-        error = L"Failed to write reflective image";
+        error = L"无法写入反射映像";
         if (remote) VirtualFreeEx(process, remote, 0, MEM_RELEASE);
         CloseHandle(process);
         return false;
@@ -257,7 +257,7 @@ bool InjectionCoordinator::injectReflectiveDll(std::uint32_t processId,
     HANDLE thread = CreateRemoteThread(process, nullptr, 0, start,
         reinterpret_cast<void*>(static_cast<std::uintptr_t>(controllerPort)), 0, nullptr);
     if (!thread) {
-        error = L"Failed to start reflective loader";
+        error = L"启动反射加载器失败";
         VirtualFreeEx(process, remote, 0, MEM_RELEASE);
         CloseHandle(process);
         return false;
@@ -269,7 +269,7 @@ bool InjectionCoordinator::injectReflectiveDll(std::uint32_t processId,
     VirtualFreeEx(process, remote, 0, MEM_RELEASE);
     CloseHandle(process);
     if (exitCode == 0) {
-        error = L"Reflective loader returned failure";
+        error = L"反射加载器返回失败";
         return false;
     }
     return true;
