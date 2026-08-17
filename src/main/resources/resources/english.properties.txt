@@ -2688,3 +2688,4 @@ show_hotbar.tooltip=Renders the hotbar slots below the inventory.
 chance=Chance
 automace.target_settings_automace=Target Settings AutoMace
 behind walls=behind walls
+killaura.perfect_swing.tooltip=Attacks perfectly on 1.9+ combat servers.\n(1.12.2 Only)
