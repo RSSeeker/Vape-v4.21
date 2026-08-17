@@ -658,10 +658,7 @@ extends Mod {
         ClientSettings.registerFrame((Frame)new ClientSettingsSectionFrame(), mainStack);
         legitModuleCategoryFrame = new ModuleCategoryFrame(Category.COMBAT);
         ClientSettings.registerFrame((Frame)legitModuleCategoryFrame, mainStack);
-        Vape vape = Vape.INSTANCE;
-        if (vape.isFeatureDisabled()) {
-            ClientSettings.registerFrame((Frame)new ModuleCategoryFrame(Category.OTHER), mainStack);
-        }
+        ClientSettings.registerFrame((Frame)new ModuleCategoryFrame(Category.OTHER), mainStack);
         ClientSettings.registerFrame((Frame)new ModuleCategoryFrame(Category.RENDER), mainStack);
         ClientSettings.registerFrame((Frame)new ModuleCategoryFrame(Category.UTILITY), mainStack);
         ClientSettings.registerFrame((Frame)new ModuleCategoryFrame(Category.WORLD), mainStack);
