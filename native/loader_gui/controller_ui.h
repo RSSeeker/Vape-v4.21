@@ -40,8 +40,8 @@ private:
         float x, float y, float width, float height, float size,
         Gdiplus::Color color, bool semibold = false,
         Gdiplus::StringAlignment alignment = Gdiplus::StringAlignmentNear);
-    std::wstring ellipsize(const std::wstring& text, float fontSize,
-        float maxWidth) const;
+    std::wstring ellipsize(Gdiplus::Graphics& graphics,
+        const std::wstring& text, float fontSize, float maxWidth) const;
     void drawRoundedRect(Gdiplus::Graphics& graphics, float x, float y,
         float width, float height, float radius, Gdiplus::Color fill,
         Gdiplus::Color border = Gdiplus::Color(0, 0, 0, 0));

@@ -423,9 +423,11 @@ void ControllerUi::drawRoundedRect(Gdiplus::Graphics& graphics, float x, float y
 }
 
 // Truncates a string to fit the given pixel width, appending an ellipsis.
-// Uses GDI+ text measurement when available; falls back to a simple
-// character-count estimate otherwise.
-std::wstring ControllerUi::ellipsize(const std::wstring& text, float fontSize,
+// Uses GDI+ MeasureString with binary search so CJK/wide glyphs are measured
+// correctly (a per-character estimate under-cuts wide characters and the
+// ellipsis gets clipped by the draw box).
+std::wstring ControllerUi::ellipsize(Gdiplus::Graphics& graphics,
+                                     const std::wstring& text, float fontSize,
                                      float maxWidth) const {
     if (text.empty() || maxWidth <= 0.0f) return text;
     Gdiplus::FontFamily loaded[4];
@@ -442,12 +444,38 @@ std::wstring ControllerUi::ellipsize(const std::wstring& text, float fontSize,
     }
     Gdiplus::Font font(family, fontSize, Gdiplus::FontStyleRegular,
         Gdiplus::UnitPixel);
-    // Estimate: average glyph width is roughly 0.62 * font size for this font.
-    const float perChar = std::max(1.0f, fontSize * 0.62f);
-    const size_t maxChars = static_cast<size_t>(maxWidth / perChar);
-    if (text.size() <= maxChars) return text;
-    if (maxChars <= 1) return text.substr(0, 1);
-    return text.substr(0, maxChars - 1) + L"\u2026";
+    Gdiplus::StringFormat format;
+    format.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
+    const Gdiplus::RectF layout(0, 0, 100000.0f, 100.0f);
+
+    Gdiplus::RectF measuredFull;
+    if (graphics.MeasureString(text.c_str(), static_cast<INT>(text.size()),
+            &font, layout, &format, &measuredFull) != Gdiplus::Ok
+            || measuredFull.Width <= maxWidth) {
+        return text;
+    }
+
+    // Leave a small safety margin so the ellipsis is never clipped by the
+    // draw box (measurement and rendering can differ by a pixel or two).
+    const float safeWidth = maxWidth - 4.0f;
+    // Binary search the longest prefix that fits together with the ellipsis.
+    const std::wstring ellipsis = L"\u2026";
+    size_t low = 0;
+    size_t high = text.size();
+    while (low < high) {
+        const size_t mid = low + (high - low + 1) / 2;
+        const std::wstring candidate = text.substr(0, mid) + ellipsis;
+        Gdiplus::RectF measured;
+        if (graphics.MeasureString(candidate.c_str(),
+                static_cast<INT>(candidate.size()), &font, layout, &format,
+                &measured) == Gdiplus::Ok && measured.Width <= safeWidth) {
+            low = mid;
+        } else {
+            high = mid - 1;
+        }
+    }
+    if (low == 0) return ellipsis;
+    return text.substr(0, low) + ellipsis;
 }
 
 void ControllerUi::drawText(Gdiplus::Graphics& graphics, const std::wstring& text,
@@ -600,8 +628,8 @@ void ControllerUi::drawMinecraftSelection(Gdiplus::Graphics& graphics) {
         // Title box: from 268 to the button right edge (572), minus a small
         // margin. The previous 210px box clipped long titles.
         const float titleWidth = 560.0f - 268.0f;
-        drawText(graphics, ellipsize(process.title, 13.0f, titleWidth), 268, y + 4,
-            titleWidth, 22, 13, Gdiplus::Color(255, 202, 199, 203));
+        drawText(graphics, ellipsize(graphics, process.title, 13.0f, titleWidth),
+            268, y + 4, titleWidth, 22, 13, Gdiplus::Color(255, 202, 199, 203));
         drawText(graphics, (process.alreadyInjected ? L"Already Injected [" : L"PID ") +
             std::to_wstring(process.pid) + (process.alreadyInjected ? L"]" : L""),
             268, y + 24, titleWidth, 18, 11,
