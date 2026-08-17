@@ -35,7 +35,6 @@ import gg.vape.wrapper.impl.GuiScreen;
 import gg.vape.wrapper.impl.ItemStack;
 import gg.vape.wrapper.impl.KeyBinding;
 import gg.vape.wrapper.impl.Minecraft;
-import gg.vape.wrapper.impl.ModelPlayer;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Queue;
@@ -323,7 +322,7 @@ implements InventoryActionModule {
                 this.inventoryOpen = true;
             }
             int windowId = localPlayer.F$src$Lgg_vape_wrapper_impl_Container_$152y6lm().getWindowId();
-            if (new ModelPlayer(localPlayer.getObject()).isCreativeMode()) {
+            if (localPlayer.C$src$Lgg_vape_wrapper_impl_ModelPlayer_$19uhx86().isCreativeMode()) {
                 // Creative mode rejects ClickType.SWAP to the offhand slot in
                 // newer versions (it copies instead of moving, and the offhand
                 // swap is not applied server side). Use a pickup/place pair:
