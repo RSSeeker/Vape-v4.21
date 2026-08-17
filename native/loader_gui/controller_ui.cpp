@@ -300,10 +300,7 @@ LRESULT ControllerUi::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) 
         } else if (page == ControllerPage::LoadingComplete && hit(x, y, 356, 348, 112, 36)) {
             DestroyWindow(window_);
         } else if (page == ControllerPage::Error) {
-            if (hit(x, y, 300, 300, 112, 36)) {
-                ShellExecuteW(nullptr, L"open", L"https://www.vape.gg/support", nullptr, nullptr,
-                    SW_SHOWNORMAL);
-            } else if (hit(x, y, 422, 300, 112, 36)) {
+            if (hit(x, y, 356, 300, 112, 36)) {
                 const auto detail = model_.status();
                 const auto text = L"阶段 " + std::to_wstring(model_.loadingStage()) +
                     L"\r\nError start\r\n====================\r\n" + detail +
@@ -664,10 +661,7 @@ void ControllerUi::drawError(Gdiplus::Graphics& graphics) {
     drawText(graphics, model_.status().empty() ? L"加载出错。阶段 0" : model_.status(),
         250, 235, 324, 48, 13, Gdiplus::Color(255, 203, 200, 204), true,
         Gdiplus::StringAlignmentCenter);
-    drawRoundedRect(graphics, 300, 300, 112, 36, 3, Gdiplus::Color(255, 51, 51, 51));
-    drawRoundedRect(graphics, 422, 300, 112, 36, 3, Gdiplus::Color(255, 51, 51, 51));
-    drawText(graphics, L"联系支持", 300, 300, 112, 36, 13,
-        Gdiplus::Color(255, 174, 171, 175), true, Gdiplus::StringAlignmentCenter);
-    drawText(graphics, L"复制错误", 422, 300, 112, 36, 13,
+    drawRoundedRect(graphics, 356, 300, 112, 36, 3, Gdiplus::Color(255, 51, 51, 51));
+    drawText(graphics, L"复制错误", 356, 300, 112, 36, 13,
         Gdiplus::Color(255, 174, 171, 175), true, Gdiplus::StringAlignmentCenter);
 }

@@ -55,6 +55,7 @@ public:
     double stageElapsedSeconds() const;
     void submitCredentialAuthentication();
     void autoLoginToService();
+    bool loginToService();
 
 private:
     static std::wstring makeHwid();

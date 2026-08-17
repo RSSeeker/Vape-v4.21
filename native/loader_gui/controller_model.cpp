@@ -237,6 +237,23 @@ bool ControllerModel::injectMinecraft(std::uint32_t processId) {
         token = accessToken_;
         serviceHttpBase = utf8(serviceHttpBase_);
     }
+    // The local Service may have been unavailable when the Loader started
+    // (Minecraft not running yet). Re-authenticate lazily so the token handed
+    // to the injected DLL is always valid.
+    if (token.empty() && !loginToService()) {
+        setStatus(L"无法登录本地服务（请先启动 Minecraft）");
+        setPage(ControllerPage::Error);
+        return false;
+    }
+    {
+        std::lock_guard lock(mutex_);
+        token = accessToken_;
+        if (token.empty()) {
+            setStatus(L"无法登录本地服务（请先启动 Minecraft）");
+            setPage(ControllerPage::Error);
+            return false;
+        }
+    }
     if (!service_.start(token, cachePreference_, true)) {
         setStatus(L"无法创建加载器控制套接字");
         setPage(ControllerPage::Error);
@@ -553,9 +570,10 @@ void ControllerModel::submitCredentialAuthentication() {
     setPage(ControllerPage::MinecraftSelection);
 }
 
-void ControllerModel::autoLoginToService() {
-    // No login screen: register an anonymous account with the local Service.
-    // The Service auto-creates accounts on first use, so any username works.
+bool ControllerModel::loginToService() {
+    // Register an anonymous account with the local Service. The Service
+    // auto-creates accounts on first use, so any username works. Returns
+    // whether a token was obtained; never changes the current page.
     const std::wstring usernameValue = L"Player" + std::to_wstring(
         static_cast<unsigned long>(GetCurrentProcessId()));
     const std::string usernameUtf8 = utf8(usernameValue);
@@ -567,10 +585,16 @@ void ControllerModel::autoLoginToService() {
         if (!token.empty()) {
             accessToken_ = token;
             status_.clear();
-        } else {
-            status_ = L"等待游戏内服务（请先启动 Minecraft）";
+            return true;
         }
+        status_ = L"等待游戏内服务（请先启动 Minecraft）";
+        return false;
     }
-    refreshMinecraftProcesses();
+}
+
+void ControllerModel::autoLoginToService() {
+    if (loginToService()) {
+        refreshMinecraftProcesses();
+    }
     setPage(ControllerPage::MinecraftSelection);
 }

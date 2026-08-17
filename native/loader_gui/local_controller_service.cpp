@@ -14,7 +14,10 @@ LocalControllerService::~LocalControllerService() { stop(); }
 
 bool LocalControllerService::start(std::string accessToken, bool cacheEnabled,
                                    bool firstRun) {
-    if (running_) return true;
+    // A previous session may have finished (completed_/failed_) while the
+    // thread loop exited; restart the listener for the new injection.
+    if (running_ && !completed_ && !failed_) return true;
+    if (running_) stop();
     WSADATA data{};
     if (WSAStartup(MAKEWORD(2, 2), &data) != 0) return false;
     SOCKET listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
