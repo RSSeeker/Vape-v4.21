@@ -289,14 +289,6 @@ LRESULT ControllerUi::handleMessage(UINT message, WPARAM wParam, LPARAM lParam) 
                     if (rowY > 410.0f) break;
                 }
             }
-        } else if (page == ControllerPage::CachePrompt) {
-            if (hit(x, y, 290, 330, 112, 36)) {
-                model_.persistCachePreference(true);
-                model_.setPage(ControllerPage::LoadingComplete);
-            } else if (hit(x, y, 422, 330, 112, 36)) {
-                model_.persistCachePreference(false);
-                model_.setPage(ControllerPage::LoadingComplete);
-            }
         } else if (page == ControllerPage::LoadingComplete && hit(x, y, 356, 348, 112, 36)) {
             DestroyWindow(window_);
         } else if (page == ControllerPage::Error) {

@@ -519,7 +519,7 @@ void ControllerModel::tick() {
         }
     }
     if (service_.completed()) {
-        setPage(cachePreference_ ? ControllerPage::LoadingComplete : ControllerPage::CachePrompt);
+        setPage(ControllerPage::LoadingComplete);
     } else if (service_.failed()) {
         const std::string detail = service_.error();
         setStatus(detail.empty() ? L"Native loading connection closed unexpectedly"
