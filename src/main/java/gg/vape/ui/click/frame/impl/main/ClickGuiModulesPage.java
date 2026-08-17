@@ -410,10 +410,11 @@ extends ClickGuiPageBase {
 
     private static boolean lambda$filterModuleButtons$13(String string, Mod mod) {
         String string2 = StringUtils.y(mod.getName());
+        String string4 = StringUtils.y(Vape.INSTANCE.getFontSelector().W().s(mod.getName()));
         if (mod.getCategory() == Category.OTHER) {
-            return !string2.equals(string);
+            return !string2.equals(string) && !string4.equals(string);
         }
-        return !string2.contains(string);
+        return !string2.contains(string) && !string4.contains(string);
     }
 
     private void renderMacrosView() {
@@ -516,7 +517,7 @@ extends ClickGuiPageBase {
         this.getSidebarContent().removeMarkedChildren();
         ArrayList<FriendModuleInteractiveComponent> arrayList = new ArrayList<>();
         for (Category object2 : Category.values()) {
-            if (object2 == Category.NONE || object2 == Category.OTHER) continue;
+            if (object2 == Category.NONE) continue;
             FriendModuleInteractiveComponent friendModuleInteractiveComponent = new FriendModuleInteractiveComponent(object2.getName(), object2.getIconKey(), () -> this.lambda$renderCategoryButtons$1(object2), ClientSettings.INSTANCE.showEnabledCount.getEffectiveValue().booleanValue() ? (object2 == Category.FAVORITES ? ClickGuiModulesPage::lambda$renderCategoryButtons$2 : () -> ClickGuiModulesPage.lambda$renderCategoryButtons$3(object2)) : null, "expandarrow");
             friendModuleInteractiveComponent.setSelectedBadgeColor(Color.WHITE);
             friendModuleInteractiveComponent.setBadgeColor(ClickGuiModulesPage.J.h);
