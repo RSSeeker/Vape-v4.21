@@ -110,7 +110,7 @@ int ControllerUi::run(int showCommand) {
     RECT bounds{0, 0, clientWidth, clientHeight};
     AdjustWindowRectExForDpi(&bounds, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU |
         WS_MINIMIZEBOX, FALSE, 0, dpi);
-    window_ = CreateWindowExW(0, klass.lpszClassName, L"Vape-v4.21",
+    window_ = CreateWindowExW(0, klass.lpszClassName, L"Vape v4",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, bounds.right - bounds.left,
         bounds.bottom - bounds.top, nullptr, nullptr, instance_, this);
