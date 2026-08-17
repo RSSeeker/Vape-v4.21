@@ -55,7 +55,11 @@ tasks.withType(JavaCompile).configureEach {
     // far as the source permits; the product is a recovery workspace, not a
     // runtime distribution constrained to a Java 8 compiler.
     // Product default is 17; pass -PtargetRelease=8 to prove Java 8 (MC 1.8.9) compatibility.
-    options.release = (project.findProperty('targetRelease') ?: '17') as int
+    // The standalone font coverage checker is a build-time tool and always
+    // compiles with the toolchain default (no --release).
+    if (name != 'compileFontCoverageCheck') {
+        options.release = (project.findProperty('targetRelease') ?: '17') as int
+    }
     options.compilerArgs += ['-Xmaxerrs', '10000', '-Xdiags:verbose']
 }
 
@@ -108,6 +112,38 @@ tasks.register('verifyRecoveredSourceQuality') {
 tasks.named('check') {
     dependsOn(tasks.named('verifyRecoveredSources'))
     dependsOn(tasks.named('verifyRecoveredSourceQuality'))
+    dependsOn(tasks.named('verifyFontCoverage'))
+}
+
+// Verifies that the bundled noto.ttf covers every character used by the
+// Chinese translation table. Run manually with:
+//   .\gradlew.bat verifyFontCoverage
+// and regenerate the font subset whenever the translations introduce new
+// characters (see tools/FontCoverageCheck.java for the exact failure output).
+def fontCheckClassDirectory = layout.buildDirectory.dir('fontCheck')
+def fontCheckSource = file('tools/FontCoverageCheck.java')
+
+tasks.register('compileFontCoverageCheck', JavaCompile) {
+    group = 'verification'
+    description = 'Compiles the standalone font coverage checker.'
+    source = files(fontCheckSource)
+    classpath = files()
+    destinationDirectory = fontCheckClassDirectory
+    options.encoding = 'UTF-8'
+}
+
+tasks.register('verifyFontCoverage', JavaExec) {
+    group = 'verification'
+    description = 'Checks that noto.ttf covers all Chinese translation characters.'
+    dependsOn(tasks.named('compileFontCoverageCheck'))
+    inputs.files(fontCheckSource)
+    inputs.file(file('src/main/resources/resources/noto.ttf'))
+    inputs.file(file('src/main/resources/resources/chinese.properties.txt'))
+    classpath = files(fontCheckClassDirectory)
+    mainClass = 'FontCoverageCheck'
+    args file('src/main/resources/resources/noto.ttf').absolutePath,
+            file('src/main/resources/resources/chinese.properties.txt').absolutePath
+    ignoreExitValue = false
 }
 
 idea {
@@ -148,6 +184,7 @@ tasks.register('verifyInjectionPayload') {
     group = 'verification'
     description = 'Verifies that the embedded payload is complete and Java 8 loadable.'
     dependsOn(tasks.named('injectionJar'))
+    dependsOn(tasks.named('verifyFontCoverage'))
     inputs.file(tasks.named('injectionJar', Jar).flatMap { it.archiveFile })
     doLast {
         def payload = tasks.named('injectionJar', Jar).get().archiveFile.get().asFile
