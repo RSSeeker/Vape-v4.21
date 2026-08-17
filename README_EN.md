@@ -2,49 +2,55 @@
 
 # Vape 4.21 Product Recovery
 
-A research-oriented recovery project for the Vape 4.21 Java layer and Windows x64 native bridge layer.
+A research-oriented recovery project for the Vape 4.21 Java layer and Windows x64 native bridge layer, with full Chinese localization.
 
 > GitHub repository: [RSSeeker/Vape-v4.21](https://github.com/RSSeeker/Vape-v4.21) ·
 > Releases: [Releases](https://github.com/RSSeeker/Vape-v4.21/releases)
 >
-> Main artifacts: `Vape-v4.21.exe` (single-file injector, embeds the DLL),
-> `Vape-v4.21Injector.exe` (injector without the embedded DLL), and
-> `Vape-v4.21Native.dll`.
-
 > Source code origin: [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape)
 > (This project recovers, reorganizes and localizes the source code from that public repository).
 
-## Changes relative to the upstream source
+## Main Artifacts
 
-Main changes compared with [OpenVapeCN/OpenVape](https://github.com/OpenVapeCN/OpenVape):
+| File | Description |
+| --- | --- |
+| `Vape-v4.21.exe` | Single-file injector (embeds the complete DLL and Java payload, no extra files required) |
+| `Vape-v4.21Injector.exe` | Injector (does not embed the DLL; requires the Native DLL) |
+| `Vape-v4.21Native.dll` | x64 native bridge layer |
 
-**Features**
+## Features
 
-- Added runtime detection for the 26.1.x / 26.2.x family (matched by `version.json`, protocol 100/110); verified on 26.1.2
-- Local configuration persistence: written to `.vapeclient\config.json` (preferring the injector EXE directory, then the DLL directory, then `%APPDATA%`) — module settings, profiles, friends and frame positions are saved locally, auto-saved plus shutdown fallback, and local data is loaded first; `autoSave` is enabled by default
-- Native and Java logs are unified under `.vapeclient\log\`, with a new log file per injection
-- Single-file injector: `Vape-v4.21.exe` embeds the complete DLL and Java payload, no extra files required
-- Chinese-localized injector console with UTF-8 output
+**Feature integration (v4.21.8)**
+
+- Merged upstream modules: **AutoMace** (mace selection / stun slam / aim range / auto unequip Elytra / smash only / show hotbar), **NoItemRelease**, **PearlCatch**, **InventoryOverlay**
+- Merged the Badlion legacy keybinding event queue for Badlion client compatibility
+- Embedded **VapeService** (HTTP 8080 + Zeus TCP 8091 companion service), auto-started in-game in the background:
+  - Account / settings / profiles / friends / party / location sharing online features run locally
+  - Service data stored in `~/.vapeclient/vape-service.json`, separate from the local config (`.vapeclient\config.json`), no conflicts
+  - Port conflicts are resolved by probing upward for a free port; startup failures degrade silently without affecting the game
+  - Configurable via environment variables (see "Embedded Service Configuration" below)
 
 **Localization**
 
-- Language pack expanded from 798 keys to 2600+ keys (options, tooltips, tutorials, dialogs, potion/item names, etc.)
-- Chinese is the default language
-- Fixed multi-line tooltip newline flattening and lost § color codes that broke exact matching
-- HUD module stack (26.x multi-module and legacy MC-font paths) now translates
-- Fixed runtime-composed strings in dropdowns and the target filter (whole-string lookup first, per-part translation fallback; e.g. `Mode - Simple`, `Target: Players`, `Ignore none`)
-- Fixed trailing-space corruption on the `ignore`/`ignoring`/`mobs`/`peaceful` key values that broke lookup, and added word keys such as `target`, `invisible`, `naked` and lowercase `none`
+- Language pack expanded to 2600+ keys covering module names, value names, tooltips, tutorials, dialogs, potion/item names, etc.
+- Chinese is the default language; the language option is trimmed to "中文 / English"
+- Fixed multi-line tooltip newline flattening and lost `§` color codes that broke exact matching
+- Fixed runtime-composed strings in dropdowns and the target filter (whole-string lookup first, per-part translation fallback)
+- Module search matches both the English name and the translated name, so modules can be found by Chinese directly
+- The "Other" category is shown in the category navigation, so Other-category modules (e.g. NoItemRelease) can be browsed directly
 
 **Fonts & visuals**
 
-- `noto.ttf` replaced with a Noto Sans SC subset covering every translated character (700 bold, zero missing glyphs)
+- `noto.ttf` is a static Noto Sans SC subset (SemiBold 600) covering every translated character, verified with zero missing glyphs via stb (the actual in-game rendering engine)
 - Custom rounded-corner icon embedded into `Vape-v4.21.exe`
+- Chinese-localized injector console with UTF-8 output
 
-**Build & tooling**
+**Engineering**
 
-- CMake auto-detects the Visual Studio generator via vswhere (VS2022 / VS2026)
-- MSVC `/utf-8` compile option; README is no longer attached to release assets
-- GitHub Actions (ci / release) compile the Java layer with JDK 17 (`--release 8` produces Java 8 bytecode) and install JDK 8 to provide JNI/JVMTI headers for building the x64 native bridge layer
+- Added runtime detection for the 26.1.x / 26.2.x family (matched by `version.json`, protocol 100/110); verified on 26.1.2
+- Local configuration persistence: module settings, profiles, friends and frame positions saved to `.vapeclient\config.json`, auto-saved plus shutdown fallback
+- Native and Java logs unified under `.vapeclient\log\`, with a new log file per injection
+- Single-file injector: `Vape-v4.21.exe` embeds the complete DLL and Java payload
 
 ### It is NOT official Vape source code, an original release package, or a vendor-signed artifact, and it does not guarantee behavior identical to the original product.
 
@@ -69,6 +75,19 @@ Support for Minecraft 1.16.5 is poor; certain mappings, rendering, and module fe
 **For versions 26.1.2 and 26.2, please inject after joining a server or singleplayer world.**
 
 All target instances must use a 64-bit JVM.
+
+## Embedded Service Configuration
+
+VapeService auto-starts in-game, listening on `127.0.0.1:8080` (HTTP) and `127.0.0.1:8091` (Zeus TCP) by default. It can be adjusted via environment variables:
+
+| Environment variable | Default | Description |
+| --- | --- | --- |
+| `VAPE_BIND_ADDRESS` | `127.0.0.1` | Bind address; set to `0.0.0.0` to allow LAN access |
+| `VAPE_HTTP_PORT` | `8080` | HTTP port |
+| `VAPE_ZEUS_PORT` | `8091` | Zeus TCP port |
+| `VAPE_DATA_FILE` | `~/.vapeclient/vape-service.json` | Service data file path |
+
+On the client side, `VAPE_ONLINE_BASE_URL` / `VAPE_ZEUS_ADDRESS` already override the service address; combined with the variables above, this enables LAN multi-client interoperation.
 
 ## Requirements
 
@@ -149,3 +168,7 @@ The injector only performs `LoadLibraryW`. Once loaded, the DLL waits for the JV
 ## License
 
 This repository is provided under [CC0 1.0 Universal](LICENSE). To the extent applicable, CC0 covers only content that repository contributors have the right to dispose of; third-party libraries, trademarks, fonts, textures, and other existing materials remain subject to their respective rights.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
