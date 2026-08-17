@@ -16,6 +16,7 @@ Vape 4.21 的 Java 层与 Windows x64 原生桥接层研究性恢复工程，附
 | --- | --- |
 | `Vape-v4.21.exe` | 单文件注入器（内嵌完整 DLL 与 Java 载荷，免附带文件） |
 | `Vape-v4.21Injector.exe` | 注入器（不内嵌 DLL，需配合 Native DLL 使用） |
+| `Vape-v4.21Loader.exe` | **GUI 版加载器**（GDI+ 界面：登录 / 浏览器授权 / 进程选择 / 注入进度），需与 `Vape-v4.21Native.dll` 同目录 |
 | `Vape-v4.21Native.dll` | x64 原生桥接层 |
 
 ## 特性

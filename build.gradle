@@ -337,7 +337,8 @@ tasks.register('buildNative', Exec) {
     outputs.files(
             nativeBuildDirectory.map { it.file('dist/Vape-v4.21Native.dll') },
             nativeBuildDirectory.map { it.file('dist/Vape-v4.21.exe') },
-            nativeBuildDirectory.map { it.file('dist/Vape-v4.21Injector.exe') })
+            nativeBuildDirectory.map { it.file('dist/Vape-v4.21Injector.exe') },
+            nativeBuildDirectory.map { it.file('dist/Vape-v4.21Loader.exe') })
     doFirst {
         commandLine 'cmake', '--build', nativeBuildDirectory.get().asFile.absolutePath,
                 '--config', 'Release'
@@ -350,7 +351,7 @@ tasks.register('prepareInjectionBundle', Sync) {
     dependsOn(tasks.named('buildNative'))
     from(nativeBuildDirectory.map { it.dir('dist') }) {
         include 'Vape-v4.21Native.dll', 'Vape-v4.21.exe',
-                'Vape-v4.21Injector.exe'
+                'Vape-v4.21Injector.exe', 'Vape-v4.21Loader.exe'
     }
     from(file('native/README.md'))
     into(injectionBundleDirectory)

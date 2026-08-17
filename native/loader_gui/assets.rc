@@ -1,0 +1,12 @@
+#include "resource_ids.h"
+
+IDR_ASSET_CLOSE RCDATA "assets/close.png"
+IDR_ASSET_LOGO RCDATA "assets/logo.png"
+IDR_ASSET_MASK_BOTTOM RCDATA "assets/mask-bottom.png"
+IDR_ASSET_MASK_LEFT RCDATA "assets/mask-left.png"
+IDR_ASSET_MASK_RIGHT RCDATA "assets/mask-right.png"
+IDR_ASSET_MASK_TOP RCDATA "assets/mask-top.png"
+IDR_ASSET_MINIMIZE RCDATA "assets/minimize.png"
+IDR_ASSET_PROXIMA_REGULAR RCDATA "assets/proxima-regular.ttf"
+IDR_ASSET_PROXIMA_SEMIBOLD RCDATA "assets/proxima-semibold.otf"
+IDR_ASSET_ROUNDED_RECT RCDATA "assets/rounded-rect.png"

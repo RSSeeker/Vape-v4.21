@@ -1,0 +1,84 @@
+#pragma once
+
+#include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include "local_controller_service.h"
+
+enum class ControllerPage {
+    Login,
+    BrowserAuth,
+    MinecraftSelection,
+    Loading,
+    CachePrompt,
+    LoadingComplete,
+    OutdatedLauncher,
+    Error
+};
+
+struct MinecraftProcess {
+    std::uint32_t pid{};
+    std::wstring title;
+    bool alreadyInjected{};
+};
+
+class ControllerModel {
+public:
+    ControllerModel();
+    ~ControllerModel();
+
+    ControllerPage page() const;
+    void setPage(ControllerPage value);
+    std::wstring status() const;
+    void setStatus(std::wstring value);
+
+    std::wstring& username();
+    std::wstring& password();
+    std::vector<MinecraftProcess> minecraftProcesses() const;
+
+    void refreshMinecraftProcesses();
+    bool injectMinecraft(std::uint32_t processId);
+    void beginBrowserAuthentication(void* windowHandle);
+    void reopenBrowserAuthentication();
+    void cancelBrowserAuthentication();
+    void persistCachePreference(bool enabled);
+    bool cachePreference() const;
+    std::wstring cacheDirectory() const;
+    void tick();
+    int loadingStage() const;
+    double loadingElapsedSeconds() const;
+    double stageElapsedSeconds() const;
+    void submitCredentialAuthentication();
+
+private:
+    static std::wstring makeHwid();
+    static std::string httpPost(const wchar_t* host, const wchar_t* path,
+        const std::string& body);
+    static std::string httpPostJson(const std::wstring& baseUrl,
+        const wchar_t* path, const std::string& body);
+    static std::string jsonString(const std::string& json, const char* key);
+
+    mutable std::mutex mutex_;
+    ControllerPage page_{ControllerPage::Login};
+    std::wstring status_;
+    std::wstring username_;
+    std::wstring password_;
+    std::vector<MinecraftProcess> minecraftProcesses_;
+    std::vector<std::uint32_t> injectedProcesses_;
+    std::string accessToken_;
+    std::wstring serviceHttpBase_;
+    std::wstring browserUrl_;
+    LocalControllerService service_;
+    std::atomic<bool> cancelAuth_{false};
+    std::thread authThread_;
+    bool cachePreference_{};
+    int loadingStage_{};
+    std::chrono::steady_clock::time_point loadingStarted_{};
+    std::chrono::steady_clock::time_point stageStarted_{};
+    std::chrono::steady_clock::time_point lastMinecraftRefresh_{};
+};

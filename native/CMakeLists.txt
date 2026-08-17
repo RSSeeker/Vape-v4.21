@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(Vape421Native VERSION 1.0 LANGUAGES C RC)
+project(Vape421Native VERSION 1.0 LANGUAGES C CXX RC)
 
 if(NOT WIN32)
     message(FATAL_ERROR "Vape421Native is a Windows-only test bridge")
@@ -84,6 +84,38 @@ target_compile_definitions(Vape421InjectorStandalone PRIVATE
         VAPE421_NO_EMBED)
 target_compile_options(Vape421InjectorStandalone PRIVATE /W4 /utf-8)
 
+# GUI loader (upstream VapeLoader): login -> process selection -> inject.
+# Talks to Vape421Native.dll through the Vape421BootstrapV2 shared-memory ABI
+# (byte-identical to loader_bootstrap.c on the DLL side).
+# NOTE: sources are collected via file(GLOB) instead of being listed inside
+# add_executable(); a CMake 4.3 VS-generator quirk misclassifies .cpp sources
+# that share a target with configure_file()-generated .rc sources as <None>.
+set(VAPE421_LOADER_GUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/loader_gui")
+file(GLOB VAPE421_LOADER_GUI_SOURCES
+        CONFIGURE_DEPENDS
+        "${VAPE421_LOADER_GUI_DIR}/*.cpp"
+        "${VAPE421_LOADER_GUI_DIR}/*.h"
+)
+add_executable(Vape421LoaderGui WIN32
+        ${VAPE421_LOADER_GUI_SOURCES}
+        "${VAPE421_LOADER_GUI_DIR}/assets.rc"
+        "${VAPE421_LOADER_GUI_DIR}/app.manifest"
+)
+target_compile_features(Vape421LoaderGui PRIVATE cxx_std_17)
+target_compile_definitions(Vape421LoaderGui PRIVATE
+        WIN32_LEAN_AND_MEAN
+        UNICODE _UNICODE NOMINMAX
+        _CRT_SECURE_NO_WARNINGS)
+target_compile_options(Vape421LoaderGui PRIVATE /W4 /permissive- /utf-8)
+target_link_libraries(Vape421LoaderGui PRIVATE
+        gdiplus
+        winhttp
+        shell32
+        shlwapi
+        ws2_32
+)
+target_include_directories(Vape421LoaderGui PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/loader_gui")
+
 include(CTest)
 if(BUILD_TESTING)
     add_executable(Vape421BootstrapTest
@@ -104,6 +136,7 @@ if(BUILD_TESTING)
 endif()
 
 set_property(TARGET Vape421Native Vape421Injector Vape421InjectorStandalone
+        Vape421LoaderGui
         PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
@@ -113,14 +146,16 @@ set_target_properties(Vape421Injector PROPERTIES
         OUTPUT_NAME "Vape-v4.21")
 set_target_properties(Vape421InjectorStandalone PROPERTIES
         OUTPUT_NAME "Vape-v4.21Injector")
+set_target_properties(Vape421LoaderGui PROPERTIES
+        OUTPUT_NAME "Vape-v4.21Loader")
 
 set_target_properties(Vape421Native Vape421Injector
-        Vape421InjectorStandalone PROPERTIES
+        Vape421InjectorStandalone Vape421LoaderGui PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")
 foreach(configuration Debug Release RelWithDebInfo MinSizeRel)
     string(TOUPPER "${configuration}" configuration_upper)
     set_target_properties(Vape421Native Vape421Injector
-            Vape421InjectorStandalone PROPERTIES
+            Vape421InjectorStandalone Vape421LoaderGui PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY_${configuration_upper}
             "${CMAKE_BINARY_DIR}/dist")
 endforeach()
