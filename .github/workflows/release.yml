@@ -63,10 +63,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Vape ${{ github.ref_name }}
-          body_path: CHANGELOG.md
+          body: |
+            单文件 GUI 加载器：`Vape-v4.21.exe`（内嵌 DLL + 图标 + 全部资源）。
+
+            使用：双击打开 GUI 选 Minecraft 进程注入；或命令行 `Vape-v4.21.exe -nogui [pid]`。
+            详见 CHANGELOG.md。
           files: |
             build/injection/Vape-v4.21.exe
-            build/injection/Vape-v4.21Injector.exe
-            build/injection/Vape-v4.21Native.dll
           prerelease: ${{ contains(github.ref_name, '-pre') }}
           fail_on_unmatched_files: true
