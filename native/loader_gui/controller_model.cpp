@@ -89,6 +89,27 @@ std::wstring executableDirectory() {
     const auto separator = result.find_last_of(L"\\/");
     return separator == std::wstring::npos ? L"." : result.substr(0, separator);
 }
+
+// Writes the GUI loader's own directory to %TEMP%\injector_dir.txt so the
+// injected DLL can place .vapeclient next to Vape-v4.21.exe instead of a stale
+// path from a previous injector run. Mirrors injector.c write_injector_dir_marker.
+void writeInjectorDirMarker() {
+    wchar_t marker[MAX_PATH]{};
+    const DWORD length = GetTempPathW(MAX_PATH, marker);
+    if (length == 0 || length >= MAX_PATH) return;
+    const std::wstring directory = executableDirectory();
+    if (directory.empty() || directory.size() >= MAX_PATH) return;
+    std::wstring path = marker;
+    if (!path.empty() && path.back() != L'\\') path.push_back(L'\\');
+    path += L"injector_dir.txt";
+    HANDLE file = CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr,
+        CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, nullptr);
+    if (file == INVALID_HANDLE_VALUE) return;
+    DWORD written = 0;
+    WriteFile(file, directory.c_str(),
+        static_cast<DWORD>(directory.size() * sizeof(wchar_t)), &written, nullptr);
+    CloseHandle(file);
+}
 }
 
 // Extracts the embedded product DLL (resource 422, RCDATA) to the temporary
@@ -268,6 +289,9 @@ bool ControllerModel::injectMinecraft(std::uint32_t processId) {
         setPage(ControllerPage::Error);
         return false;
     }
+    // Refresh the injector directory marker so .vapeclient lands next to this
+    // exe (a stale marker from a previous run would point elsewhere).
+    writeInjectorDirMarker();
     if (!InjectionCoordinator::injectProductDll(processId, dllPath, service_.port(),
             serviceHttpBase, error)) {
         service_.stop();

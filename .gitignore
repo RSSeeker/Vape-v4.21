@@ -13,3 +13,6 @@ javap-*.txt
 project/
 # backup of the previous subset font (replaced by full-coverage static subset)
 noto.old.ttf.backup
+
+# IDE/???????
+bin/
