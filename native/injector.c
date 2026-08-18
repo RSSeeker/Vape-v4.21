@@ -50,8 +50,10 @@ static int materialize_embedded_dll(
     HGLOBAL loaded;
     const unsigned char *bytes;
     DWORD size;
-    wchar_t temp_root[MAX_PATH];
+    wchar_t exe_path[MAX_PATH];
+    wchar_t client_root[MAX_PATH];
     wchar_t directory[MAX_PATH];
+    wchar_t *separator;
     HANDLE file = INVALID_HANDLE_VALUE;
     DWORD offset = 0;
     int result = 0;
@@ -68,13 +70,35 @@ static int materialize_embedded_dll(
     if (bytes == NULL || size < 4) {
         return 0;
     }
-    if (GetTempPathW((DWORD)(sizeof(temp_root) / sizeof(temp_root[0])),
-            temp_root) == 0) {
+    /* Extract into <exe>\.vapeclient\Vape421Recovery so the injected DLL can
+     * derive the client directory from its own module path; nothing is ever
+     * written to %TEMP%. */
+    if (GetModuleFileNameW(NULL, exe_path, MAX_PATH) == 0
+            || exe_path[0] == L'\0') {
         return 0;
+    }
+    separator = wcsrchr(exe_path, L'\\');
+    if (separator != NULL) {
+        *separator = L'\0';
+    }
+    _snwprintf_s(client_root,
+            sizeof(client_root) / sizeof(client_root[0]), _TRUNCATE,
+            L"%ls\\.vapeclient", exe_path);
+    if (!CreateDirectoryW(client_root, NULL)
+            && GetLastError() != ERROR_ALREADY_EXISTS) {
+        return 0;
+    }
+    {
+        DWORD attributes = GetFileAttributesW(client_root);
+        if (attributes != INVALID_FILE_ATTRIBUTES
+                && (attributes & FILE_ATTRIBUTE_HIDDEN) == 0) {
+            SetFileAttributesW(client_root,
+                    attributes | FILE_ATTRIBUTE_HIDDEN);
+        }
     }
     _snwprintf_s(directory,
             sizeof(directory) / sizeof(directory[0]), _TRUNCATE,
-            L"%lsVape421Recovery", temp_root);
+            L"%ls\\Vape421Recovery", client_root);
     if (!CreateDirectoryW(directory, NULL)
             && GetLastError() != ERROR_ALREADY_EXISTS) {
         return 0;
@@ -84,7 +108,7 @@ static int materialize_embedded_dll(
             (unsigned long)process_id);
     file = CreateFileW(output, GENERIC_WRITE,
             FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, CREATE_ALWAYS,
-            FILE_ATTRIBUTE_TEMPORARY, NULL);
+            FILE_ATTRIBUTE_NORMAL, NULL);
     if (file == INVALID_HANDLE_VALUE) {
         return 0;
     }
@@ -356,48 +380,6 @@ static int require_x64_target(HANDLE process) {
     }
 }
 
-static int write_injector_dir_marker(const wchar_t *dll_path) {
-    wchar_t marker[MAX_PATH];
-    wchar_t injector_path[MAX_PATH];
-    wchar_t *separator;
-    HANDLE file;
-    DWORD written;
-    DWORD length;
-    int result = 0;
-    (void)dll_path;
-    /* Write the injector EXE directory to the shared TEMP root so the DLL can
-     * find it via GetEnvironmentVariableW("TEMP"), independent of where the
-     * remote-injected DLL was extracted. */
-    length = GetTempPathW(MAX_PATH, marker);
-    if (length == 0 || length >= MAX_PATH) {
-        return 0;
-    }
-    if (wcslen(marker) + wcslen(L"injector_dir.txt") + 1 > MAX_PATH) {
-        return 0;
-    }
-    wcscat(marker, L"injector_dir.txt");
-    if (GetModuleFileNameW(NULL, injector_path, MAX_PATH) == 0
-            || injector_path[0] == L'\0') {
-        return 0;
-    }
-    separator = wcsrchr(injector_path, L'\\');
-    if (separator != NULL) {
-        *separator = L'\0';
-    }
-    file = CreateFileW(marker, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-            FILE_ATTRIBUTE_TEMPORARY, NULL);
-    if (file == INVALID_HANDLE_VALUE) {
-        return 0;
-    }
-    if (WriteFile(file, injector_path,
-            (DWORD)(wcslen(injector_path) * sizeof(wchar_t)), &written, NULL)
-            && written == wcslen(injector_path) * sizeof(wchar_t)) {
-        result = 1;
-    }
-    CloseHandle(file);
-    return result;
-}
-
 static int inject_library(DWORD process_id, const wchar_t *dll_path) {
     HANDLE process = NULL;
     HANDLE thread = NULL;
@@ -427,9 +409,6 @@ static int inject_library(DWORD process_id, const wchar_t *dll_path) {
     if (!require_x64_target(process)) {
         fwprintf(stderr, L"目标进程不是 x64；已拒绝注入。\n");
         goto cleanup;
-    }
-    if (!write_injector_dir_marker(dll_path)) {
-        fwprintf(stderr, L"警告: 无法写入配置目录标记文件。\n");
     }
     remote_path = VirtualAllocEx(process, NULL, path_bytes,
             MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -492,7 +471,7 @@ static void usage(const wchar_t *program) {
             L"      %ls <minecraft-pid>\n"
             L"不指定 PID 时，会显示自动刷新的 Java 窗口选择器。\n"
             L"本程序始终使用内嵌的 Vape-v4.21Native.dll，不加载外部 DLL。\n"
-            L"内嵌 DLL 会解压到 %%TEMP%%\\Vape421Recovery 后注入。\n",
+            L"内嵌 DLL 会解压到 <exe>\\.vapeclient\\Vape421Recovery 后注入。\n",
             program, program);
 }
 

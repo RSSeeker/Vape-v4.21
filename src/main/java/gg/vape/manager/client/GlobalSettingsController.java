@@ -14,7 +14,7 @@ public class GlobalSettingsController {
     private boolean firstRun = false;
     private GlobalSettingsPayload settings;
     private boolean loadFailed = false;
-    private final BooleanValue cacheData = BooleanValue.create(null, "Cache data", false, "Caches data locally to improve load time (%appdata%/.vapeclient)");
+    private final BooleanValue cacheData = BooleanValue.create(null, "Cache data", false, "Caches data locally to improve load time (.vapeclient)");
 
     public boolean isFirstRun() {
         return this.firstRun;

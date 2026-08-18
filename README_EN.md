@@ -24,12 +24,13 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 
 ## Features
 
-**GUI loader (v4.21.9)**
+**GUI loader (v4.21.9+)**
 
 - Integrated the upstream VapeLoader graphical UI (GDI+, fully Chinese): process selection / injection progress / loading complete
 - Removed the login page and cache prompt: start directly into process selection, token generated locally
 - Embedded-DLL only: both the GUI and `-nogui` command-line modes extract the DLL from the exe resource; no external DLL is loaded
 - Window title "Vape v4", icon matches the product
+- All runtime artifacts are kept inside the hidden `<exe>\.vapeclient` folder (extracted DLL/JAR, logs, config, service data, texture cache); **nothing is ever written to %TEMP%**
 
 **Feature integration (v4.21.8)**
 
@@ -37,7 +38,7 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 - Merged the Badlion legacy keybinding event queue for Badlion client compatibility
 - Embedded **VapeService** (HTTP 8080 + Zeus TCP 8091 companion service), auto-started in-game in the background:
   - Account / settings / profiles / friends / party / location sharing online features run locally
-  - Service data stored in `~/.vapeclient/vape-service.json`, separate from the local config (`.vapeclient\config.json`), no conflicts
+  - Service data stored in `<exe>\.vapeclient\vape-service.json`, separate from the local config (`.vapeclient\config.json`), no conflicts
   - Port conflicts are resolved by probing upward for a free port; startup failures degrade silently without affecting the game
   - Configurable via environment variables (see "Embedded Service Configuration" below)
 
@@ -96,7 +97,7 @@ VapeService auto-starts in-game, listening on `127.0.0.1:8080` (HTTP) and `127.0
 | `VAPE_BIND_ADDRESS` | `127.0.0.1` | Bind address; set to `0.0.0.0` to allow LAN access |
 | `VAPE_HTTP_PORT` | `8080` | HTTP port |
 | `VAPE_ZEUS_PORT` | `8091` | Zeus TCP port |
-| `VAPE_DATA_FILE` | `~/.vapeclient/vape-service.json` | Service data file path |
+| `VAPE_DATA_FILE` | `<exe>/.vapeclient/vape-service.json` | Service data file path |
 
 On the client side, `VAPE_ONLINE_BASE_URL` / `VAPE_ZEUS_ADDRESS` already override the service address; combined with the variables above, this enables LAN multi-client interoperation.
 

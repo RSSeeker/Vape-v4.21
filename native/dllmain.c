@@ -34,6 +34,7 @@ static void injector_diag(const wchar_t *format, ...) {
     wchar_t message[512];
     wchar_t line[640];
     wchar_t path[MAX_PATH];
+    wchar_t *separator;
     FILE *file;
     va_list arguments;
     DWORD length;
@@ -41,9 +42,16 @@ static void injector_diag(const wchar_t *format, ...) {
     _vsnwprintf_s(message, sizeof(message) / sizeof(message[0]),
             _TRUNCATE, format, arguments);
     va_end(arguments);
-    length = GetEnvironmentVariableW(L"TEMP", path, MAX_PATH);
+    /* Diagnostic output stays inside the .vapeclient tree: the DLL always
+     * lives at <exe>\.vapeclient\Vape421Recovery\, so its module directory is
+     * a safe, already-existing location (no TEMP writes). */
+    length = GetModuleFileNameW(g_module, path, MAX_PATH);
     if (length == 0 || length >= MAX_PATH) {
         wcscpy(path, L".");
+    }
+    separator = wcsrchr(path, L'\\');
+    if (separator != NULL) {
+        *separator = L'\0';
     }
     _snwprintf_s(line, sizeof(line) / sizeof(line[0]), _TRUNCATE,
             L"%ls\\vape_injector_diag.txt", path);
@@ -55,59 +63,36 @@ static void injector_diag(const wchar_t *format, ...) {
     }
 }
 
+/* The injected DLL is always extracted to
+ * <exe>\.vapeclient\Vape421Recovery\Vape-v4.21Native-<pid>.dll, so the
+ * injector EXE directory can be derived from the module path instead of a
+ * shared TEMP marker file. Everything stays inside the .vapeclient tree and
+ * nothing is ever written to %TEMP%. */
 static int injector_directory(wchar_t *output, size_t capacity) {
-    wchar_t marker[MAX_PATH];
-    HANDLE file;
-    DWORD bytes_read;
-    DWORD length;
+    wchar_t *marker;
+    wchar_t *last = NULL;
     if (output == NULL || capacity == 0) {
         injector_diag(L"injector_directory: null args");
         return 0;
     }
-    /* The injector writes injector_dir.txt to the shared TEMP root. Use the
-     * TEMP environment variable directly so this is independent of where the
-     * remote-injected DLL was extracted (GetModuleFileNameW of the injected
-     * module can report a different directory). */
-    length = GetEnvironmentVariableW(L"TEMP", marker, MAX_PATH);
-    if (length == 0 || length >= MAX_PATH) {
-        injector_diag(L"injector_directory: no TEMP env");
+    if (!module_directory(output, capacity)) {
+        injector_diag(L"injector_directory: no module directory");
         return 0;
     }
-    if (marker[length - 1] != L'\\'
-            && wcslen(marker) + wcslen(L"\\injector_dir.txt") + 1 > MAX_PATH) {
-        injector_diag(L"injector_directory: marker path too long");
-        return 0;
+    /* Find the LAST \.vapeclient\ separator so an EXE path that happens to
+     * contain that substring is still truncated at the real client root. */
+    for (marker = wcsstr(output, L"\\.vapeclient\\");
+            marker != NULL;
+            marker = wcsstr(marker + 1, L"\\.vapeclient\\")) {
+        last = marker;
     }
-    if (marker[length - 1] != L'\\') {
-        wcscat(marker, L"\\");
+    if (last != NULL && last != output) {
+        *last = L'\0';
+        injector_diag(L"injector_directory: resolved [%ls]", output);
+        return 1;
     }
-    wcscat(marker, L"injector_dir.txt");
-    file = CreateFileW(marker, GENERIC_READ, FILE_SHARE_READ, NULL,
-            OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
-    if (file == INVALID_HANDLE_VALUE) {
-        injector_diag(L"injector_directory: cannot open %ls (err=%lu)",
-                marker, (unsigned long)GetLastError());
-        return 0;
-    }
-    bytes_read = 0;
-    if (!ReadFile(file, output, (DWORD)(capacity * sizeof(wchar_t)),
-            &bytes_read, NULL)) {
-        injector_diag(L"injector_directory: ReadFile failed (err=%lu)",
-                (unsigned long)GetLastError());
-        CloseHandle(file);
-        return 0;
-    }
-    CloseHandle(file);
-    if (bytes_read < 2 || bytes_read >= capacity * sizeof(wchar_t)) {
-        injector_diag(L"injector_directory: bad marker size %lu", bytes_read);
-        return 0;
-    }
-    output[bytes_read / sizeof(wchar_t)] = L'\0';
-    if (output[0] == L'\0' || output[0] == L'\r' || output[0] == L'\n') {
-        injector_diag(L"injector_directory: marker content invalid");
-        return 0;
-    }
-    injector_diag(L"injector_directory: resolved [%ls]", output);
+    /* Development layout: the DLL sits directly beside the EXE. */
+    injector_diag(L"injector_directory: resolved (dev layout) [%ls]", output);
     return 1;
 }
 
@@ -117,9 +102,9 @@ static int client_directory(wchar_t *output, size_t capacity) {
     if (output == NULL || capacity == 0) {
         return 0;
     }
-    /* Prefer the injector EXE directory (written by the injector as
-     * injector_dir.txt next to the extracted DLL), so .vapeclient lands next
-     * to Vape-v4.21.exe instead of the temp folder used for remote injection. */
+    /* Prefer the injector EXE directory (derived from this DLL's module path
+     * at <exe>\.vapeclient\Vape421Recovery), so .vapeclient lands next to
+     * Vape-v4.21.exe instead of the temp folder used for remote injection. */
     if (!injector_directory(output, capacity)) {
         if (!module_directory(output, capacity)) {
             length = GetEnvironmentVariableW(L"APPDATA", output,
@@ -137,6 +122,14 @@ static int client_directory(wchar_t *output, size_t capacity) {
     if (!CreateDirectoryW(output, NULL)
             && GetLastError() != ERROR_ALREADY_EXISTS) {
         return 0;
+    }
+    /* Keep the whole .vapeclient tree hidden from Explorer. */
+    {
+        DWORD attributes = GetFileAttributesW(output);
+        if (attributes != INVALID_FILE_ATTRIBUTES
+                && (attributes & FILE_ATTRIBUTE_HIDDEN) == 0) {
+            SetFileAttributesW(output, attributes | FILE_ATTRIBUTE_HIDDEN);
+        }
     }
     return 1;
 }
@@ -307,14 +300,14 @@ static int materialize_embedded_product_jar(
         vape_log(L"embedded product JAR resource is invalid");
         return 0;
     }
-    if (GetTempPathW((DWORD)(sizeof(temp_root) / sizeof(temp_root[0])),
-            temp_root) == 0) {
-        vape_log(L"GetTempPathW failed: %lu", GetLastError());
+    if (!client_directory(temp_root,
+            sizeof(temp_root) / sizeof(temp_root[0]))) {
+        vape_log(L"client_directory failed for embedded product JAR");
         return 0;
     }
     _snwprintf_s(temp_directory,
             sizeof(temp_directory) / sizeof(temp_directory[0]), _TRUNCATE,
-            L"%lsVape421Recovery", temp_root);
+            L"%ls\\Vape421Recovery", temp_root);
     if (!CreateDirectoryW(temp_directory, NULL)
             && GetLastError() != ERROR_ALREADY_EXISTS) {
         vape_log(L"CreateDirectoryW failed: %lu", GetLastError());
@@ -328,7 +321,7 @@ static int materialize_embedded_product_jar(
     }
     file = CreateFileW(jar_path, GENERIC_WRITE,
             FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, CREATE_ALWAYS,
-            FILE_ATTRIBUTE_TEMPORARY, NULL);
+            FILE_ATTRIBUTE_NORMAL, NULL);
     if (file == INVALID_HANDLE_VALUE) {
         vape_log(L"CreateFileW for embedded product JAR failed: %lu",
                 GetLastError());

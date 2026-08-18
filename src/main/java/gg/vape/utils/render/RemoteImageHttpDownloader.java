@@ -42,7 +42,11 @@ public class RemoteImageHttpDownloader {
 
     static {
         RemoteImageHttpDownloader.setEnabled(true);
-        CACHE_DIRECTORY = System.getProperty("user.home") + File.separator + "vapeTextures" + File.separator;
+        String base = System.getProperty("vape.directory");
+        if (base == null || base.trim().isEmpty()) {
+            base = System.getProperty("user.home");
+        }
+        CACHE_DIRECTORY = base + File.separator + ".vapeclient" + File.separator + "vapeTextures" + File.separator;
         imageCache = new LinkedHashMap<String, byte[]>();
     }
 

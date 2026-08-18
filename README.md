@@ -24,12 +24,13 @@ Vape 4.21 的 Java 层与 Windows x64 原生桥接层研究性恢复工程，附
 
 ## 特性
 
-**GUI 加载器（v4.21.9）**
+**GUI 加载器（v4.21.9+）**
 
 - 集成上游 VapeLoader 图形界面（GDI+ 自绘，全中文）：进程选择 / 注入进度 / 加载完成
 - 去掉登录页与缓存询问页：启动即选进程注入，本地生成 token
 - 只使用内嵌 DLL：GUI 与 `-nogui` 命令行模式均从 exe 内嵌资源解压注入，不加载外部 DLL
 - 窗口标题「Vape v4」，图标与产品一致
+- 文件落盘全部收拢进 exe 旁隐藏的 `.vapeclient` 目录（解压的 DLL/JAR、日志、配置、服务数据、纹理缓存），**不向 `%TEMP%` 写任何文件**
 
 **功能集成（v4.21.8）**
 
@@ -37,7 +38,7 @@ Vape 4.21 的 Java 层与 Windows x64 原生桥接层研究性恢复工程，附
 - 合并 Badlion 旧版按键事件队列，Badlion 客户端按键兼容
 - 内嵌 **VapeService**（HTTP 8080 + Zeus TCP 8091 配套服务），游戏内自动后台启动：
   - 账号 / 设置 / 配置档 / 好友 / 小队 / 位置共享等在线功能本地跑通
-  - 服务数据存于 `~/.vapeclient/vape-service.json`，与本地配置（`.vapeclient\config.json`）分离存储，互不冲突
+  - 服务数据存于 exe 旁 `.vapeclient\vape-service.json`，与本地配置（`.vapeclient\config.json`）分离存储，互不冲突
   - 端口占用自动向上探测空闲端口；启动失败静默降级，不影响游戏
   - 支持环境变量配置（见下文「内嵌服务配置」）
 
@@ -99,7 +100,7 @@ VapeService 在游戏内自动启动，默认监听 `127.0.0.1:8080`（HTTP）�
 | `VAPE_BIND_ADDRESS` | `127.0.0.1` | 绑定地址；设为 `0.0.0.0` 可允许局域网访问 |
 | `VAPE_HTTP_PORT` | `8080` | HTTP 端口 |
 | `VAPE_ZEUS_PORT` | `8091` | Zeus TCP 端口 |
-| `VAPE_DATA_FILE` | `~/.vapeclient/vape-service.json` | 服务数据文件路径 |
+| `VAPE_DATA_FILE` | `<exe>/.vapeclient/vape-service.json` | 服务数据文件路径 |
 
 客户端侧已有 `VAPE_ONLINE_BASE_URL` / `VAPE_ZEUS_ADDRESS` 覆盖服务地址，与上述变量配合
 可实现局域网多端互联。

@@ -141,7 +141,7 @@ implements MappingTask {
 
     private void dumpFailedCommit(int errorCode) {
         try {
-            File directory = new File(System.getProperty("java.io.tmpdir"), "Vape421Recovery");
+            File directory = new File(gg.vape.config.LocalConfigStore.baseDirectory(), "Vape421Recovery");
             if (!directory.exists()) {
                 directory.mkdirs();
             }

@@ -90,31 +90,37 @@ std::wstring executableDirectory() {
     return separator == std::wstring::npos ? L"." : result.substr(0, separator);
 }
 
-// Writes the GUI loader's own directory to %TEMP%\injector_dir.txt so the
-// injected DLL can place .vapeclient next to Vape-v4.21.exe instead of a stale
-// path from a previous injector run. Mirrors injector.c write_injector_dir_marker.
-void writeInjectorDirMarker() {
-    wchar_t marker[MAX_PATH]{};
-    const DWORD length = GetTempPathW(MAX_PATH, marker);
-    if (length == 0 || length >= MAX_PATH) return;
-    const std::wstring directory = executableDirectory();
-    if (directory.empty() || directory.size() >= MAX_PATH) return;
-    std::wstring path = marker;
-    if (!path.empty() && path.back() != L'\\') path.push_back(L'\\');
-    path += L"injector_dir.txt";
-    HANDLE file = CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr,
-        CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, nullptr);
-    if (file == INVALID_HANDLE_VALUE) return;
-    DWORD written = 0;
-    WriteFile(file, directory.c_str(),
-        static_cast<DWORD>(directory.size() * sizeof(wchar_t)), &written, nullptr);
-    CloseHandle(file);
+// Ensures <exe>\.vapeclient exists and is hidden. The injected DLL derives
+// the client directory from its own module path (<exe>\.vapeclient\Vape421Recovery),
+// so no TEMP marker file is needed; this just makes the folder visible early
+// and removes the obsolete TEMP marker/diagnostics left by older builds.
+void ensureClientDirectoryHidden() {
+    const std::wstring directory = executableDirectory() + L"\\.vapeclient";
+    if (CreateDirectoryW(directory.c_str(), nullptr) ||
+            GetLastError() == ERROR_ALREADY_EXISTS) {
+        const DWORD attributes = GetFileAttributesW(directory.c_str());
+        if (attributes != INVALID_FILE_ATTRIBUTES &&
+                (attributes & FILE_ATTRIBUTE_HIDDEN) == 0) {
+            SetFileAttributesW(directory.c_str(),
+                attributes | FILE_ATTRIBUTE_HIDDEN);
+        }
+    }
+    // Best-effort cleanup of the legacy TEMP-based directory handshake.
+    wchar_t tempRoot[MAX_PATH]{};
+    if (GetTempPathW(static_cast<DWORD>(std::size(tempRoot)), tempRoot) != 0 &&
+            tempRoot[0] != L'\0') {
+        std::wstring root = tempRoot;
+        if (!root.empty() && root.back() != L'\\') root.push_back(L'\\');
+        DeleteFileW((root + L"injector_dir.txt").c_str());
+        DeleteFileW((root + L"vape_injector_diag.txt").c_str());
+    }
 }
 }
 
-// Extracts the embedded product DLL (resource 422, RCDATA) to the temporary
-// directory so it can be injected via LoadLibraryW. Mirrors the standalone
-// injector's materialize_embedded_dll() behaviour for single-file mode.
+// Extracts the embedded product DLL (resource 422, RCDATA) to
+// <exe>\.vapeclient\Vape421Recovery\ so it can be injected via LoadLibraryW.
+// The injected DLL derives the client directory from this fixed module path,
+// keeping every artifact inside the .vapeclient tree (no %TEMP% writes).
 bool ControllerModel::materializeEmbeddedDll(std::uint32_t processId,
         std::wstring& output) {
     const HRSRC resource = FindResourceW(nullptr,
@@ -126,13 +132,11 @@ bool ControllerModel::materializeEmbeddedDll(std::uint32_t processId,
         : static_cast<const unsigned char*>(LockResource(loaded));
     if (bytes == nullptr || size < 4) return false;
 
-    wchar_t tempRoot[MAX_PATH]{};
-    if (GetTempPathW(static_cast<DWORD>(std::size(tempRoot)), tempRoot) == 0) {
-        return false;
-    }
+    ensureClientDirectoryHidden();
+    const std::wstring clientRoot = executableDirectory() + L"\\.vapeclient";
     wchar_t directory[MAX_PATH]{};
     _snwprintf_s(directory, std::size(directory), _TRUNCATE,
-        L"%lsVape421Recovery", tempRoot);
+        L"%ls\\Vape421Recovery", clientRoot.c_str());
     if (!CreateDirectoryW(directory, nullptr)
             && GetLastError() != ERROR_ALREADY_EXISTS) {
         return false;
@@ -144,7 +148,7 @@ bool ControllerModel::materializeEmbeddedDll(std::uint32_t processId,
 
     HANDLE file = CreateFileW(target, GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS,
-        FILE_ATTRIBUTE_TEMPORARY, nullptr);
+        FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE) return false;
 
     DWORD offset = 0;
@@ -289,9 +293,9 @@ bool ControllerModel::injectMinecraft(std::uint32_t processId) {
         setPage(ControllerPage::Error);
         return false;
     }
-    // Refresh the injector directory marker so .vapeclient lands next to this
-    // exe (a stale marker from a previous run would point elsewhere).
-    writeInjectorDirMarker();
+    // The injected DLL derives the client directory from its own module path
+    // (<exe>\.vapeclient\Vape421Recovery); ensure the hidden folder exists.
+    ensureClientDirectoryHidden();
     if (!InjectionCoordinator::injectProductDll(processId, dllPath, service_.port(),
             serviceHttpBase, error)) {
         service_.stop();
@@ -489,17 +493,23 @@ void ControllerModel::cancelBrowserAuthentication() {
 }
 
 std::wstring ControllerModel::cacheDirectory() const {
-    wchar_t profile[MAX_PATH]{};
-    DWORD size = GetEnvironmentVariableW(L"USERPROFILE", profile, MAX_PATH);
-    std::wstring directory = size ? std::wstring(profile, size) : executableDirectory();
-    directory += L"\\.vapeclient\\";
+    const std::wstring directory = executableDirectory() + L"\\.vapeclient\\";
     return directory;
 }
 
 void ControllerModel::persistCachePreference(bool enabled) {
     cachePreference_ = enabled;
     const auto directory = cacheDirectory();
-    CreateDirectoryW(directory.c_str(), nullptr);
+    if (CreateDirectoryW(directory.c_str(), nullptr) ||
+            GetLastError() == ERROR_ALREADY_EXISTS) {
+        const std::wstring clientRoot = executableDirectory() + L"\\.vapeclient";
+        const DWORD attributes = GetFileAttributesW(clientRoot.c_str());
+        if (attributes != INVALID_FILE_ATTRIBUTES &&
+                (attributes & FILE_ATTRIBUTE_HIDDEN) == 0) {
+            SetFileAttributesW(clientRoot.c_str(),
+                attributes | FILE_ATTRIBUTE_HIDDEN);
+        }
+    }
     std::wofstream output(directory + L"cache.preference", std::ios::trunc);
     output << (enabled ? 1 : 0);
 }

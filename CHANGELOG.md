@@ -1,5 +1,23 @@
 # 更新日志
 
+## v4.21.10 (2026-08-18)
+
+**文件落盘收拢（不再写 %TEMP%）**
+
+- 所有运行产物全部收进 exe 旁隐藏的 `.vapeclient` 目录，不再向 `%TEMP%` 写入任何文件：
+  - 内嵌 DLL / 产品 JAR 解压到 `<exe>\.vapeclient\Vape421Recovery\`（原 `%TEMP%\Vape421Recovery\`）
+  - 注入目录不再经 `%TEMP%\injector_dir.txt` 传递：DLL 从自身模块路径（固定位于 `.vapeclient\Vape421Recovery`）推断 exe 目录，彻底废弃跨进程 TEMP 标记
+  - 注入诊断改为写到 DLL 模块目录（`.vapeclient\Vape421Recovery\vape_injector_diag.txt`），不再写 `%TEMP%\vape_injector_diag.txt`
+  - Java 侧映射失败转储改到 `.vapeclient\Vape421Recovery\`（原 `java.io.tmpdir`）
+  - 在线纹理缓存从 `~/vapeTextures` 移入 `.vapeclient\vapeTextures`
+  - 服务数据 `vape-service.json` 与本地配置统一到 exe 旁 `.vapeclient`（跟随 DLL 注入的 `vape.directory`）
+- `.vapeclient` 目录自动设为隐藏属性（GUI / 命令行 / DLL 三处创建时均设置），Explorer 中不再显眼
+- 启动时顺手清理旧版本遗留的 `%TEMP%\injector_dir.txt` / `vape_injector_diag.txt`
+
+**修复**
+
+- 修复 `.vapeclient` 落点与 exe 目录不一致：GUI 注入不再依赖可能过期的 TEMP 标记，路径始终由注入链路内的模块位置推导
+
 ## v4.21.9 (2026-08-17)
 
 **GUI 单文件加载器**

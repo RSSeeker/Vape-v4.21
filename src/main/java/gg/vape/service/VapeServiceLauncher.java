@@ -105,8 +105,11 @@ public final class VapeServiceLauncher {
         if (configured != null && !configured.trim().isEmpty()) {
             return Paths.get(configured);
         }
-        String home = System.getProperty("user.home", ".");
-        return Paths.get(home, ".vapeclient", "vape-service.json");
+        String base = System.getProperty("vape.directory");
+        if (base == null || base.trim().isEmpty()) {
+            base = System.getProperty("user.home", ".");
+        }
+        return Paths.get(base, ".vapeclient", "vape-service.json");
     }
 
     private static String env(String name, String fallback) {

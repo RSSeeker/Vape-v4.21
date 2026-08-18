@@ -43,8 +43,21 @@ public final class LocalConfigStore {
         if (!directory.exists()) {
             directory.mkdirs();
         }
+        hideDirectory(directory);
         migrateLegacyConfig(directory);
         return directory;
+    }
+
+    private static void hideDirectory(File directory) {
+        try {
+            java.nio.file.Path path = directory.toPath();
+            if (java.nio.file.Files.exists(path)) {
+                java.nio.file.Files.setAttribute(path, "dos:hidden", true);
+            }
+        }
+        catch (Exception ignored) {
+            // hiding is cosmetic; never fail config access over it
+        }
     }
 
     private static void migrateLegacyConfig(File targetDirectory) {
