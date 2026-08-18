@@ -15,6 +15,7 @@ import gg.vape.wrapper.impl.ChunkWorldBridge;
 import gg.vape.wrapper.impl.EntityPlayerSP;
 import gg.vape.wrapper.impl.ForgeVersion;
 import gg.vape.wrapper.impl.Minecraft;
+import gg.vape.wrapper.impl.WorldClient;
 import java.awt.Color;
 
 public class CoordinatesHudFrame
@@ -89,17 +90,26 @@ extends HudModuleConfigFrameBase {
 
     private String getBiomeName() {
         EntityPlayerSP player = Minecraft.thePlayer();
+        if (player == null || player.isNull()) {
+            return "";
+        }
         int blockX = (int)Math.floor(player.z());
         int blockZ = (int)Math.floor(player.h());
-        if (ForgeVersion.MC_1_16_5.d()) {
-            return Minecraft.theWorld().Y(BlockPos.create(blockX, 0, blockZ)).n();
+        WorldClient world = Minecraft.theWorld();
+        if (world == null || world.isNull()) {
+            // Leaving a world clears the client level; the HUD frame may still
+            // render one more frame before the game returns to the menu.
+            return "";
         }
-        Chunk chunk = Minecraft.theWorld().P(blockX, blockZ);
-        ChunkWorldBridge chunkWorldBridge = Minecraft.theWorld().C();
+        if (ForgeVersion.MC_1_16_5.d()) {
+            return world.Y(BlockPos.create(blockX, 0, blockZ)).n();
+        }
+        Chunk chunk = world.P(blockX, blockZ);
+        ChunkWorldBridge chunkWorldBridge = world.C();
         if (chunk == null || chunkWorldBridge == null) {
             return "";
         }
-        Biome biome = chunk.J(blockX, blockZ, Minecraft.theWorld().C());
+        Biome biome = chunk.J(blockX, blockZ, world.C());
         return biome.n();
     }
 
