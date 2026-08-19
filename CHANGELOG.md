@@ -1,5 +1,13 @@
 # 更新日志
 
+## v4.21.12 (2026-08-19)
+
+**通知文案翻译修复**
+
+- 修复自救/搭梯失败通知（"Server rejected block placement!" 等）仍显示英文：根因是通知文本经 WrappedTextComponent 按空格拆行后再做整句翻译匹配，拆行后的碎片永远匹配不到完整句子键
+- `WrappedTextComponent.getWrappedLines()` 改为在拆行前先对完整文本翻译一次，未知文本（玩家名/动态消息）原样返回不受影响
+- 顺带补译 server_rejected_block_placement 键（服务器拒绝了方块放置！），并核查全部救援失败通知（Clutch Failed / AutoLadder Failed / Server teleported you! / No ladder available! / No support block available! / Could not find a valid laddering solution!）均已有翻译
+
 ## v4.21.11 (2026-08-19)
 
 **翻译与界面完善**
