@@ -2720,3 +2720,4 @@ UI_USE_VIA_KEYBIND_WHILE_IN_GAME=游戏中通过按键使用
 UI_MUST_BE_BOUND_TO_USE=必须先绑定后才能使用
 UI_PLEASE_PROVIDE_FEEDBACK=请为你的评分提供反馈...
 BETA_UPPERCASE=测试版
+server_rejected_block_placement=服务器拒绝了方块放置！
