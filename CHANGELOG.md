@@ -1,5 +1,16 @@
 # 更新日志
 
+## v4.21.11 (2026-08-19)
+
+**翻译与界面完善**
+
+- 修复按键绑定文案仍显示英文：`Properties` 键不允许空格，改用下划线键（`UI_PRESS_A_KEY_TO_BIND` 等），JVM 级验证全部按键提示（按任意键绑定 / 绑定已移除 / 已绑定 / 必须先绑定 / 通过按键使用 / 设置按键 / 输入物品名称 / 正在编辑收藏）映射正确
+- 补译界面徽章与占位文案：New!→新！、UNSAFE→不安全、INDEV→开发中、Beta/BETA→测试版、Type message...→输入消息...、User is offline→用户已离线、Click to remove bind→点击移除绑定（补全全大写 BETA 键）
+- 术语统一：锚点→重生锚、救场→自救、上帝视角→自由视角（Freecam）、围堵→围墙（BlockIn）、变速齿轮→变速（Timer）、距离→攻击距离（Reach）、自由视角→自由旋转视角（Freelook）
+- 部分翻译中文化：Combo→连击、Kite→风筝、overlay→覆盖层、nametags→名称标签、Bot→机器人、Post→后置；CPS / GUI / FPS / ESP / WTap / 甩枪 保留原文（社区通用）
+- 修复中文字体过细：noto.ttf 重建时固定字重为 SemiBold(600)（NotoSansSC-VF 默认 Thin(100) 导致文字发虚），新增 `tools/rebuild_noto.py` 一键重建脚本
+- 修复退出世界闪退：`CoordinatesHudFrame.getBiomeName` 空世界保护（退出世界后 HUD 坐标框多渲染一帧导致 NPE）
+
 ## v4.21.10 (2026-08-18)
 
 **文件落盘收拢（不再写 %TEMP%）**
