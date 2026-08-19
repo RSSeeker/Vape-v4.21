@@ -17,8 +17,10 @@ from pathlib import Path
 from fontTools import subset
 from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib import TTFont
+from fontTools.varLib import instancer
 
 DEFAULT_SOURCE = r"C:\Windows\Fonts\NotoSansSC-VF.ttf"
+WEIGHT = 600  # SemiBold: the previous release used this weight for legibility
 
 
 def collect_unicodes(properties_path: Path) -> set:
@@ -34,12 +36,29 @@ def collect_unicodes(properties_path: Path) -> set:
     return needed
 
 
-def flatten_variable_font(font: TTFont) -> TTFont:
-    """Freeze the variable font to the default instance and drop gvar/fvar.
+def pin_weight(font: TTFont, weight: int) -> TTFont:
+    """Pin the variable font to a specific weight (default instance).
 
-    fontTools' Subsetter already drops fvar/gvar when the instance is pinned,
-    but we do it explicitly for clarity and determinism.
+    NotoSansSC-VF defaults to Thin (100), which renders illegibly in the GUI;
+    the previous release shipped a SemiBold (600) subset. instancer freezes the
+    wght axis and removes the variable tables so stb can consume the static
+    outline directly.
     """
+    if "fvar" in font:
+        font = instancer.instantiateVariableFont(font, {"wght": weight},
+                                                 inplace=False)
+    if "fvar" in font:
+        del font["fvar"]
+    for table_tag in ("gvar", "avar", "STAT", "cvar", "HVAR", "MVAR", "cvar"):
+        if table_tag in font:
+            del font[table_tag]
+    if "OS/2" in font:
+        font["OS/2"].usWeightClass = weight
+    return font
+
+
+def flatten_variable_font(font: TTFont) -> TTFont:
+    """Drop any remaining variable tables (defensive; pin_weight handles them)."""
     for table_tag in ("fvar", "gvar", "avar", "STAT", "cvar", "HVAR", "MVAR"):
         if table_tag in font:
             del font[table_tag]
@@ -72,6 +91,8 @@ def main() -> int:
     print(f"covering {len(unicodes)} codepoints")
 
     font = TTFont(str(source))
+    font = pin_weight(font, WEIGHT)
+
     options = subset.Options()
     options.flavor = None
     options.layout_features = []
