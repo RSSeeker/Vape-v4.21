@@ -48,7 +48,13 @@ extends SimpleTextLabelComponent {
     public List<String> getWrappedLines() {
         if (this.wrappedLines == null) {
             SmoothFontRenderer fontRenderer = this.bold ? Vape.INSTANCE.getFontManager().W(this.fontScale, false) : Vape.INSTANCE.getFontManager().E(this.fontScale, false);
-            this.wrappedLines = this.wrapLines(Arrays.asList(this.text.split("\n")), fontRenderer);
+            // Translate the WHOLE text before wrapping. wrapLines() splits on
+            // spaces and the font renderer's s() matches whole strings, so a
+            // post-wrap lookup would miss (e.g. "Server rejected block
+            // placement!" wrapped to "Server rejected"/"block"/"placement!").
+            // Unknown text (names, messages) passes through unchanged.
+            String localized = Vape.INSTANCE.getFontSelector().W().s(this.text);
+            this.wrappedLines = this.wrapLines(Arrays.asList(localized.split("\n")), fontRenderer);
         }
         return this.wrappedLines;
     }
