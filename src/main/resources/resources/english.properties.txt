@@ -2704,3 +2704,4 @@ UI_SHARE_ADDITIONAL_FEEDBACK=Share additional feedback? (Optional)
 UI_USE_VIA_KEYBIND_WHILE_IN_GAME=Use via keybind while in game
 UI_MUST_BE_BOUND_TO_USE=Must be bound to use
 UI_PLEASE_PROVIDE_FEEDBACK=Please provide feedback with your rating...
+BETA_UPPERCASE=BETA
