@@ -105,6 +105,9 @@ implements Runnable {
                     EntityPlayerSP entityPlayerSP = Minecraft.thePlayer();
                     WorldClient worldClient = Minecraft.theWorld();
                     int n = ((Double)this.j.getValue()).intValue();
+                    Vape.debugLog("[SearchProcessor] scanning range=" + n
+                            + " targets=" + this.H.size()
+                            + " resultsBefore=" + this.c.size());
                     this.h(0, 0, 0);
                     for (int i = -n; i < n; ++i) {
                         for (int j = -n; j < n; ++j) {
@@ -115,6 +118,7 @@ implements Runnable {
                                     int n3;
                                     if (Minecraft.theWorld().isNull() || !Minecraft.theWorld().equals(worldClient) || Minecraft.thePlayer().isNull() || !Minecraft.thePlayer().equals(entityPlayerSP)) {
                                         this.c.clear();
+                                        Vape.debugLog("[SearchProcessor] world/player changed, cleared results");
                                         continue block4;
                                     }
                                     int n4 = (int)entityPlayerSP.z() + i;
@@ -128,6 +132,7 @@ implements Runnable {
                                         SearchBlock searchBlock = this.S(n5, n6);
                                         if (searchBlock == null || this.P && !this.h(n4, n3, n2)) continue;
                                         this.c.add(new SearchResultData(n4, n3, n2, n5, searchBlock, searchBlock.I$src$Ljava_util_concurrent_atomic_AtomicBoolean_$10pq3bz(), 0));
+                                        Vape.debugLog("[SearchProcessor] FOUND " + searchBlock.d() + " at " + n4 + "," + n3 + "," + n2 + " id=" + n5 + " results=" + this.c.size());
                                         continue;
                                     }
                                     if (n5 == searchResultData.N && !(RotationUtil.p(entityPlayerSP, n4, n3, n2) > 200.0)) continue;
@@ -138,10 +143,14 @@ implements Runnable {
                             }
                         }
                     }
+                    if (this.c.isEmpty()) {
+                        Vape.debugLog("[SearchProcessor] scan complete, NO results (targets=" + this.H.size() + ")");
+                    }
                 }
             }
             catch (Exception exception) {
                 Vape.logThrowable(exception);
+                Vape.debugLog("[SearchProcessor] scan thread threw: " + exception);
             }
         }
     }

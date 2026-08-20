@@ -104,12 +104,28 @@ extends Frame {
         centerX /= Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
         centerY /= Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
         centerY += 10.0;
+        gg.vape.Vape.debugLog("[CenterStack] window=" + Minecraft.J() + "x" + Minecraft.h()
+                + " scale=" + Vape.INSTANCE.getClientSettings().getGuiScaleFactor()
+                + " center=" + centerX + "," + centerY
+                + " visible=" + this.V$src$Z$1xhop3l()
+                + " activeModules=" + this.activeModules.size()
+                + " font26=" + ForgeVersion.MC_26_1.d());
         ArrayList<ActiveModuleStackEntry> entries = new ArrayList<ActiveModuleStackEntry>();
         for (Mod module : this.activeModules) {
-            ModuleDisplayInfo moduleDisplayInfo = module.getModuleDisplayInfo();
-            if (moduleDisplayInfo == null) continue;
-            entries.add(new ActiveModuleStackEntry(module, moduleDisplayInfo));
+            try {
+                ModuleDisplayInfo moduleDisplayInfo = module.getModuleDisplayInfo();
+                if (moduleDisplayInfo == null) {
+                    gg.vape.Vape.debugLog("[CenterStack] module " + module.getName() + " returned null info");
+                    continue;
+                }
+                entries.add(new ActiveModuleStackEntry(module, moduleDisplayInfo));
+            }
+            catch (Throwable throwable) {
+                gg.vape.Vape.logThrowable(throwable);
+                gg.vape.Vape.debugLog("[CenterStack] module " + module.getName() + " threw: " + throwable);
+            }
         }
+        gg.vape.Vape.debugLog("[CenterStack] entries=" + entries.size());
         boolean showModuleName = entries.size() > 1;
         for (ActiveModuleStackEntry entry : entries) {
             String translatedLabel = Vape.INSTANCE.getFontSelector().W()
@@ -137,6 +153,11 @@ extends Frame {
             }
             fontRenderer.drawStringWithShadow(text, textX + 1.0, centerY, entry.displayInfo.getColor());
             centerY += (double)(fontRenderer.FONT_HEIGHT(text) + 4);
+        }
+        try {
+            gg.vape.Vape.debugLog("[CenterStack] rendered " + entries.size() + " entries at x=" + (float)Minecraft.J() / 2.0f / (float)Vape.INSTANCE.getClientSettings().getGuiScaleFactor() + " y=" + ((float)Minecraft.h() / 2.0f / (float)Vape.INSTANCE.getClientSettings().getGuiScaleFactor() + 10.0f));
+        }
+        catch (Throwable ignored) {
         }
     }
 }
