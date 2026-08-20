@@ -5,6 +5,7 @@ import gg.vape.config.ClientSettings;
 import gg.vape.event.EventHandler;
 import gg.vape.event.EventPriority;
 import gg.vape.event.impl.EventMotion;
+import gg.vape.event.impl.EventPreMotion;
 import gg.vape.event.impl.EventPrePlayerTick;
 import gg.vape.event.impl.EventPreTick;
 import gg.vape.event.impl.EventRender3D;
@@ -98,6 +99,8 @@ extends Mod {
     private final LimitValue allowedItems;
     private float yawIntegral = 0.0f;
     private float pitchIntegral = 0.0f;
+    private float legacyAimYaw;
+    private float legacyAimPitch;
     private final BooleanValue perfectSwing;
     public final ModeOption centerMode;
     private float pitchProportionalScale = 1.0f;
@@ -658,9 +661,24 @@ extends Mod {
                 Vec3.create(player.c(), player.A() + 1.62, player.Z()),
                 Vec3.create(targetX, aimY, targetZ),
                 player.J(), false);
-        EventMotion.setRotationYaw(angles.getYaw());
-        EventMotion.setRotationPitch(angles.getPitch());
+        this.legacyAimYaw = angles.getYaw();
+        this.legacyAimPitch = angles.getPitch();
         this.readyToAttack = this.isInRange(this.target);
+    }
+
+    /** 1.7.10: apply the silent rotation to the outgoing packet. EventPreMotion
+     *  constructor overwrites EventMotion's rotation with the local view, so we
+     *  must re-apply the target angles AFTER that constructor (this handler runs
+     *  after RotationManager.onMotionUpdate, before the packet is written). */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPreMotionLegacy(EventPreMotion event) {
+        if (!ForgeVersion.MC_1_7_10.L()) {
+            return;
+        }
+        if (this.target != null && this.readyToAttack) {
+            EventMotion.setRotationYaw(this.legacyAimYaw);
+            EventMotion.setRotationPitch(this.legacyAimPitch);
+        }
     }
 
     @Override
