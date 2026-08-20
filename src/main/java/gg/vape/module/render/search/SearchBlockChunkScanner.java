@@ -91,18 +91,19 @@ public class SearchBlockChunkScanner {
         int chunkX;
         ArrayList<SearchBlockRenderEntry> results = new ArrayList<SearchBlockRenderEntry>();
         WorldClient worldClient = Minecraft.theWorld();
-        ClientChunkProvider clientChunkProvider = worldClient.U();
-        List<Chunk> loadedChunks = clientChunkProvider.L();
         EntityPlayerSP entityPlayerSP = Minecraft.thePlayer();
         double playerX = entityPlayerSP.z();
         double playerZ = entityPlayerSP.h();
         // Modern versions (1.16.5+) store block states in paletted containers,
-        // not the 1.8-1.12 char[] data field; scan by world coordinates instead.
+        // not the 1.8-1.12 char[] data field, and ClientChunkProvider's
+        // chunkListing field does not exist there; scan by world coordinates.
         if (ForgeVersion.MC_1_16_5.d()) {
             return SearchBlockChunkScanner.scanLoadedChunksModern(
-                    loadedChunks, searchBlocks, maxDistance, onlyCaves,
+                    null, searchBlocks, maxDistance, onlyCaves,
                     worldClient, playerX, playerZ);
         }
+        ClientChunkProvider clientChunkProvider = worldClient.U();
+        List<Chunk> loadedChunks = clientChunkProvider.L();
         HashSet<Long> airPositions = new HashSet<Long>();
         if (onlyCaves) {
             for (Chunk chunk : loadedChunks) {
@@ -135,10 +136,12 @@ public class SearchBlockChunkScanner {
     }
 
     /** Modern (1.16.5+) scan: block states live in paletted containers, so the
-     *  1.8-1.12 char[] shortcut is unusable. Walk each loaded chunk's world
-     *  coordinates and compare the block's registry id with the search blocks. */
+     *  1.8-1.12 char[] shortcut is unusable, and ClientChunkProvider's
+     *  chunkListing field does not exist on the modern ClientChunkCache. Walk
+     *  the world coordinates around the player instead, comparing each block's
+     *  registry id with the search blocks. */
     private static ArrayList<SearchBlockRenderEntry> scanLoadedChunksModern(
-            List<Chunk> loadedChunks, List<SearchBlock> searchBlocks,
+            List<Chunk> ignoredChunks, List<SearchBlock> searchBlocks,
             int maxDistance, boolean onlyCaves, WorldClient worldClient,
             double playerX, double playerZ) {
         ArrayList<SearchBlockRenderEntry> results = new ArrayList<SearchBlockRenderEntry>();
@@ -146,34 +149,39 @@ public class SearchBlockChunkScanner {
         if (targets.length == 0) {
             return results;
         }
-        for (Chunk chunk : loadedChunks) {
-            int chunkX = chunk.a();
-            int chunkZ = chunk.j();
-            int distance = (int)MathUtil.Z(playerX, 0.0, playerZ,
-                    (chunkX << 4) + 8, 0.0, (chunkZ << 4) + 8);
-            if (distance > maxDistance) continue;
-            for (int y = 0; y < 256; ++y) {
-                for (int z = 0; z < 16; ++z) {
-                    for (int x = 0; x < 16; ++x) {
-                        int worldX = (chunkX << 4) + x;
-                        int worldY = y;
-                        int worldZ = (chunkZ << 4) + z;
-                        Block block = worldClient.getBlockByPos(worldX, worldY, worldZ);
-                        if (block == null || block.isNull()) continue;
-                        int blockId = Block.R(block);
-                        if (blockId == 0) continue;
-                        for (SearchBlock searchBlock : targets) {
-                            if (!searchBlock.T() || searchBlock.M() == -1
-                                    || searchBlock.M() != blockId) continue;
-                            if (onlyCaves && !SearchBlockChunkScanner
-                                    .hasAdjacentAirModern(worldClient, worldX, worldY, worldZ)) {
-                                continue;
+        int chunkRadius = (maxDistance / 16) + 1;
+        int centerChunkX = ((int)Math.floor(playerX)) >> 4;
+        int centerChunkZ = ((int)Math.floor(playerZ)) >> 4;
+        for (int dx = -chunkRadius; dx <= chunkRadius; ++dx) {
+            for (int dz = -chunkRadius; dz <= chunkRadius; ++dz) {
+                int chunkX = centerChunkX + dx;
+                int chunkZ = centerChunkZ + dz;
+                int distance = (int)MathUtil.Z(playerX, 0.0, playerZ,
+                        (chunkX << 4) + 8, 0.0, (chunkZ << 4) + 8);
+                if (distance > maxDistance) continue;
+                for (int y = 0; y < 256; ++y) {
+                    for (int z = 0; z < 16; ++z) {
+                        for (int x = 0; x < 16; ++x) {
+                            int worldX = (chunkX << 4) + x;
+                            int worldY = y;
+                            int worldZ = (chunkZ << 4) + z;
+                            Block block = worldClient.getBlockByPos(worldX, worldY, worldZ);
+                            if (block == null || block.isNull()) continue;
+                            int blockId = Block.R(block);
+                            if (blockId == 0) continue;
+                            for (SearchBlock searchBlock : targets) {
+                                if (!searchBlock.T() || searchBlock.M() == -1
+                                        || searchBlock.M() != blockId) continue;
+                                if (onlyCaves && !SearchBlockChunkScanner
+                                        .hasAdjacentAirModern(worldClient, worldX, worldY, worldZ)) {
+                                    continue;
+                                }
+                                int metadata = 0;
+                                SearchBlockRenderEntry entry = SearchBlockChunkScanner.obtain(
+                                        blockId, metadata, worldX, worldY, worldZ);
+                                results.add(entry);
+                                break;
                             }
-                            int metadata = 0;
-                            SearchBlockRenderEntry entry = SearchBlockChunkScanner.obtain(
-                                    blockId, metadata, worldX, worldY, worldZ);
-                            results.add(entry);
-                            break;
                         }
                     }
                 }

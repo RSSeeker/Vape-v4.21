@@ -95,11 +95,15 @@ extends Frame {
         } else {
             fontRenderer = Minecraft.getFontRenderer();
         }
-        // Center of the screen. (Minecraft.J()/h() are the MOUSE position in
-        // this version, NOT the window size - using them put the health text at
-        // mouseX/4, mouseY/4, drifting around the top-left instead of center.)
-        centerX = (double)scaledResolution.getScaledWidth() / 2.0;
-        centerY = (double)(scaledResolution.getScaledHeight() / 2) + 10.0;
+        // HUD frames render in scaled GUI coordinates: windowPixels / guiScale.
+        // Center is windowWidth/(2*scale), windowHeight/(2*scale). The original
+        // code divided the raw window size by 4 (before the scale division),
+        // placing the stack at the quarter point instead of the center.
+        centerX = (double)Minecraft.J() / 2.0
+                / Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
+        centerY = (double)Minecraft.h() / 2.0
+                / Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
+        centerY += 10.0;
         ArrayList<ActiveModuleStackEntry> entries = new ArrayList<ActiveModuleStackEntry>();
         for (Mod module : this.activeModules) {
             ModuleDisplayInfo moduleDisplayInfo = module.getModuleDisplayInfo();
