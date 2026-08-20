@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import gg.vape.Vape;
+import gg.vape.account.AccountInfo;
 import gg.vape.api.ApiHttpClient;
 import gg.vape.api.ApiHttpStatusException;
 import gg.vape.api.ApiResponse;
@@ -278,7 +279,8 @@ public class SyncThread {
                 this.vape.loadConfigData(config, true);
                 return;
             }
-            if (this.vape.getAccountInfo().hasProfilesEnabled()) {
+            AccountInfo accountInfo = this.vape.getAccountInfo();
+            if (accountInfo != null && accountInfo.hasProfilesEnabled()) {
                 this.loadRemoteConfig();
             } else {
                 this.loadStandaloneConfig();

@@ -173,6 +173,10 @@ public class Vape {
             this.profilesManager.loadJson(profilesData);
         } else {
             Vape.debugLog("profilesData is NULL!");
+            // No stored profiles: create the built-in defaults so at least one
+            // profile exists to persist module settings into (avoids settings
+            // being lost on every fresh/offline session).
+            this.profilesManager.loadJson(new JsonObject());
         }
         JsonArray otherData = ConfigJsonUtils.getJsonArray(configRoot, useNewOtherDataKey ? "otherData" : "otherdata");
         if (otherData != null && otherData.size() > 0) {
