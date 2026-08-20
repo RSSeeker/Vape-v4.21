@@ -2711,3 +2711,7 @@ TARGETINFO_HITS_COMPARATOR_TOOLTIP=Measures how many hits you've landed compared
 TARGETINFO_POTS_COMPARATOR_TOOLTIP=Measures how many heal pots you've used compared to target
 TARGETINFO_COMBO_COUNTER_TOOLTIP=Shows how many hits in a direct row you've landed, or taken, from target
 TARGETINFO_SHOW_HOVERED_TOOLTIP=Show information on a hovered entity if not attacking.
+shieldbreaker.double_click=Double click
+shieldbreaker.double_click.tooltip=Attacks again immediately after breaking the shield to knock the target back
+shieldbreaker.limit_to_items.tooltip=ShieldBreaker functions only while holding selected items
+silentaura.shield_check.tooltip=Won't attack players blocking with shield\nUsing ShieldBreaker, HitSwap, or AutoMace will override this behavior

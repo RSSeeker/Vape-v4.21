@@ -123,6 +123,7 @@ extends MappingTaskSet {
             this.D.add(new KeyBindingStateEventMappingTask());
         }
         if (NativeBridge.isBadlion189Runtime()) {
+            this.D.add(new Badlion189InputQueueMappingTask());
             this.D.add(new Badlion189Render2DMappingTask());
         }
     }

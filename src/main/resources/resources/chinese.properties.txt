@@ -2727,3 +2727,7 @@ TARGETINFO_HITS_COMPARATOR_TOOLTIP=衡量你对目标造成的命中次数
 TARGETINFO_POTS_COMPARATOR_TOOLTIP=衡量你比目标多使用的治疗药水数量
 TARGETINFO_COMBO_COUNTER_TOOLTIP=显示你对目标连续命中或受击的次数
 TARGETINFO_SHOW_HOVERED_TOOLTIP=未攻击时显示悬停实体的信息。
+shieldbreaker.double_click=双击
+shieldbreaker.double_click.tooltip=破盾后立即再次攻击，将目标击退
+shieldbreaker.limit_to_items.tooltip=破盾仅在手持选定物品时生效
+silentaura.shield_check.tooltip=不会攻击举盾格挡的玩家\n使用破盾、命中切换或自动重锤时可覆盖此行为

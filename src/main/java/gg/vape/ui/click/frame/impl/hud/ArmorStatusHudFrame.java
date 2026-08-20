@@ -58,7 +58,7 @@ extends HudModuleConfigFrameBase {
             ArmorStatusItemComponent armorStatusItemComponent;
             if (!(guiComponent instanceof ArmorStatusItemComponent)
                     || !(armorStatusItemComponent = (ArmorStatusItemComponent)guiComponent)
-                            .getSlot().getStack().isNotNull()) continue;
+                            .getEquippedItem().isNotNull()) continue;
             armorStatusItemComponent.setVisible(true);
         }
         double itemY = this.n() + 2.0;

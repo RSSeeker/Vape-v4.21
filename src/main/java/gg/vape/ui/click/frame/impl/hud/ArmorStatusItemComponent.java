@@ -10,6 +10,8 @@ import gg.vape.utils.render.GuiRenderPrimitives;
 import gg.vape.utils.render.ImageRenderer;
 import gg.vape.utils.render.ItemIconRenderer;
 import gg.vape.utils.render.RenderUtils;
+import gg.vape.wrapper.impl.Container;
+import gg.vape.wrapper.impl.EntityPlayerSP;
 import gg.vape.wrapper.impl.ForgeVersion;
 import gg.vape.wrapper.impl.Item;
 import gg.vape.wrapper.impl.ItemStack;
@@ -34,8 +36,16 @@ extends GuiComponent {
     }
 
     public Slot getSlot() {
-        return Minecraft.thePlayer().F$src$Lgg_vape_wrapper_impl_Container_$152y6lm()
-                .getSlot(this.slotIndex);
+        EntityPlayerSP player = Minecraft.thePlayer();
+        if (player.isNull()) {
+            return new Slot(null);
+        }
+        Container inventoryContainer =
+                player.F$src$Lgg_vape_wrapper_impl_Container_$152y6lm();
+        if (inventoryContainer.isNull()) {
+            return new Slot(null);
+        }
+        return inventoryContainer.getSlot(this.slotIndex);
     }
 
     public void setLastVisibleEntry(boolean lastVisibleEntry) {
@@ -122,7 +132,11 @@ extends GuiComponent {
     }
 
     public ItemStack getEquippedItem() {
-        return this.getSlot().getStack();
+        Slot slot = this.getSlot();
+        if (slot.isNull()) {
+            return new ItemStack(null);
+        }
+        return slot.getStack();
     }
 
     @Override

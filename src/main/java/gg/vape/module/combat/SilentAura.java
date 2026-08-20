@@ -53,6 +53,7 @@ import gg.vape.value.RandomValue;
 import gg.vape.value.Value;
 import gg.vape.wrapper.impl.Entity;
 import gg.vape.wrapper.impl.EntityLivingBase;
+import gg.vape.wrapper.impl.EntityOtherPlayerMP;
 import gg.vape.wrapper.impl.EntityPlayerSP;
 import gg.vape.wrapper.impl.ForgeVersion;
 import gg.vape.wrapper.impl.GuiScreen;
@@ -100,6 +101,7 @@ extends Mod {
     private float pitchIntegral = 0.0f;
     private boolean legacyAimLocked;
     private final BooleanValue perfectSwing;
+    private final BooleanValue shieldCheck;
     public final ModeOption centerMode;
     private float pitchProportionalScale = 1.0f;
     private final ColorValue attackColor;
@@ -213,6 +215,26 @@ extends Mod {
         if (candidate.equals(Minecraft.thePlayer().S$src$Lgg_vape_wrapper_impl_Entity_$dgzs12())) {
             return false;
         }
+        if (this.shieldCheck.getEffectiveValue().booleanValue()
+                && candidate.isInstance(MappedClasses.lG)
+                && RotationUtil.n(new EntityOtherPlayerMP(candidate.getObject()))) {
+            boolean enforceShieldCheck = true;
+            ShieldBreaker shieldBreaker = Vape.INSTANCE.getModManager().getMod(ShieldBreaker.class);
+            if (shieldBreaker != null && shieldBreaker.isEnabled() && shieldBreaker.hasAxeInHotbar()) {
+                enforceShieldCheck = false;
+            }
+            HitSwap hitSwap = Vape.INSTANCE.getModManager().getMod(HitSwap.class);
+            if (hitSwap != null && hitSwap.isEnabled() && hitSwap.hasAlternateAxe()) {
+                enforceShieldCheck = false;
+            }
+            AutoMace autoMace = Vape.INSTANCE.getModManager().getMod(AutoMace.class);
+            if (autoMace != null && autoMace.isEnabled() && autoMace.canHandleMaceAttack()) {
+                enforceShieldCheck = false;
+            }
+            if (enforceShieldCheck) {
+                return false;
+            }
+        }
         return this.passesItemFilter(candidate);
     }
 
@@ -231,6 +253,17 @@ extends Mod {
 
     public boolean isAttackCooldownReady() {
         if (ForgeVersion.MC_1_12_2.d() && this.perfectSwing.getEffectiveValue().booleanValue()) {
+            if (RotationUtil.u(Minecraft.thePlayer())) {
+                AutoMace autoMace = Vape.INSTANCE.getModManager().getMod(AutoMace.class);
+                if (autoMace != null && autoMace.isEnabled() && autoMace.hasReadyMace()) {
+                    return true;
+                }
+                ItemStack heldItem = Minecraft.thePlayer().getHeldItemHand();
+                if (heldItem.isNotNull() && heldItem.getItem().isNotNull()
+                        && heldItem.getItem().isInstance(MappedClasses.zx)) {
+                    return true;
+                }
+            }
             float attackStrength = Minecraft.thePlayer().getCooledAttackStrength(0.0f);
             return attackStrength == 1.0f;
         }
@@ -290,6 +323,8 @@ extends Mod {
         this.boxMode = new ModeOption("Box");
         this.renderType = ModeValue.create((Object)this, "Render type", this.ringMode, this.ringMode, this.boxMode);
         this.perfectSwing = BooleanValue.create(this, "Perfect swing", false, "Only attacks when there is no attack cooldown\nAdditionally, only swings when hovering(trigger)");
+        this.shieldCheck = BooleanValue.create(this, "Shield check", false,
+                "Won't attack players blocking with shield\nUsing ShieldBreaker, HitSwap, or AutoMace will override this behavior");
         this.breakBlocksTimer = new TimerUtil();
         this.rotationClaim = SharedModuleControlClaims.rotation;
         this.random = new Random();
@@ -302,7 +337,7 @@ extends Mod {
         if (ForgeVersion.MC_1_7_10.L()) {
             this.aimSpeed.setHidden(true);
         }
-        this.addValue(this.targetFilter, this.aimSpeed, this.attackRate, this.extraSwingDistance, this.maxAngle, this.targetMode, this.targetArea);
+        this.addValue(this.targetFilter, this.aimSpeed, this.attackRate, this.extraSwingDistance, this.maxAngle, this.targetMode, this.targetArea, this.shieldCheck);
         this.showTarget.addDependentValues(this.targetColor, this.attackColor, this.renderType);
         this.breakBlocks.addDependentValues(this.breakBlocksDelay, this.breakBlocksWhitelist);
         this.breakBlocksWhitelist.addDependentValues(this.blockBreakItems);
