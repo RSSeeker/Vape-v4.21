@@ -582,7 +582,7 @@ void ControllerModel::tick() {
                                  : std::wstring(detail.begin(), detail.end()));
         setPage(ControllerPage::Error);
     } else if (loadingElapsedSeconds() >= 90.0) {
-        setStatus(L"原生加载超时");
+        setStatus(L"原生加载超时\n26+版本请在打开世界后注入");
         setPage(ControllerPage::Error);
     }
 }

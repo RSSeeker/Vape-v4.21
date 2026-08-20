@@ -658,8 +658,8 @@ void ControllerUi::drawLoading(Gdiplus::Graphics& graphics) {
     }
     if (stageElapsed >= 10.0) {
         drawText(graphics,
-            L"该阶段加载时间异常长\n请联系支持人员",
-            180, 314, 464, 42, 12, Gdiplus::Color(255, 176, 73, 73), false,
+            L"该阶段加载时间异常长\n26+版本请在打开世界后注入\n请联系支持人员",
+            180, 310, 464, 60, 12, Gdiplus::Color(255, 176, 73, 73), false,
             Gdiplus::StringAlignmentCenter);
     }
 }
