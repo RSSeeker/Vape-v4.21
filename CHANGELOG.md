@@ -1,5 +1,27 @@
 # 更新日志
 
+## v4.21.14 (2026-08-20)
+
+**生命值 HUD 修复**
+
+- 修复生命值在所有现代版本（1.21.11 / 26.1.2 等）完全不显示：根因是 `ActiveModuleStackFrame` 用 Minecraft 原生 `FontRenderer.drawStringWithShadow`，而 1.20.6+ 该旧签名不存在（基于 GuiGraphics）→ 静默不绘制。改为统一使用 Vape 自绘字体（SmoothFontRenderer），与 Keystrokes 等正常 HUD 帧一致
+- 生命值居中坐标对齐其他 HUD 帧的实际坐标系（`窗口/(2×缩放)`），字号调大至 1.5 倍更清晰
+
+**寻找方块（Search）修复**
+
+- 修复现代版本搜不到方块：`ClientChunkProvider.chunkListing` 字段在现代 `ClientChunkCache` 不存在，改为按玩家周围区块坐标扫描；`Block.t` 现代版增加物品注册表 fallback
+- 现代版扫描改由 SearchProcessor 单路径负责（避免双扫描并发清空结果）
+- 翻译：寻找矿物 → **寻找方块**（Search 为通用方块搜索器，可搜任意方块）
+
+**翻译与界面**
+
+- 输入框不再自动翻译用户输入（输入 Diamond 不再变钻石，仅 placeholder 翻译）
+- 天神搭路 → 神桥（godbridge）
+
+**渲染修复**
+
+- 补交 3D 渲染修复（26.1.2/1.21.10 事件钩子矩阵、实例化渲染器矩阵、视口/FBO 状态），修正矿物边框错位
+
 ## v4.21.13 (2026-08-20)
 
 **1.7.10 兼容性修复（SilentAura / XRay）**
