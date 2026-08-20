@@ -63,10 +63,14 @@ extends Mod {
     }
 
     private void updateSearchResults() {
-        if (this.pendingScanEntries != null) {
-            if (Minecraft.theWorld().isNull()) {
-                return;
-            }
+        // Modern versions: SearchProcessor fills searchResults directly; this
+        // char[]-based path would clear them and show nothing.
+        if (ForgeVersion.MC_1_16_5.d() || this.pendingScanEntries == null) {
+            return;
+        }
+        if (Minecraft.theWorld().isNull()) {
+            return;
+        }
             this.searchResults.clear();
             EntityPlayerSP entityPlayerSP = Minecraft.thePlayer();
             for (SearchBlockRenderEntry object : this.pendingScanEntries) {
@@ -83,13 +87,12 @@ extends Mod {
                         SearchResultDataPool.release(searchResultData);
                     }
                 }
-                SearchBlockChunkScanner.recycle(object);
-            }
-            for (SearchResultData searchResultData : this.searchResults) {
-                SearchResultDataPool.release(searchResultData);
-            }
-            this.pendingScanEntries = null;
+            SearchBlockChunkScanner.recycle(object);
         }
+        for (SearchResultData searchResultData : this.searchResults) {
+            SearchResultDataPool.release(searchResultData);
+        }
+        this.pendingScanEntries = null;
     }
 
     public void addSearchBlock(SearchBlock searchBlock) {
@@ -98,6 +101,12 @@ extends Mod {
 
     @Override
     public void onScheduledAction() {
+        // Modern versions scan via SearchProcessor (started in onEnable); the
+        // chunk-scanner path here only supports the 1.8-1.12 char[] format and
+        // would conflict with the processor's own result list.
+        if (ForgeVersion.MC_1_16_5.d()) {
+            return;
+        }
         if (this.scanTimer.hasTimeElapsed(1000L)) {
             this.scanTimer.reset();
             if (Minecraft.theWorld().isNull() || Minecraft.thePlayer().isNull()) {

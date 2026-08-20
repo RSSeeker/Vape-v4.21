@@ -95,14 +95,14 @@ extends Frame {
         } else {
             fontRenderer = Minecraft.getFontRenderer();
         }
-        // HUD frames render in scaled GUI coordinates: windowPixels / guiScale.
-        // Center is windowWidth/(2*scale), windowHeight/(2*scale). The original
-        // code divided the raw window size by 4 (before the scale division),
-        // placing the stack at the quarter point instead of the center.
-        centerX = (double)Minecraft.J() / 2.0
-                / Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
-        centerY = (double)Minecraft.h() / 2.0
-                / Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
+        // Center of the screen: the HUD uses window-pixel coordinates scaled by
+        // the GUI scale. The original /4 (before the scale division) put the
+        // stack at the quarter point; /2 lands on the center. Keeping the same
+        // operations as the original code avoids changing the coordinate space.
+        centerX = (float)Minecraft.J() / 2.0f;
+        centerY = Minecraft.h() / 2;
+        centerX /= Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
+        centerY /= Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
         centerY += 10.0;
         ArrayList<ActiveModuleStackEntry> entries = new ArrayList<ActiveModuleStackEntry>();
         for (Mod module : this.activeModules) {
