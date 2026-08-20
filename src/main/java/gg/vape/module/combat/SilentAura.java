@@ -5,7 +5,6 @@ import gg.vape.config.ClientSettings;
 import gg.vape.event.EventHandler;
 import gg.vape.event.EventPriority;
 import gg.vape.event.impl.EventMotion;
-import gg.vape.event.impl.EventPreMotion;
 import gg.vape.event.impl.EventPrePlayerTick;
 import gg.vape.event.impl.EventPreTick;
 import gg.vape.event.impl.EventRender3D;
@@ -99,8 +98,6 @@ extends Mod {
     private final LimitValue allowedItems;
     private float yawIntegral = 0.0f;
     private float pitchIntegral = 0.0f;
-    private float legacyAimYaw;
-    private float legacyAimPitch;
     private boolean legacyAimLocked;
     private final BooleanValue perfectSwing;
     public final ModeOption centerMode;
@@ -631,11 +628,11 @@ extends Mod {
         }
     }
 
-    /** 1.7.10 fallback: silently rotate the outgoing packets toward the target.
-     *  EntityClientPlayerMPMotionExprEditor rewrites the packet's rotation
-     *  fields to EventMotion.getRotationYaw/Pitch. The aim speed setting
-     *  controls how fast the packet view turns toward the target each tick
-     *  (with a human-like random multiplier, mirroring SilentAuraRotationController). */
+    /** 1.7.10 fallback: track the target and mark it ready to attack. The
+     *  outgoing packet rotation is NOT modified: rewriting the server-side
+     *  view makes the server send S08 PositionLook syncs that yank the local
+     *  camera toward the target (and cause entity-tick NPEs). attackEntity()
+     *  targets the tracked entity directly, so no view rewrite is needed. */
     private void updateAimLegacy() {
         if (Minecraft.theWorld().isNull()) {
             this.resetTargeting();
@@ -651,69 +648,8 @@ extends Mod {
         if (player.isNull()) {
             return;
         }
-        if (!this.legacyAimLocked) {
-            this.legacyAimLocked = true;
-            this.legacyAimYaw = player.J();
-            this.legacyAimPitch = player.V();
-        }
-        double[] aimCoordinates = this.computeAimCoords(this.target);
-        double targetX = aimCoordinates[0];
-        double targetY = aimCoordinates[1];
-        double targetZ = aimCoordinates[2];
-        double playerEyeY = player.N() + 1.62;
-        double targetHeight = this.target.Y();
-        double aimY = playerEyeY < targetY
-                ? targetY
-                : Math.min(playerEyeY, targetY + targetHeight) - 0.275;
-        RotationAngles angles = RotationVectorMath.H(
-                Vec3.create(player.c(), player.A() + 1.62, player.Z()),
-                Vec3.create(targetX, aimY, targetZ),
-                player.J(), false);
-        float targetYaw = angles.getYaw();
-        float targetPitch = angles.getPitch();
-        // Human-like per-tick step: aimSpeed base times a log-normal multiplier
-        // (1.4x..3.0x), same distribution as SilentAuraRotationController.
-        double meanLog = 0.65;
-        double stdDevLog = 0.25;
-        double uniform1 = Math.random();
-        if (uniform1 < 1.0E-4) {
-            uniform1 = 1.0E-4;
-        }
-        double gaussian = Math.sqrt(-2.0 * Math.log(uniform1)) * Math.cos(Math.PI * 2 * Math.random());
-        double multiplier = Math.exp(meanLog + stdDevLog * gaussian);
-        multiplier = Math.max(1.4, Math.min(3.0, multiplier));
-        float step = ((Double)this.getAimSpeed().getValue()).floatValue() * (float)multiplier;
-        float yawDiff = MathUtil.wrapAngleTo180(targetYaw - this.legacyAimYaw);
-        if (Math.abs(yawDiff) <= step) {
-            this.legacyAimYaw = targetYaw;
-        } else {
-            this.legacyAimYaw += Math.copySign(step, yawDiff);
-        }
-        float pitchDiff = targetPitch - this.legacyAimPitch;
-        if (Math.abs(pitchDiff) <= step) {
-            this.legacyAimPitch = targetPitch;
-        } else {
-            this.legacyAimPitch += Math.copySign(step, pitchDiff);
-        }
+        this.legacyAimLocked = true;
         this.readyToAttack = this.isInRange(this.target);
-    }
-
-    /** 1.7.10: apply the silent rotation to the outgoing packet. EventPreMotion
-     *  constructor overwrites EventMotion's rotation with the local view, so we
-     *  must re-apply the smoothed target angles AFTER that constructor (this
-     *  handler runs after RotationManager.onMotionUpdate, before the packet is
-     *  written). Applied while tracking a target so the server sees the view
-     *  smoothly turning (aim speed), not just at the attack tick. */
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onPreMotionLegacy(EventPreMotion event) {
-        if (!ForgeVersion.MC_1_7_10.L()) {
-            return;
-        }
-        if (this.target != null && this.legacyAimLocked
-                && this.rotationClaim.isOwnedBy(this)) {
-            EventMotion.setRotationYaw(this.legacyAimYaw);
-            EventMotion.setRotationPitch(this.legacyAimPitch);
-        }
     }
 
     @Override
