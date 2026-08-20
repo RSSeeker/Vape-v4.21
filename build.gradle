@@ -304,7 +304,7 @@ tasks.register('configureNative', Exec) {
     dependsOn(tasks.named('verifyInjectionPayload'))
     inputs.file(recoveredProductJar)
     inputs.files(fileTree(nativeSourceDirectory) {
-        include 'CMakeLists.txt', '*.c', '*.h', '*.cpp', '*.rc.in'
+        include 'CMakeLists.txt', '**/*.c', '**/*.h', '**/*.cpp', '**/*.rc.in'
         exclude 'legacy_*'
     })
     outputs.file(nativeBuildDirectory.map { it.file('CMakeCache.txt') })
@@ -331,7 +331,7 @@ tasks.register('buildNative', Exec) {
     dependsOn(tasks.named('configureNative'))
     inputs.file(recoveredProductJar)
     inputs.files(fileTree(nativeSourceDirectory) {
-        include 'CMakeLists.txt', '*.c', '*.h', '*.cpp', '*.rc.in'
+        include 'CMakeLists.txt', '**/*.c', '**/*.h', '**/*.cpp', '**/*.rc.in'
         exclude 'legacy_*'
     })
     outputs.files(
