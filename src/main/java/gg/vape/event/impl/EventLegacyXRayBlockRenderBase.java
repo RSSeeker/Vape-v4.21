@@ -5,6 +5,7 @@ import gg.vape.event.Event;
 import gg.vape.event.EventListeners;
 import gg.vape.module.world.XRay;
 import gg.vape.wrapper.impl.Block;
+import gg.vape.wrapper.impl.ForgeVersion;
 import gg.vape.wrapper.impl.Tessellator;
 
 public class EventLegacyXRayBlockRenderBase
@@ -24,8 +25,14 @@ extends Event {
         if (xRay == null || !xRay.boolean_r()) {
             return false;
         }
-        if (!xRay.isTargetBlock(this.block) && this.tessellator.w()) {
-            this.tessellator.u(255, 255, 255, xRay.getOpacity());
+        if (!xRay.isTargetBlock(this.block)) {
+            // 1.7.10 has no Tessellator.isDrawing field; w() returns false there,
+            // which would skip the opacity and leave non-target blocks opaque.
+            // The face-render injection point is by definition inside an active
+            // tessellator, so applying the color is safe without the guard.
+            if (this.tessellator.w() || ForgeVersion.MC_1_8_9.v()) {
+                this.tessellator.u(255, 255, 255, xRay.getOpacity());
+            }
         }
         return this.isCanceled();
     }

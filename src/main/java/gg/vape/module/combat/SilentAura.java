@@ -35,6 +35,7 @@ import gg.vape.utils.EntityHealthComparator;
 import gg.vape.utils.MathUtil;
 import gg.vape.utils.RayTraceUtil;
 import gg.vape.utils.RotationUtil;
+import gg.vape.utils.RotationVectorMath;
 import gg.vape.utils.TimerUtil;
 import gg.vape.utils.Vec3d;
 import gg.vape.utils.render.GuiRenderPrimitives;
@@ -491,15 +492,14 @@ extends Mod {
     }
 
     private void updateAim() {
-        // 1.7.10: the adaptive rotation path relies on ThreadBound pre/post
-        // tick events that are injected into Item.onItemRightClick /
-        // getMovingObjectPositionFromPlayer. Silent attacks never pair those
-        // events, so applyManagedRotation(true) leaves the camera stuck on the
-        // managed yaw and visibly yanks the player's view toward the target.
-        // Disable the managed rotation entirely on 1.7.10; the clicker still
-        // attacks through the legacy packet path without camera control.
+        // 1.7.10: RotationManager's adaptive path depends on ThreadBound
+        // pre/post tick events injected into Item.onItemRightClick /
+        // getMovingObjectPositionFromPlayer, which do not pair reliably for
+        // silent left-click attacks (the camera ends up stuck on the managed
+        // yaw). Rotate the real view toward the target directly instead; the
+        // clicker attacks through the legacy packet path with this rotation.
         if (ForgeVersion.MC_1_7_10.L()) {
-            this.readyToAttack = this.target != null && this.isInRange(this.target);
+            this.updateAimLegacy();
             return;
         }
         if (Minecraft.theWorld().isNull()) {
@@ -592,6 +592,40 @@ extends Mod {
         } else {
             this.resetTargeting();
         }
+    }
+
+    /** 1.7.10 fallback: rotate the real view toward the target each tick. */
+    private void updateAimLegacy() {
+        if (Minecraft.theWorld().isNull()) {
+            this.resetTargeting();
+            return;
+        }
+        if (this.target == null || !this.isValidTarget(this.target)
+                || !this.rotationClaim.isOwnedBy(this)) {
+            this.readyToAttack = this.target != null && this.isInRange(this.target);
+            return;
+        }
+        EntityPlayerSP player = Minecraft.thePlayer();
+        if (player.isNull()) {
+            return;
+        }
+        double[] aimCoordinates = this.computeAimCoords(this.target);
+        double targetX = aimCoordinates[0];
+        double targetY = aimCoordinates[1];
+        double targetZ = aimCoordinates[2];
+        double playerEyeY = player.N() + 1.62;
+        double targetHeight = this.target.Y();
+        double aimY = playerEyeY < targetY
+                ? targetY
+                : Math.min(playerEyeY, targetY + targetHeight) - 0.275;
+        RotationAngles angles = RotationVectorMath.H(
+                Vec3.create(player.c(), player.A() + 1.62, player.Z()),
+                Vec3.create(targetX, aimY, targetZ),
+                player.J(), false);
+        player.H(angles.getYaw());
+        player.C(angles.getPitch());
+        player.z(angles.getYaw());
+        this.readyToAttack = this.isInRange(this.target);
     }
 
     @Override
