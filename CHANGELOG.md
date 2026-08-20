@@ -1,5 +1,13 @@
 # 更新日志
 
+## v4.21.15 (2026-08-20)
+
+**外部 DLL 优先 + 双文件发布**
+
+- exe 同目录存在 `Vape-v4.21Native.dll` 时，优先直接使用外部 DLL，不再解压内嵌副本（GUI 与 `-nogui` 两种模式均支持；便于单独替换/更新原生库，无需重发整个 exe）
+- 外部 DLL 不存在时自动回退：解压内嵌 DLL 到 `<exe>\.vapeclient\Vape421Recovery\`（原有行为不变，仍不写 `%TEMP%`）
+- 自动构建产物与 GitHub Release 现在同时附带 `Vape-v4.21.exe` 和 `Vape-v4.21Native.dll`（双文件发布）
+
 ## v4.21.14 (2026-08-20)
 
 **生命值 HUD 修复**
