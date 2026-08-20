@@ -1,6 +1,7 @@
 package gg.vape.wrapper.impl;
 
 import gg.vape.Vape;
+import gg.vape.mapping.MappedClasses;
 import gg.vape.mapping.mappings.MBlock;
 import gg.vape.wrapper.Wrapper;
 
@@ -20,6 +21,13 @@ extends Wrapper {
                 Block block = new Block(t);
                 if (block.U() == null || !block.U().equalsIgnoreCase(string)) continue;
                 return block;
+            }
+            // Fallback: resolve via the item registry (works reliably on modern
+            // versions where the translation-key iteration can miss).
+            String registryName = "minecraft:" + string.substring("block.minecraft.".length());
+            Item item = Item.L(registryName);
+            if (item != null && item.isInstance(MappedClasses.Vw)) {
+                return new ItemBlock(item).C();
             }
             return null;
         }
