@@ -608,11 +608,9 @@ implements EventListener {
                     for (Object relativeFlag : relativeFlags) {
                         PlayerInteractEventAction action = new PlayerInteractEventAction(relativeFlag);
                         if (action.T() == PlayerInteractEventAction.e()) {
-                            player.C(this.managedPitch);
                             this.managedPitch += packetPitch;
                         }
                         if (action.T() != PlayerInteractEventAction.t()) continue;
-                        player.H(this.managedYaw);
                         this.managedYaw += packetYaw;
                     }
                 }

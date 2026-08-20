@@ -33,6 +33,20 @@ def collect_unicodes(properties_path: Path) -> set:
         for ch in value:
             if ch not in ("\r", "\n"):
                 needed.add(ord(ch))
+    # GB2312 level-1 hanzi (3755 chars) cover entity/item names shown by the
+    # game (cow=牛, pig=猪, ...) that never appear in the translation table.
+    for hi in range(0xB0, 0xD8):
+        for lo in range(0xA1, 0xFF):
+            if hi == 0xD7 and lo > 0xF9:
+                break
+            try:
+                char = bytes((hi, lo)).decode("gb2312")
+                needed.add(ord(char))
+            except UnicodeDecodeError:
+                continue
+    # Minecraft creature names that fall outside GB2312 level-1.
+    for ch in "鱿鳕蝾螈鹦鹉蝙蝠疣鲑鲨鳐鲤鲶鳝鲈鳗鳖蜥蜴蚯蚓萤火虫蟑螂蜈蚣蝎":
+        needed.add(ord(ch))
     return needed
 
 
