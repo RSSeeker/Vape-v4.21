@@ -10,6 +10,7 @@ import gg.vape.ui.click.component.FocusableComponent;
 import gg.vape.ui.click.component.GlyphIconComponent;
 import gg.vape.ui.click.component.GuiComponent;
 import gg.vape.ui.click.component.GuiRefreshListener;
+import gg.vape.ui.font.FontOption;
 import gg.vape.ui.click.component.value.SliderInputHandle;
 import gg.vape.ui.font.SmoothFontRenderer;
 import gg.vape.utils.ClipboardUtil;
@@ -276,20 +277,52 @@ implements FocusableComponent {
         double centeredTextY = this.n() + this.L() / 2.0 - textHeight / 2.0;
         String displayedText = this.getText();
         boolean focused = this.isFocused() && this.inputEnabled;
-        if (focused) {
-            boolean showingPlaceholder = false;
-            if (this.inputEnabled) {
-                if (this.getText() != null && this.getText().length() < 1) {
-                    // empty if block
+        // User-typed text must render verbatim (e.g. "Diamond" must not become
+        // "钻石" via the translation table); only the placeholder is translated.
+        FontOption.setTranslationDisabled(true);
+        try {
+            if (focused) {
+                boolean showingPlaceholder = false;
+                if (this.inputEnabled) {
+                    if (this.getText() != null && this.getText().length() < 1) {
+                        // empty if block
+                    }
+                } else {
+                    showingPlaceholder = true;
+                    displayedText = this.getPlaceholderText();
                 }
-            } else {
+                if (displayedText == null) {
+                    displayedText = "";
+                }
+                double textBeforeCursorWidth = textRenderer.N(displayedText.substring(0, this.cursorPosition));
+                SmoothFontRenderer caretRenderer = this.getFontRenderer(1.2);
+                this.renderInputDecorations();
+                if (this.textOverflowing) {
+                    RenderUtils.m(this.getInputX() + (double)this.getRightInset() - this.getFontRenderer(1.2).N("|"), this.n() + 2.5, this.getAvailableTextWidth() + this.getFontRenderer(1.2).N("|") + 2.0, this.L() - 5.0);
+                }
+                double textX = this.getInputX() + (double)this.getRightInset() + this.textScrollOffset;
+                double textY = centeredTextY + (double)this.getTextVerticalOffset();
+                Color renderedTextColor = showingPlaceholder ? this.placeholderColor : this.textColor;
+                textRenderer.d(displayedText, textX, textY, renderedTextColor);
+                this.renderSuggestionHint(displayedText, showingPlaceholder, textRenderer, textX, centeredTextY, textHeight);
+                if (this.textOverflowing) {
+                    RenderUtils.T();
+                }
+                this.renderCaret(caretRenderer, this.getInputX() + (double)this.getRightInset() + textBeforeCursorWidth + this.textScrollOffset, this.n() + this.L() / 2.0 - caretRenderer.d("|") / 2.0 + (double)this.getTextVerticalOffset());
+                if (KeyboardInput.isKeyDown(8) && this.getBackspaceRepeatTimer().hasTimeElapsed(100L)) {
+                    this.getBackspaceRepeatTimer().reset();
+                }
+                return;
+            }
+            boolean showingPlaceholder = false;
+            if (!this.inputEnabled || this.getText() == null || this.getText().length() < 1) {
                 showingPlaceholder = true;
                 displayedText = this.getPlaceholderText();
             }
             if (displayedText == null) {
                 displayedText = "";
             }
-            double textBeforeCursorWidth = textRenderer.N(displayedText.substring(0, this.cursorPosition));
+            double cursorTextWidth = textRenderer.N(displayedText.substring(0, this.cursorPosition));
             SmoothFontRenderer caretRenderer = this.getFontRenderer(1.2);
             this.renderInputDecorations();
             if (this.textOverflowing) {
@@ -303,33 +336,9 @@ implements FocusableComponent {
             if (this.textOverflowing) {
                 RenderUtils.T();
             }
-            this.renderCaret(caretRenderer, this.getInputX() + (double)this.getRightInset() + textBeforeCursorWidth + this.textScrollOffset, this.n() + this.L() / 2.0 - caretRenderer.d("|") / 2.0 + (double)this.getTextVerticalOffset());
-            if (KeyboardInput.isKeyDown(8) && this.getBackspaceRepeatTimer().hasTimeElapsed(100L)) {
-                this.getBackspaceRepeatTimer().reset();
-            }
-            return;
         }
-        boolean showingPlaceholder = false;
-        if (!this.inputEnabled || this.getText() == null || this.getText().length() < 1) {
-            showingPlaceholder = true;
-            displayedText = this.getPlaceholderText();
-        }
-        if (displayedText == null) {
-            displayedText = "";
-        }
-        double cursorTextWidth = textRenderer.N(displayedText.substring(0, this.cursorPosition));
-        SmoothFontRenderer caretRenderer = this.getFontRenderer(1.2);
-        this.renderInputDecorations();
-        if (this.textOverflowing) {
-            RenderUtils.m(this.getInputX() + (double)this.getRightInset() - this.getFontRenderer(1.2).N("|"), this.n() + 2.5, this.getAvailableTextWidth() + this.getFontRenderer(1.2).N("|") + 2.0, this.L() - 5.0);
-        }
-        double textX = this.getInputX() + (double)this.getRightInset() + this.textScrollOffset;
-        double textY = centeredTextY + (double)this.getTextVerticalOffset();
-        Color renderedTextColor = showingPlaceholder ? this.placeholderColor : this.textColor;
-        textRenderer.d(displayedText, textX, textY, renderedTextColor);
-        this.renderSuggestionHint(displayedText, showingPlaceholder, textRenderer, textX, centeredTextY, textHeight);
-        if (this.textOverflowing) {
-            RenderUtils.T();
+        finally {
+            FontOption.setTranslationDisabled(false);
         }
     }
 
