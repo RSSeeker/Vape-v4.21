@@ -92,7 +92,8 @@ extends Frame {
         // 1.20.6+ (GuiGraphics-based), which silently draws nothing for the
         // health text. The Vape renderer (SmoothFontRenderer) is used by other
         // HUD frames (e.g. KeystrokesCpsCounterComponent) and works everywhere.
-        SmoothFontRenderer smoothFontRenderer = Vape.INSTANCE.getFontManager().p(1.0);
+        // 1.5 scale keeps the centered health readout clearly legible.
+        SmoothFontRenderer smoothFontRenderer = Vape.INSTANCE.getFontManager().p(1.5);
         // Center of the screen. HUD frames render inside renderHudFrames()
         // which pushes scale(guiScale), and EventRender2D's GuiRenderPrimitives.o()
         // also pushes scale(2.0) - so the effective HUD coordinate space is
