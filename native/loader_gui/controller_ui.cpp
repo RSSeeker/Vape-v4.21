@@ -630,7 +630,7 @@ void ControllerUi::drawMinecraftSelection(Gdiplus::Graphics& graphics) {
         const float titleWidth = 560.0f - 268.0f;
         drawText(graphics, ellipsize(graphics, process.title, 13.0f, titleWidth),
             268, y + 4, titleWidth, 22, 13, Gdiplus::Color(255, 202, 199, 203));
-        drawText(graphics, (process.alreadyInjected ? L"Already Injected [" : L"PID ") +
+        drawText(graphics, (process.alreadyInjected ? L"已注入 [" : L"PID ") +
             std::to_wstring(process.pid) + (process.alreadyInjected ? L"]" : L""),
             268, y + 24, titleWidth, 18, 11,
             Gdiplus::Color(255, 105, 102, 106));
@@ -658,7 +658,7 @@ void ControllerUi::drawLoading(Gdiplus::Graphics& graphics) {
     }
     if (stageElapsed >= 10.0) {
         drawText(graphics,
-            L"It is taking abnormally long to load this stage\nContact support for assistance",
+            L"该阶段加载时间异常长\n请联系支持人员",
             180, 314, 464, 42, 12, Gdiplus::Color(255, 176, 73, 73), false,
             Gdiplus::StringAlignmentCenter);
     }

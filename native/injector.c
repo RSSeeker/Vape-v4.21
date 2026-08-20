@@ -37,8 +37,8 @@ static void print_last_error(const wchar_t *operation) {
                     | FORMAT_MESSAGE_FROM_SYSTEM
                     | FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL, error, 0, (wchar_t *)&message, 0, NULL);
-    fwprintf(stderr, L"%ls failed (%lu): %ls\n", operation,
-            (unsigned long)error, message == NULL ? L"unknown error" : message);
+    fwprintf(stderr, L"%ls 失败 (%lu): %ls\n", operation,
+            (unsigned long)error, message == NULL ? L"未知错误" : message);
     if (message != NULL) {
         LocalFree(message);
     }

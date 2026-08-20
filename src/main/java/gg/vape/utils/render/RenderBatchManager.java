@@ -227,22 +227,22 @@ public class RenderBatchManager {
 
     public static String buildInitializationDiagnostics(String phase, Throwable throwable) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Failed to initialize modern renderer\n");
-        stringBuilder.append("Phase: ").append(phase).append('\n');
+        stringBuilder.append("现代渲染器初始化失败\n");
+        stringBuilder.append("阶段: ").append(phase).append('\n');
         OpenGlDeviceInfo.appendDeviceInfo(stringBuilder);
         try {
-            stringBuilder.append("Current Program: ").append(GL11.glGetInteger((int)35725)).append('\n');
-            stringBuilder.append("Current VAO: ").append(GL11.glGetInteger((int)34229)).append('\n');
-            stringBuilder.append("Array Buffer: ").append(GL11.glGetInteger((int)34964)).append('\n');
-            stringBuilder.append("Element Buffer: ").append(GL11.glGetInteger((int)34965)).append('\n');
-            stringBuilder.append("Framebuffer: ").append(GL11.glGetInteger((int)36006)).append('\n');
-            stringBuilder.append("GL Error: ").append(GL11.glGetError()).append('\n');
+            stringBuilder.append("当前着色器程序: ").append(GL11.glGetInteger((int)35725)).append('\n');
+            stringBuilder.append("当前 VAO: ").append(GL11.glGetInteger((int)34229)).append('\n');
+            stringBuilder.append("数组缓冲: ").append(GL11.glGetInteger((int)34964)).append('\n');
+            stringBuilder.append("元素缓冲: ").append(GL11.glGetInteger((int)34965)).append('\n');
+            stringBuilder.append("帧缓冲: ").append(GL11.glGetInteger((int)36006)).append('\n');
+            stringBuilder.append("GL 错误: ").append(GL11.glGetError()).append('\n');
         }
         catch (Throwable throwable2) {
-            stringBuilder.append("GL Diagnostics Error: ").append(throwable2.getClass().getSimpleName()).append(": ").append(throwable2.getMessage()).append('\n');
+            stringBuilder.append("GL 诊断错误: ").append(throwable2.getClass().getSimpleName()).append(": ").append(throwable2.getMessage()).append('\n');
         }
         if (throwable != null) {
-            stringBuilder.append("Exception: ").append(throwable.getClass().getName());
+            stringBuilder.append("异常: ").append(throwable.getClass().getName());
             if (throwable.getMessage() != null) {
                 stringBuilder.append(": ").append(throwable.getMessage());
             }

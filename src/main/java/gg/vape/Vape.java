@@ -242,7 +242,7 @@ public class Vape {
         StringWriter stackTraceWriter = new StringWriter();
         PrintWriter stackTracePrinter = new PrintWriter(stackTraceWriter);
         error.printStackTrace(stackTracePrinter);
-        return "\nException " + error.getClass().getCanonicalName() + " " + stackTraceWriter.toString();
+        return "\n异常 " + error.getClass().getCanonicalName() + " " + stackTraceWriter.toString();
     }
 
     public FriendManager getFriendManager() {
@@ -340,18 +340,18 @@ public class Vape {
             ApiResponse<AccountInfoResponse> response = ApiServices.getInstance().getAccountInfo().join();
             if (response == null || !response.isSuccessful() || response.getData() == null) {
                 String error = response == null ? "empty response" : response.getError();
-                Vape.logError("Failed to initialize account details1: " + error);
+                Vape.logError("初始化账户信息失败1: " + error);
                 return false;
             }
             AccountInfo initializedAccount = AccountInfo.fromResponse(response.getData());
             if (initializedAccount == null) {
-                Vape.logError("Failed to initialize account details1: empty account data");
+                Vape.logError("初始化账户信息失败1: 账户数据为空");
                 return false;
             }
             this.accountInfo = initializedAccount;
         }
         catch (CancellationException | CompletionException error) {
-            Vape.logError("Failed to initialize account details2: " + Vape.formatThrowable(error));
+            Vape.logError("初始化账户信息失败2: " + Vape.formatThrowable(error));
             return false;
         }
         return true;

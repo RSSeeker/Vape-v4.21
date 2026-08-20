@@ -551,7 +551,7 @@ void ControllerModel::tick() {
         setPage(ControllerPage::LoadingComplete);
     } else if (service_.failed()) {
         const std::string detail = service_.error();
-        setStatus(detail.empty() ? L"Native loading connection closed unexpectedly"
+        setStatus(detail.empty() ? L"原生加载连接意外关闭"
                                  : std::wstring(detail.begin(), detail.end()));
         setPage(ControllerPage::Error);
     } else if (loadingElapsedSeconds() >= 90.0) {
