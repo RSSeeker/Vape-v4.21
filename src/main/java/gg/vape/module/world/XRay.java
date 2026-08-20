@@ -22,7 +22,9 @@ import gg.vape.wrapper.impl.Block;
 import gg.vape.wrapper.impl.EntityPlayerSP;
 import gg.vape.wrapper.impl.EnumWorldBlockLayer;
 import gg.vape.wrapper.impl.ForgeVersion;
+import gg.vape.wrapper.impl.Material;
 import gg.vape.wrapper.impl.Minecraft;
+import gg.vape.wrapper.impl.World;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -152,9 +154,43 @@ extends Mod {
         // makes them vanish entirely, which is stable across chunk rebuilds
         // (the face-opacity path only applies to the RenderBlocks path and
         // leaves rebuilt chunks opaque).
-        if (!isTarget && ForgeVersion.MC_1_7_10.L()) {
-            eventBlockRenderBounds.setCancelled(true);
+        if (!isTarget) {
+            if (ForgeVersion.MC_1_7_10.L()) {
+                eventBlockRenderBounds.setCancelled(true);
+            }
+            return;
         }
+        // Cave mode (1.7.10): hide the ore when none of its six neighbours is
+        // air/replaceable (i.e. it is buried, not exposed to a cave).
+        if (this.caveModeValue.getEffectiveValue() && ForgeVersion.MC_1_7_10.L()) {
+            World world = Minecraft.theWorld();
+            if (world.isNotNull()) {
+                int x = eventBlockRenderBounds.getX();
+                int y = eventBlockRenderBounds.getY();
+                int z = eventBlockRenderBounds.getZ();
+                if (!this.isExposedToAir(world, x, y, z)) {
+                    eventBlockRenderBounds.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    private boolean isExposedToAir(World world, int x, int y, int z) {
+        return this.isAirOrReplaceable(world, x + 1, y, z)
+                || this.isAirOrReplaceable(world, x - 1, y, z)
+                || this.isAirOrReplaceable(world, x, y + 1, z)
+                || this.isAirOrReplaceable(world, x, y - 1, z)
+                || this.isAirOrReplaceable(world, x, y, z + 1)
+                || this.isAirOrReplaceable(world, x, y, z - 1);
+    }
+
+    private boolean isAirOrReplaceable(World world, int x, int y, int z) {
+        Block neighbor = world.getBlockByPos(x, y, z);
+        if (neighbor == null || neighbor.isNull()) {
+            return true;
+        }
+        Material material = neighbor.H();
+        return material != null && (material.isReplaceable() || !material.blocksMovement());
     }
 
     @EventHandler

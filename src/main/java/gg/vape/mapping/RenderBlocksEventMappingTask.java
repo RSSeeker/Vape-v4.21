@@ -24,7 +24,7 @@ extends JavassistMappingTask {
     public void transform() {
         MappingMethod mappingMethod = Vape.INSTANCE.getMappings().renderBlocks.renderBlockByRenderTypeMethod;
         EventInjectionSpec eventInjectionSpec = new EventInjectionSpec(mappingMethod, EventBlockRenderBounds.class);
-        eventInjectionSpec.setConstructorArguments("$0, $1");
+        eventInjectionSpec.setConstructorArguments("$0, $1, $2, $3, $4");
         eventInjectionSpec.setReturnExpression("false");
         this.registerEventInjection(eventInjectionSpec);
         mappingMethod = Vape.INSTANCE.getMappings().renderBlocks.renderStandardBlockMethod;

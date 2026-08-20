@@ -12,14 +12,32 @@ extends Event {
     private final RenderBlocks renderBlocks;
     private static final EventListeners EVENT_LISTENERS = new EventListeners();
     private final Block block;
+    private final int x;
+    private final int y;
+    private final int z;
 
     public RenderBlocks getRenderBlocks() {
         return this.renderBlocks;
     }
 
-    public EventBlockRenderBounds(Object renderBlocksHandle, Object blockHandle) {
+    public EventBlockRenderBounds(Object renderBlocksHandle, Object blockHandle, int x, int y, int z) {
         this.renderBlocks = new RenderBlocks(renderBlocksHandle);
         this.block = new Block(blockHandle);
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public int getZ() {
+        return this.z;
     }
 
     public Block getBlock() {

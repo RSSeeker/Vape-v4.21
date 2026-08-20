@@ -8,6 +8,7 @@ import gg.vape.event.impl.EventMotion;
 import gg.vape.event.impl.EventPrePlayerTick;
 import gg.vape.event.impl.EventPreTick;
 import gg.vape.event.impl.EventRender3D;
+import gg.vape.event.impl.SyntheticAttackRequestEvent;
 import gg.vape.input.AttackKeyController;
 import gg.vape.input.InputEventDispatcher;
 import gg.vape.input.KeyBindingHelper;
@@ -58,6 +59,7 @@ import gg.vape.wrapper.impl.GuiScreen;
 import gg.vape.wrapper.impl.ItemStack;
 import gg.vape.wrapper.impl.KeyBinding;
 import gg.vape.wrapper.impl.Minecraft;
+import gg.vape.wrapper.impl.PlayerControllerMP;
 import gg.vape.wrapper.impl.RayTraceResult;
 import gg.vape.wrapper.impl.TitledScreen;
 import gg.vape.wrapper.impl.Vec3;
@@ -328,6 +330,33 @@ extends Mod {
 
     @EventHandler
     public void onTick(EventPrePlayerTick eventPrePlayerTick) {
+    }
+
+    /** 1.7.10: attack the tracked target directly instead of letting MC attack
+     *  whatever the crosshair ray-trace hits (the crosshair never points at the
+     *  target because the legacy rotation path only rewrites outgoing packets). */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onSyntheticAttack(SyntheticAttackRequestEvent event) {
+        if (event.getSource() == this) {
+            return;
+        }
+        if (!ForgeVersion.MC_1_7_10.L()) {
+            return;
+        }
+        EntityLivingBase target = this.target;
+        if (!this.isEnabled() || target == null || target.isNull()
+                || !this.readyToAttack || !this.isInRange(target)) {
+            return;
+        }
+        EntityPlayerSP player = Minecraft.thePlayer();
+        if (player.isNull()) {
+            return;
+        }
+        PlayerControllerMP controller = Minecraft.playerController();
+        if (controller != null && controller.isNotNull()) {
+            controller.attackEntity(player, target);
+        }
+        event.setCancelled(true);
     }
 
 
