@@ -1,5 +1,33 @@
 # 更新日志
 
+## v4.21.16 (2026-08-20)
+
+**配置保存修复（1.7.10 / 1.8.9 / 1.12.2 / 1.16.5 等老版本）**
+
+- 修复老版本（1.8.9/1.12.2 等）配置无法保存、第二次注入设置重置：`LocalConfigStore` 用了 Gson 2.8.6+ 才有的 `JsonParser.parseReader`，而 1.7.10/1.8.9（Gson 2.2.4）、1.12.2（2.8.0）、1.16.5（2.8.5）自带的 Gson 均无此方法 → 每次读配置都抛 `NoSuchMethodError`，配置读不出也存不回。改为全版本兼容的 `new JsonParser().parse(...)`
+- 同类问题一并修复：`JsonParser.parseString`（LegacyHttpServer）、`JsonPrimitive.isNumber`（ConfigJsonUtils）、`JsonElement.deepCopy`（FileStore/LegacyHttpServer，改为自实现递归深拷贝），覆盖所有旧 Gson 环境
+- 修复离线/全新环境下配置无法保存：`SyncThread.loadConfig` 对 `accountInfo` 为 null（本地服务连不上）做保护并走 standalone 配置加载；无存储 profiles 时创建内置默认 profile，保证至少有一个 profile 可持久化模块设置
+
+**加载提示**
+
+- 原生加载超时 / 阶段加载异常长的提示末尾增加"注：26+版本请在打开世界后注入"（现代版本建议进入世界后再注入，避免初始化阶段等待游戏世界导致卡顿/超时）
+
+**Badlion 1.8.9 键盘队列与模块协作**
+
+- 恢复 Badlion 1.8.9 键盘事件队列接线（clicker 线程经队列投递按键事件，不再直接改键位状态），ClickerWorker/KeyBindingHelper/Badlion189InputQueueMappingTask 恢复
+- ShieldBreaker 恢复对 HitSwap/AutoMace 合成攻击的排除，新增 Double click、Limit to items、Allowed Items 选项（含汉化）与 `hasAxeInHotbar()`
+- Triggerbot / SilentAura 恢复盾检豁免与重锤冷却跳过；SilentAura 恢复 Shield check 选项（含汉化）
+- HitSwap 恢复排除 ShieldBreaker 与 AutoMace 进行中的合成攻击
+
+**其他修复**
+
+- 中文长文本换行丢末字：`WrappedTextComponent` 拆词时 `substring` 结束索引丢最后一个字符（"建议避免使用"→"建议避免使"），改为保留末字并加边界保护
+- ArmorStatus HUD 空指针保护（player/container/slot 三重兜底）
+- 解压文件改名：产品 JAR → `Vape-v4.21-product-<pid>.jar`、目录 → `Vape-v4.21Recovery`
+- 清理机制修复：`.vapeclient\Vape-v4.21Recovery` 每次注入自动清空旧文件（递归删除 + 解压前 sweep），不再随注入次数堆积 DLL/JAR
+- 同进程（PID）重复注入时，若 DLL 被先前会话占用，自动复用已有文件
+- 构建增量检测修复：native 源码递归跟踪 `**/*.cpp`，子目录改动不再误判 UP-TO-DATE
+
 ## v4.21.15 (2026-08-20)
 
 **外部 DLL 优先 + 双文件发布**
