@@ -72,8 +72,14 @@ extends SimpleTextLabelComponent {
                     splitOversizedWord = true;
                     double fittingRatio = this.getWrapWidth() / wordWidth;
                     int splitIndex = (int)((double)word.length() * fittingRatio);
+                    // Keep both halves non-empty and strictly shrinking so the
+                    // recursion terminates; substring(splitIndex) keeps the
+                    // last character (the old length()-1 end index dropped it,
+                    // e.g. "...建议避免使用" -> "...建议避免使").
+                    if (splitIndex < 1) splitIndex = 1;
+                    if (splitIndex >= word.length()) splitIndex = word.length() - 1;
                     String firstPart = word.substring(0, splitIndex);
-                    String secondPart = word.substring(splitIndex, word.length() - 1);
+                    String secondPart = word.substring(splitIndex);
                     wrappedResult.add(firstPart);
                     wrappedResult.add(secondPart);
                     continue;
