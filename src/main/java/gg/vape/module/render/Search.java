@@ -214,10 +214,11 @@ extends Mod {
         if (ForgeVersion.MC_1_16_5.d()) {
             cameraYOffset = Minecraft.m$src$Lgg_vape_wrapper_impl_EntityRenderer_$13begmf().l().o().getY() - renderY;
         }
-        if (GuiRenderPrimitives.d()) {
+        double adjustedRenderY = renderY + cameraYOffset;
+        boolean modernInstancedRender = GuiRenderPrimitives.d() && !(ForgeVersion.MC_1_21_10.d() && !ForgeVersion.MC_26_1.d());
+        if (modernInstancedRender) {
             RenderBatchState renderBatchState = RenderBatchState.getInstance();
             renderBatchState.beginBatch();
-            double adjustedRenderY = renderY + cameraYOffset;
             for (SearchResultData searchResultData : this.searchResults) {
                 if (!searchResultData.q() || searchResultData.N == 0) continue;
                 Color color = searchResultData.O();
@@ -228,7 +229,7 @@ extends Mod {
         } else {
             for (SearchResultData searchResultData : this.searchResults) {
                 if (!searchResultData.q() || searchResultData.N == 0) continue;
-                RenderUtil.m(searchResultData, renderX, renderY + cameraYOffset, renderZ);
+                RenderUtil.m(searchResultData, renderX, adjustedRenderY, renderZ);
             }
         }
         OpenGlBackendHolder.backend.setDepthMask(true);

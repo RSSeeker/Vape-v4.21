@@ -54,6 +54,16 @@ extends Mapping {
                 this.renderLevelMethod = this.Y("renderLevel", true, Void.TYPE,
                         MappedClasses.Ds, MappedClasses.uy, Boolean.TYPE, MappedClasses.zf,
                         MappedClasses.ZA, MappedClasses.qk, MappedClasses.FC, Boolean.TYPE, MappedClasses.VY);
+            } else if (ForgeVersion.MC_1_21_10.d()) {
+                this.renderLevelMethod = this.Y("renderLevel", true, Void.TYPE,
+                        MappedClasses.Ds, MappedClasses.uy, Boolean.TYPE, MappedClasses.lt,
+                        MappedClasses.qr, MappedClasses.qr, MappedClasses.qr, MappedClasses.qk,
+                        MappedClasses.FC, Boolean.TYPE);
+            } else if (ForgeVersion.MC_1_21_6.d()) {
+                this.renderLevelMethod = this.Y("renderLevel", true, Void.TYPE,
+                        MappedClasses.Ds, MappedClasses.uy, Boolean.TYPE, MappedClasses.lt,
+                        MappedClasses.qr, MappedClasses.qr, MappedClasses.qk, MappedClasses.FC,
+                        Boolean.TYPE);
             } else {
                 this.renderLevelMethod = this.Y("renderLevel", true, Void.TYPE,
                         Float.TYPE, Long.TYPE, Boolean.TYPE, MappedClasses.lt, MappedClasses.FW,

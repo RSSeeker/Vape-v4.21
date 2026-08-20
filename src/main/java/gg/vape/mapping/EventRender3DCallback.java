@@ -5,6 +5,7 @@ import gg.vape.event.impl.EventRender3D;
 import gg.vape.event.impl.EventRenderTracers3D;
 import gg.vape.mapping.InsertedEventCallback;
 import gg.vape.module.control.SharedModuleControlClaims;
+import gg.vape.rotation.LocalPlayerRotationUtil;
 import gg.vape.utils.render.OpenGlBackendHolder;
 import gg.vape.wrapper.impl.EntityRenderer;
 import gg.vape.wrapper.impl.ForgeVersion;
@@ -72,6 +73,10 @@ implements InsertedEventCallback {
         if (ForgeVersion.MC_26_1.d()) {
             this.y = MatrixStack.A();
             this.y.i(new Matrix4f(object));
+        } else if (ForgeVersion.MC_1_21_10.d()) {
+            this.y = MatrixStack.A();
+            this.y.i(new Matrix4f(object));
+            LocalPlayerRotationUtil.setModelViewMatrix(object);
         } else {
             this.y = new MatrixStack(object);
         }

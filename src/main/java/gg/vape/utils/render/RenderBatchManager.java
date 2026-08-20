@@ -342,7 +342,7 @@ public class RenderBatchManager {
         try {
             LocalPlayerRotationUtil.updateProjectionMatrix(partialTicks);
             GL11.glViewport(0, 0, Minecraft.J(), Minecraft.h());
-            this.skipWorldFramebufferBind = true;
+            this.skipWorldFramebufferBind = !(ForgeVersion.MC_1_21_10.d() && !ForgeVersion.MC_26_1.d());
             for (RenderBatch renderBatch : this.worldBatches) {
                 this.ensureBatchResourcesBound();
                 renderBatch.getCapabilityState().apply();

@@ -470,6 +470,9 @@ public class RenderUtil {
     }
 
     public static void p() {
+        if (ForgeVersion.MC_1_21_10.d() && !ForgeVersion.MC_26_1.d()) {
+            return;
+        }
         RenderUtil.f(Minecraft.D());
     }
 
