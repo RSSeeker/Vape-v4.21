@@ -112,7 +112,7 @@ public final class Vanilla262Mappings {
             if (stream == null) {
                 return 0;
             }
-            JsonElement element = JsonParser.parseReader(new InputStreamReader(
+            JsonElement element = new JsonParser().parse(new InputStreamReader(
                     stream, StandardCharsets.UTF_8));
             if (!element.isJsonObject()) {
                 return 0;

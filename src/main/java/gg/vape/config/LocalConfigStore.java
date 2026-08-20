@@ -96,7 +96,10 @@ public final class LocalConfigStore {
         }
         try (InputStreamReader reader = new InputStreamReader(
                 new FileInputStream(file), StandardCharsets.UTF_8)) {
-            return JsonParser.parseReader(reader).getAsJsonObject();
+            // new JsonParser().parse(Reader) works on every Gson generation;
+            // JsonParser.parseReader(...) is missing on the Gson bundled with
+            // 1.8.9-era Minecraft (NoSuchMethodError).
+            return new JsonParser().parse(reader).getAsJsonObject();
         }
         catch (Exception ignored) {
             return null;

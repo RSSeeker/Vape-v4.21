@@ -267,7 +267,8 @@ public final class LegacyHttpServer implements AutoCloseable {
 
     private JsonElement readJson(HttpExchange exchange) throws IOException {
         String body = readBody(exchange);
-        return body.trim().isEmpty() ? JsonNull.INSTANCE : JsonParser.parseString(body);
+        return body.trim().isEmpty() ? JsonNull.INSTANCE
+                : new JsonParser().parse(body);
     }
 
     private JsonObject readJsonObject(HttpExchange exchange) throws IOException {
