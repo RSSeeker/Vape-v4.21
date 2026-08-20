@@ -2,6 +2,7 @@ package gg.vape.config;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import gg.vape.input.KeyboardCodeUtil;
@@ -9,6 +10,7 @@ import gg.vape.ui.click.component.GuiComponent;
 import gg.vape.utils.Base64Util;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import org.jetbrains.annotations.Nullable;
@@ -152,10 +154,52 @@ public class ConfigJsonUtils {
         ArrayList<Integer> values = new ArrayList<Integer>();
         for (JsonElement element : array) {
             JsonPrimitive primitive;
-            if (element.isJsonNull() || !element.isJsonPrimitive() || !(primitive = element.getAsJsonPrimitive()).isNumber()) continue;
+            if (element.isJsonNull() || !element.isJsonPrimitive()) continue;
+            primitive = element.getAsJsonPrimitive();
+            // JsonPrimitive.isNumber() only exists on Gson >= 2.8.0; the Gson
+            // bundled with 1.7.10/1.8.9 (2.2.4) lacks it.
+            try {
+                if (primitive.getAsNumber() == null) continue;
+            }
+            catch (Throwable ignored) {
+                continue;
+            }
             values.add(primitive.getAsInt());
         }
         return values;
+    }
+
+    /**
+     * Deep-copies a JsonElement. Gson's JsonElement.deepCopy() only exists on
+     * Gson >= 2.8.0; 1.7.10/1.8.9 (2.2.4) needs this manual recursive copy.
+     */
+    public static JsonElement deepCopy(JsonElement element) {
+        if (element == null || element.isJsonNull()) {
+            return JsonNull.INSTANCE;
+        }
+        if (element.isJsonPrimitive()) {
+            return element;
+        }
+        if (element.isJsonArray()) {
+            JsonArray copy = new JsonArray();
+            for (JsonElement child : element.getAsJsonArray()) {
+                copy.add(ConfigJsonUtils.deepCopy(child));
+            }
+            return copy;
+        }
+        JsonObject copy = new JsonObject();
+        for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
+            copy.add(entry.getKey(), ConfigJsonUtils.deepCopy(entry.getValue()));
+        }
+        return copy;
+    }
+
+    public static JsonObject deepCopy(JsonObject object) {
+        return (JsonObject)ConfigJsonUtils.deepCopy((JsonElement)object);
+    }
+
+    public static JsonArray deepCopy(JsonArray array) {
+        return (JsonArray)ConfigJsonUtils.deepCopy((JsonElement)array);
     }
 
     @Nullable

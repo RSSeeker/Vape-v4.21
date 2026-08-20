@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import gg.vape.config.ConfigJsonUtils;
 import gg.vape.service.store.AccountRecord;
 import gg.vape.service.store.AuthChallengeRecord;
 import gg.vape.service.store.FileStore;
@@ -224,7 +225,7 @@ public final class LegacyHttpServer implements AutoCloseable {
     private JsonObject pagedProfiles() {
         JsonObject stored = store.publicProfiles();
         JsonArray content = new JsonArray();
-        stored.entrySet().forEach(entry -> content.add(entry.getValue().deepCopy()));
+        stored.entrySet().forEach(entry -> content.add(ConfigJsonUtils.deepCopy(entry.getValue())));
         JsonObject page = new JsonObject();
         page.add("content", content);
         page.addProperty("last", true);

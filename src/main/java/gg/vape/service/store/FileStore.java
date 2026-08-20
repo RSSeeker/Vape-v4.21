@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import gg.vape.config.ConfigJsonUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -493,32 +494,32 @@ public final class FileStore {
     }
 
     public synchronized JsonObject globalSettings(String token) {
-        return requireAccount(token).globalSettings.deepCopy();
+        return ConfigJsonUtils.deepCopy(requireAccount(token).globalSettings);
     }
 
     public synchronized void saveGlobalSettings(String token, JsonObject settings) throws IOException {
-        requireAccount(token).globalSettings = settings.deepCopy();
+        requireAccount(token).globalSettings = ConfigJsonUtils.deepCopy(settings);
         save();
     }
 
     public synchronized JsonObject onlineSettings(String token) {
-        return requireAccount(token).onlineSettings.deepCopy();
+        return ConfigJsonUtils.deepCopy(requireAccount(token).onlineSettings);
     }
 
     public synchronized void saveOnlineSettings(String token, JsonObject settings) throws IOException {
-        requireAccount(token).onlineSettings = settings.deepCopy();
+        requireAccount(token).onlineSettings = ConfigJsonUtils.deepCopy(settings);
         save();
     }
 
     public synchronized JsonObject privateData(String token) {
         AccountRecord account = requireAccount(token);
         JsonObject data = new JsonObject();
-        data.add("friends", account.localFriends.deepCopy());
+        data.add("friends", ConfigJsonUtils.deepCopy(account.localFriends));
         JsonObject profiles = new JsonObject();
-        account.privateProfiles.forEach((key, value) -> profiles.add(key, value.deepCopy()));
+        account.privateProfiles.forEach((key, value) -> profiles.add(key, ConfigJsonUtils.deepCopy(value)));
         data.add("profiles", profiles);
         data.add("publicProfiles", new JsonObject());
-        data.add("otherData", account.otherData.deepCopy());
+        data.add("otherData", ConfigJsonUtils.deepCopy(account.otherData));
         return data;
     }
 
@@ -529,11 +530,11 @@ public final class FileStore {
         JsonObject source = userData.getAsJsonObject();
         AccountRecord account = requireAccount(token);
         if (source.has("friends") && source.get("friends").isJsonArray()) {
-            account.localFriends = source.getAsJsonArray("friends").deepCopy();
+            account.localFriends = ConfigJsonUtils.deepCopy(source.getAsJsonArray("friends"));
         }
         JsonElement otherData = source.has("otherData") ? source.get("otherData") : source.get("otherdata");
         if (otherData != null && otherData.isJsonArray()) {
-            account.otherData = otherData.getAsJsonArray().deepCopy();
+            account.otherData = ConfigJsonUtils.deepCopy(otherData.getAsJsonArray());
         }
         save();
     }
@@ -555,7 +556,7 @@ public final class FileStore {
                 if (!updatedProfile.isJsonObject()) {
                     continue;
                 }
-                JsonObject storedProfile = updatedProfile.getAsJsonObject().deepCopy();
+                JsonObject storedProfile = ConfigJsonUtils.deepCopy(updatedProfile.getAsJsonObject());
                 String profileId = storedProfile.has("profileId")
                         ? storedProfile.get("profileId").getAsString()
                         : UUID.randomUUID().toString();
@@ -566,7 +567,7 @@ public final class FileStore {
         }
         save();
         JsonObject result = new JsonObject();
-        account.privateProfiles.forEach((key, value) -> result.add(key, value.deepCopy()));
+        account.privateProfiles.forEach((key, value) -> result.add(key, ConfigJsonUtils.deepCopy(value)));
         return result;
     }
 
@@ -579,25 +580,26 @@ public final class FileStore {
 
     public synchronized JsonObject publicProfiles() {
         JsonObject profiles = new JsonObject();
-        state.publicProfiles.forEach((key, value) -> profiles.add(key, value.deepCopy()));
+        state.publicProfiles.forEach((key, value) -> profiles.add(key, ConfigJsonUtils.deepCopy(value)));
         return profiles;
     }
 
     public synchronized JsonObject savePublicProfile(String token, JsonObject profile) throws IOException {
         AccountRecord account = requireAccount(token);
-        JsonObject stored = profile.deepCopy();
+        JsonObject stored = ConfigJsonUtils.deepCopy(profile);
         String id = stored.has("id") ? stored.get("id").getAsString()
                 : Long.toString(state.nextPublicProfileId++);
         stored.addProperty("id", id);
         stored.addProperty("userId", account.userId);
         state.publicProfiles.put(id, stored);
         save();
-        return stored.deepCopy();
+        return ConfigJsonUtils.deepCopy(stored);
     }
 
     public synchronized Optional<JsonObject> publicProfile(String id) {
         JsonObject profile = state.publicProfiles.get(id);
-        return profile == null ? Optional.empty() : Optional.of(profile.deepCopy());
+        return profile == null ? Optional.empty()
+                : Optional.of(ConfigJsonUtils.deepCopy(profile));
     }
 
     public synchronized boolean deletePublicProfile(String token, String id) throws IOException {
