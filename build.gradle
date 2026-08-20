@@ -349,6 +349,7 @@ tasks.register('prepareInjectionBundle', Sync) {
     dependsOn(tasks.named('buildNative'))
     from(nativeBuildDirectory.map { it.dir('dist') }) {
         include 'Vape-v4.21.exe'
+        include 'Vape-v4.21Native.dll'
     }
     from(file('native/README.md'))
     into(injectionBundleDirectory)

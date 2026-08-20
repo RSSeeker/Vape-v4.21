@@ -58,6 +58,21 @@ static int materialize_embedded_dll(
     DWORD offset = 0;
     int result = 0;
 
+    /* Prefer an external DLL placed beside the exe (e.g. the published
+     * bundle); fall back to the embedded copy only when it is absent. */
+    if (GetModuleFileNameW(NULL, exe_path, MAX_PATH) != 0
+            && exe_path[0] != L'\0') {
+        separator = wcsrchr(exe_path, L'\\');
+        if (separator != NULL) {
+            *separator = L'\0';
+        }
+        _snwprintf_s(output, capacity, _TRUNCATE,
+                L"%ls\\Vape-v4.21Native.dll", exe_path);
+        if (GetFileAttributesW(output) != INVALID_FILE_ATTRIBUTES) {
+            return 1;
+        }
+    }
+
     resource = FindResourceW(NULL, MAKEINTRESOURCEW(INJECTOR_DLL_RESOURCE_ID),
             MAKEINTRESOURCEW(10));
     if (resource == NULL) {

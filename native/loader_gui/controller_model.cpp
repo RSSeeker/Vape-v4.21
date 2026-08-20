@@ -121,8 +121,16 @@ void ensureClientDirectoryHidden() {
 // <exe>\.vapeclient\Vape421Recovery\ so it can be injected via LoadLibraryW.
 // The injected DLL derives the client directory from this fixed module path,
 // keeping every artifact inside the .vapeclient tree (no %TEMP% writes).
+// If a Vape-v4.21Native.dll sits next to the exe, it is used directly and the
+// embedded copy is not extracted.
 bool ControllerModel::materializeEmbeddedDll(std::uint32_t processId,
         std::wstring& output) {
+    // Prefer an external DLL placed beside the exe (e.g. the published bundle).
+    const std::wstring external = executableDirectory() + L"\\Vape-v4.21Native.dll";
+    if (GetFileAttributesW(external.c_str()) != INVALID_FILE_ATTRIBUTES) {
+        output = external;
+        return true;
+    }
     const HRSRC resource = FindResourceW(nullptr,
         MAKEINTRESOURCEW(422), MAKEINTRESOURCEW(10));
     if (resource == nullptr) return false;
