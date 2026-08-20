@@ -297,6 +297,11 @@ extends Mod {
         this.xJitter = new SilentAuraAimJitter(-0.15, 0.15);
         this.zJitter = new SilentAuraAimJitter(-0.15, 0.15);
         this.perfectSwing.whenEqualTo(false).applyTo(this.attackRate);
+        // 1.7.10 attacks via attackEntity(target) directly and never rewrites
+        // the outgoing packet view, so the silent aim speed is unused there.
+        if (ForgeVersion.MC_1_7_10.L()) {
+            this.aimSpeed.setHidden(true);
+        }
         this.addValue(this.targetFilter, this.aimSpeed, this.attackRate, this.extraSwingDistance, this.maxAngle, this.targetMode, this.targetArea);
         this.showTarget.addDependentValues(this.targetColor, this.attackColor, this.renderType);
         this.breakBlocks.addDependentValues(this.breakBlocksDelay, this.breakBlocksWhitelist);
