@@ -63,7 +63,7 @@ extends Mod {
     }
 
     private void updateSearchResults() {
-        if (ForgeVersion.MC_1_8_9.L() && this.pendingScanEntries != null) {
+        if (this.pendingScanEntries != null) {
             if (Minecraft.theWorld().isNull()) {
                 return;
             }
@@ -98,7 +98,7 @@ extends Mod {
 
     @Override
     public void onScheduledAction() {
-        if (ForgeVersion.MC_1_8_9.L() && this.scanTimer.hasTimeElapsed(1000L)) {
+        if (this.scanTimer.hasTimeElapsed(1000L)) {
             this.scanTimer.reset();
             if (Minecraft.theWorld().isNull() || Minecraft.thePlayer().isNull()) {
                 return;
