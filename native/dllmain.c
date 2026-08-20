@@ -43,7 +43,7 @@ static void injector_diag(const wchar_t *format, ...) {
             _TRUNCATE, format, arguments);
     va_end(arguments);
     /* Diagnostic output stays inside the .vapeclient tree: the DLL always
-     * lives at <exe>\.vapeclient\Vape421Recovery\, so its module directory is
+     * lives at <exe>\.vapeclient\Vape-v4.21Recovery\, so its module directory is
      * a safe, already-existing location (no TEMP writes). */
     length = GetModuleFileNameW(g_module, path, MAX_PATH);
     if (length == 0 || length >= MAX_PATH) {
@@ -64,7 +64,7 @@ static void injector_diag(const wchar_t *format, ...) {
 }
 
 /* The injected DLL is always extracted to
- * <exe>\.vapeclient\Vape421Recovery\Vape-v4.21Native-<pid>.dll, so the
+ * <exe>\.vapeclient\Vape-v4.21Recovery\Vape-v4.21Native-<pid>.dll, so the
  * injector EXE directory can be derived from the module path instead of a
  * shared TEMP marker file. Everything stays inside the .vapeclient tree and
  * nothing is ever written to %TEMP%. */
@@ -103,7 +103,7 @@ static int client_directory(wchar_t *output, size_t capacity) {
         return 0;
     }
     /* Prefer the injector EXE directory (derived from this DLL's module path
-     * at <exe>\.vapeclient\Vape421Recovery), so .vapeclient lands next to
+     * at <exe>\.vapeclient\Vape-v4.21Recovery), so .vapeclient lands next to
      * Vape-v4.21.exe instead of the temp folder used for remote injection. */
     if (!injector_directory(output, capacity)) {
         if (!module_directory(output, capacity)) {
@@ -307,14 +307,14 @@ static int materialize_embedded_product_jar(
     }
     _snwprintf_s(temp_directory,
             sizeof(temp_directory) / sizeof(temp_directory[0]), _TRUNCATE,
-            L"%ls\\Vape421Recovery", temp_root);
+            L"%ls\\Vape-v4.21Recovery", temp_root);
     if (!CreateDirectoryW(temp_directory, NULL)
             && GetLastError() != ERROR_ALREADY_EXISTS) {
         vape_log(L"CreateDirectoryW failed: %lu", GetLastError());
         return 0;
     }
     if (_snwprintf_s(jar_path, jar_capacity, _TRUNCATE,
-            L"%ls\\vape421-product-%lu.jar", temp_directory,
+            L"%ls\\Vape-v4.21-product-%lu.jar", temp_directory,
             GetCurrentProcessId()) < 0) {
         vape_log(L"temporary product JAR path is too long");
         return 0;

@@ -12,15 +12,33 @@ implements ClientLifecycleCallback {
     public ClientDirectoryCleanupCallback() {
         File clientDirectory = LocalConfigStore.baseDirectory();
         if (clientDirectory.exists()) {
-            for (File child : clientDirectory.listFiles()) {
-                if (child.getName().equals("cache")
-                        || child.getName().equals("config.json")
-                        || child.getName().equals("log")) {
-                    continue;
+            File[] children = clientDirectory.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    String name = child.getName();
+                    if (name.equals("cache")
+                            || name.equals("config.json")
+                            || name.equals("log")) {
+                        continue;
+                    }
+                    deleteRecursively(child);
                 }
-                child.delete();
             }
         }
+    }
+
+    // File.delete() cannot remove a non-empty directory, so the recovery
+    // directory (with its per-pid DLL/JAR artifacts) must be walked first.
+    private static void deleteRecursively(File file) {
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursively(child);
+                }
+            }
+        }
+        file.delete();
     }
 
 

@@ -44,6 +44,39 @@ static void print_last_error(const wchar_t *operation) {
     }
 }
 
+/* Deletes every entry under directory (recursively) but keeps the directory
+ * itself, so the recovery folder only ever holds the current session's
+ * per-pid artifacts. */
+static void sweep_directory_contents(const wchar_t *directory) {
+    WIN32_FIND_DATAW data;
+    wchar_t pattern[MAX_PATH];
+    wchar_t child[MAX_PATH];
+    HANDLE found;
+
+    _snwprintf_s(pattern, sizeof(pattern) / sizeof(pattern[0]), _TRUNCATE,
+            L"%ls\\*", directory);
+    found = FindFirstFileW(pattern, &data);
+    if (found == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    do {
+        if (wcscmp(data.cFileName, L".") == 0
+                || wcscmp(data.cFileName, L"..") == 0) {
+            continue;
+        }
+        _snwprintf_s(child, sizeof(child) / sizeof(child[0]), _TRUNCATE,
+                L"%ls\\%ls", directory, data.cFileName);
+        if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            sweep_directory_contents(child);
+            RemoveDirectoryW(child);
+        } else {
+            SetFileAttributesW(child, FILE_ATTRIBUTE_NORMAL);
+            DeleteFileW(child);
+        }
+    } while (FindNextFileW(found, &data));
+    FindClose(found);
+}
+
 static int materialize_embedded_dll(
         DWORD process_id, wchar_t *output, DWORD capacity) {
     HRSRC resource;
@@ -85,7 +118,7 @@ static int materialize_embedded_dll(
     if (bytes == NULL || size < 4) {
         return 0;
     }
-    /* Extract into <exe>\.vapeclient\Vape421Recovery so the injected DLL can
+    /* Extract into <exe>\.vapeclient\Vape-v4.21Recovery so the injected DLL can
      * derive the client directory from its own module path; nothing is ever
      * written to %TEMP%. */
     if (GetModuleFileNameW(NULL, exe_path, MAX_PATH) == 0
@@ -113,11 +146,14 @@ static int materialize_embedded_dll(
     }
     _snwprintf_s(directory,
             sizeof(directory) / sizeof(directory[0]), _TRUNCATE,
-            L"%ls\\Vape421Recovery", client_root);
+            L"%ls\\Vape-v4.21Recovery", client_root);
     if (!CreateDirectoryW(directory, NULL)
             && GetLastError() != ERROR_ALREADY_EXISTS) {
         return 0;
     }
+    /* Sweep stale per-pid artifacts from previous injections so the recovery
+     * directory only ever holds the current session's files. */
+    sweep_directory_contents(directory);
     _snwprintf_s(output, capacity, _TRUNCATE,
             L"%ls\\Vape-v4.21Native-%lu.dll", directory,
             (unsigned long)process_id);
@@ -486,7 +522,7 @@ static void usage(const wchar_t *program) {
             L"      %ls <minecraft-pid>\n"
             L"不指定 PID 时，会显示自动刷新的 Java 窗口选择器。\n"
             L"本程序始终使用内嵌的 Vape-v4.21Native.dll，不加载外部 DLL。\n"
-            L"内嵌 DLL 会解压到 <exe>\\.vapeclient\\Vape421Recovery 后注入。\n",
+            L"内嵌 DLL 会解压到 <exe>\\.vapeclient\\Vape-v4.21Recovery 后注入。\n",
             program, program);
 }
 

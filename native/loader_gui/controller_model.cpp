@@ -58,6 +58,30 @@ std::string jsonEscape(const std::string& value) {
     return result;
 }
 
+// Deletes every entry under directory (recursively) but keeps the directory
+// itself, so the recovery folder only ever holds the current session's files.
+void sweepDirectory(const std::wstring& directory) {
+    WIN32_FIND_DATAW data{};
+    const std::wstring pattern = directory + L"\\*";
+    HANDLE found = FindFirstFileW(pattern.c_str(), &data);
+    if (found == INVALID_HANDLE_VALUE) return;
+    do {
+        if (wcscmp(data.cFileName, L".") == 0 ||
+                wcscmp(data.cFileName, L"..") == 0) {
+            continue;
+        }
+        const std::wstring child = directory + L"\\" + data.cFileName;
+        if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+            sweepDirectory(child);
+            RemoveDirectoryW(child.c_str());
+        } else {
+            SetFileAttributesW(child.c_str(), FILE_ATTRIBUTE_NORMAL);
+            DeleteFileW(child.c_str());
+        }
+    } while (FindNextFileW(found, &data));
+    FindClose(found);
+}
+
 void captureWindowTitles(std::vector<MinecraftProcess>& candidates) {
     EnumWindows([](HWND window, LPARAM value) -> BOOL {
         auto* candidates = reinterpret_cast<std::vector<MinecraftProcess>*>(value);
@@ -91,7 +115,7 @@ std::wstring executableDirectory() {
 }
 
 // Ensures <exe>\.vapeclient exists and is hidden. The injected DLL derives
-// the client directory from its own module path (<exe>\.vapeclient\Vape421Recovery),
+// the client directory from its own module path (<exe>\.vapeclient\Vape-v4.21Recovery),
 // so no TEMP marker file is needed; this just makes the folder visible early
 // and removes the obsolete TEMP marker/diagnostics left by older builds.
 void ensureClientDirectoryHidden() {
@@ -118,7 +142,7 @@ void ensureClientDirectoryHidden() {
 }
 
 // Extracts the embedded product DLL (resource 422, RCDATA) to
-// <exe>\.vapeclient\Vape421Recovery\ so it can be injected via LoadLibraryW.
+// <exe>\.vapeclient\Vape-v4.21Recovery\ so it can be injected via LoadLibraryW.
 // The injected DLL derives the client directory from this fixed module path,
 // keeping every artifact inside the .vapeclient tree (no %TEMP% writes).
 // If a Vape-v4.21Native.dll sits next to the exe, it is used directly and the
@@ -144,11 +168,14 @@ bool ControllerModel::materializeEmbeddedDll(std::uint32_t processId,
     const std::wstring clientRoot = executableDirectory() + L"\\.vapeclient";
     wchar_t directory[MAX_PATH]{};
     _snwprintf_s(directory, std::size(directory), _TRUNCATE,
-        L"%ls\\Vape421Recovery", clientRoot.c_str());
+        L"%ls\\Vape-v4.21Recovery", clientRoot.c_str());
     if (!CreateDirectoryW(directory, nullptr)
             && GetLastError() != ERROR_ALREADY_EXISTS) {
         return false;
     }
+    // Sweep stale per-pid artifacts from previous injections so the recovery
+    // directory only ever holds the current session's files.
+    sweepDirectory(directory);
     wchar_t target[MAX_PATH]{};
     _snwprintf_s(target, std::size(target), _TRUNCATE,
         L"%ls\\Vape-v4.21Native-%lu.dll", directory,
@@ -302,7 +329,7 @@ bool ControllerModel::injectMinecraft(std::uint32_t processId) {
         return false;
     }
     // The injected DLL derives the client directory from its own module path
-    // (<exe>\.vapeclient\Vape421Recovery); ensure the hidden folder exists.
+    // (<exe>\.vapeclient\Vape-v4.21Recovery); ensure the hidden folder exists.
     ensureClientDirectoryHidden();
     if (!InjectionCoordinator::injectProductDll(processId, dllPath, service_.port(),
             serviceHttpBase, error)) {

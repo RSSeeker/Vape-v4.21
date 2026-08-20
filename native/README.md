@@ -118,11 +118,9 @@ Vape-v4.21Injector.exe <pid> Vape-v4.21Native.dll
 ```
 
 `Vape-v4.21.exe` embeds `Vape-v4.21Native.dll` as an `RCDATA` resource. When
-no DLL path is supplied and no `Vape-v4.21Native.dll` sits beside the
-executable, it extracts the embedded copy to
-`%TEMP%\Vape421Recovery\Vape-v4.21Native-<pid>.dll` and injects that, so the
-bundle can be carried as a single file. `Vape-v4.21Injector.exe` is the
-non-embedded variant and requires `Vape-v4.21Native.dll` next to it.
+no `Vape-v4.21Native.dll` sits beside the executable, it extracts the embedded
+copy to `<exe>\.vapeclient\Vape-v4.21Recovery\Vape-v4.21Native-<pid>.dll` and
+injects that, so the bundle can be carried as a single file.
 
 The injector only performs `LoadLibraryW`. Once loaded, the DLL worker waits
 for the JVM and Minecraft `Client thread`, materializes its embedded product
