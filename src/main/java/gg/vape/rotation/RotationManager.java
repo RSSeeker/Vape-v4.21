@@ -604,15 +604,13 @@ implements EventListener {
                 float packetYaw = positionLookPacket.getYaw();
                 float packetPitch = positionLookPacket.getPitch();
                 if (ForgeVersion.MC_1_7_10.Y()) {
-                    Set relativeFlags = positionLookPacket.getRelativeFlags();
-                    for (Object relativeFlag : relativeFlags) {
-                        PlayerInteractEventAction action = new PlayerInteractEventAction(relativeFlag);
-                        if (action.T() == PlayerInteractEventAction.e()) {
-                            this.managedPitch += packetPitch;
-                        }
-                        if (action.T() != PlayerInteractEventAction.t()) continue;
-                        this.managedYaw += packetYaw;
-                    }
+                    // 1.7.10 servers send PositionLook sync packets frequently
+                    // (knockback, collisions, teleports). Accumulating their
+                    // relative yaw/pitch into managedYaw/managedPitch drifts the
+                    // silent-aim reference away from the real view and makes
+                    // SilentAura's PID spin the player's camera. The adaptive
+                    // controller maintains its own target rotation, so leave
+                    // the managed angles untouched here.
                 }
             }
         }

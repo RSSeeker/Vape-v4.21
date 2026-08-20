@@ -21,6 +21,7 @@ import gg.vape.value.OptionalLimitValue;
 import gg.vape.wrapper.impl.Block;
 import gg.vape.wrapper.impl.EntityPlayerSP;
 import gg.vape.wrapper.impl.EnumWorldBlockLayer;
+import gg.vape.wrapper.impl.ForgeVersion;
 import gg.vape.wrapper.impl.Minecraft;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +41,13 @@ extends Mod {
         if (!this.isEnabled()) {
             return;
         }
-        eventChunkRenderRebuild.setCancelled(true);
+        // 1.7.10: cancelling the chunk rebuild entry point breaks RenderGlobal's
+        // tessellator lifecycle ("Already tesselating!" crash on enable). The
+        // legacy renderer path (RenderBlocks + face events) already hides non
+        // target blocks, so only cancel on modern render pipelines.
+        if (ForgeVersion.MC_1_8_9.d()) {
+            eventChunkRenderRebuild.setCancelled(true);
+        }
     }
 
     private void onOpacityChanged(NumberValue numberValue) {
@@ -80,6 +87,14 @@ extends Mod {
 
     private void refreshWorldForOpacity() {
         if (Minecraft.thePlayer().isNull() || (Double)this.opacityValue.getValue() == this.lastOpacity) {
+            return;
+        }
+        // 1.7.10: a 4000-block-radius markBlocksRangeForRenderUpdate on enable
+        // triggers a synchronous chunk rebuild storm that races the active
+        // tessellator ("Already tesselating!" crash). Legacy RenderBlocks face
+        // events apply opacity instantly, so no world refresh is needed there.
+        if (!ForgeVersion.MC_1_8_9.d()) {
+            this.lastOpacity = (Double)this.opacityValue.getValue();
             return;
         }
         int radius = 4000;
