@@ -73,5 +73,6 @@ jobs:
             build/injection/Vape-v4.21.exe
             build/injection/Vape-v4.21Native.dll
           overwrite: true
+          update_release_body: false
           prerelease: ${{ contains(github.ref_name, '-pre') }}
           fail_on_unmatched_files: true
