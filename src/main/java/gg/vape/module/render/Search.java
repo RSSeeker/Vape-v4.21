@@ -1,6 +1,5 @@
 package gg.vape.module.render;
 
-import gg.vape.Vape;
 import gg.vape.event.EventHandler;
 import gg.vape.event.impl.EventRender3D;
 import gg.vape.event.impl.EventRenderTracers3D;
@@ -98,10 +97,6 @@ extends Mod {
 
     public void addSearchBlock(SearchBlock searchBlock) {
         this.searchBlocks.add(searchBlock);
-        Vape.debugLog("[Search] addSearchBlock: " + (searchBlock != null ? searchBlock.d() : "null")
-                + " id=" + (searchBlock != null ? searchBlock.M() : -1)
-                + " total=" + this.searchBlocks.size()
-                + " enabled=" + this.isEnabled());
     }
 
     @Override
