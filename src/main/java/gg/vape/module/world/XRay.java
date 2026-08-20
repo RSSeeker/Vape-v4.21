@@ -145,8 +145,16 @@ extends Mod {
         if (!this.isEnabled()) {
             return;
         }
-        eventBlockRenderBounds.getRenderBlocks().setRenderAllFaces(
-                this.isTargetBlock(eventBlockRenderBounds.getBlock()));
+        boolean isTarget = this.isTargetBlock(eventBlockRenderBounds.getBlock());
+        eventBlockRenderBounds.getRenderBlocks().setRenderAllFaces(isTarget);
+        // 1.7.10: renderBlockByRenderType is injected with a cancelable return
+        // guard ("if(fire()) return false;"). Cancelling non-target blocks here
+        // makes them vanish entirely, which is stable across chunk rebuilds
+        // (the face-opacity path only applies to the RenderBlocks path and
+        // leaves rebuilt chunks opaque).
+        if (!isTarget && ForgeVersion.MC_1_7_10.L()) {
+            eventBlockRenderBounds.setCancelled(true);
+        }
     }
 
     @EventHandler

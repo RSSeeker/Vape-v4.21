@@ -4,6 +4,7 @@ import gg.vape.Vape;
 import gg.vape.config.ClientSettings;
 import gg.vape.event.EventHandler;
 import gg.vape.event.EventPriority;
+import gg.vape.event.impl.EventMotion;
 import gg.vape.event.impl.EventPrePlayerTick;
 import gg.vape.event.impl.EventPreTick;
 import gg.vape.event.impl.EventRender3D;
@@ -594,7 +595,10 @@ extends Mod {
         }
     }
 
-    /** 1.7.10 fallback: rotate the real view toward the target each tick. */
+    /** 1.7.10 fallback: silently rotate the outgoing packets toward the target.
+     *  EntityClientPlayerMPMotionExprEditor rewrites the packet's rotation
+     *  fields to EventMotion.getRotationYaw/Pitch, so setting these here makes
+     *  the server see us facing the target while the local camera stays free. */
     private void updateAimLegacy() {
         if (Minecraft.theWorld().isNull()) {
             this.resetTargeting();
@@ -622,9 +626,8 @@ extends Mod {
                 Vec3.create(player.c(), player.A() + 1.62, player.Z()),
                 Vec3.create(targetX, aimY, targetZ),
                 player.J(), false);
-        player.H(angles.getYaw());
-        player.C(angles.getPitch());
-        player.z(angles.getYaw());
+        EventMotion.setRotationYaw(angles.getYaw());
+        EventMotion.setRotationPitch(angles.getPitch());
         this.readyToAttack = this.isInRange(this.target);
     }
 
