@@ -29,7 +29,6 @@ extends Event {
         }
         return this.isCanceled();
     }
-
     @Override
     public EventListeners getListeners() {
         return EVENT_LISTENERS;

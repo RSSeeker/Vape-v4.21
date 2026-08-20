@@ -52,6 +52,12 @@ extends Mapping {
     }
 
     public boolean K(Object object) {
+        // 1.7.10 Tessellator has no "renderingChunk" boolean field; the field
+        // resolution fails and getBoolean would throw, crashing XRay's legacy
+        // face render path. Treat an unresolved field as "not drawing".
+        if (this.A == null || this.A.hasResolutionFailed()) {
+            return false;
+        }
         return this.A.getBoolean(object);
     }
 

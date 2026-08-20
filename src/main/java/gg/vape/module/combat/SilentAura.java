@@ -491,6 +491,17 @@ extends Mod {
     }
 
     private void updateAim() {
+        // 1.7.10: the adaptive rotation path relies on ThreadBound pre/post
+        // tick events that are injected into Item.onItemRightClick /
+        // getMovingObjectPositionFromPlayer. Silent attacks never pair those
+        // events, so applyManagedRotation(true) leaves the camera stuck on the
+        // managed yaw and visibly yanks the player's view toward the target.
+        // Disable the managed rotation entirely on 1.7.10; the clicker still
+        // attacks through the legacy packet path without camera control.
+        if (ForgeVersion.MC_1_7_10.L()) {
+            this.readyToAttack = this.target != null && this.isInRange(this.target);
+            return;
+        }
         if (Minecraft.theWorld().isNull()) {
             this.resetTargeting();
             return;
