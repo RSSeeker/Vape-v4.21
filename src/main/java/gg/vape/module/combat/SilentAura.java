@@ -352,9 +352,36 @@ extends Mod {
         if (player.isNull()) {
             return;
         }
-        PlayerControllerMP controller = Minecraft.playerController();
-        if (controller != null && controller.isNotNull()) {
-            controller.attackEntity(player, target);
+        // Temporarily aim the real view at the target so PlayerControllerMP's
+        // attack ray-trace connects and the swing animation plays, then restore
+        // the player's own view so the camera is not left locked on the target.
+        double[] aimCoordinates = this.computeAimCoords(target);
+        double targetX = aimCoordinates[0];
+        double targetY = aimCoordinates[1];
+        double targetZ = aimCoordinates[2];
+        double playerEyeY = player.N() + 1.62;
+        double targetHeight = target.Y();
+        double aimY = playerEyeY < targetY
+                ? targetY
+                : Math.min(playerEyeY, targetY + targetHeight) - 0.275;
+        RotationAngles angles = RotationVectorMath.H(
+                Vec3.create(player.c(), player.A() + 1.62, player.Z()),
+                Vec3.create(targetX, aimY, targetZ),
+                player.J(), false);
+        float savedYaw = player.J();
+        float savedPitch = player.V();
+        player.H(angles.getYaw());
+        player.C(angles.getPitch());
+        player.z(angles.getYaw());
+        try {
+            PlayerControllerMP controller = Minecraft.playerController();
+            if (controller != null && controller.isNotNull()) {
+                controller.attackEntity(player, target);
+            }
+        } finally {
+            player.H(savedYaw);
+            player.C(savedPitch);
+            player.z(savedYaw);
         }
         event.setCancelled(true);
     }

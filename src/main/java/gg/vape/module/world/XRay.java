@@ -223,6 +223,19 @@ extends Mod {
         this.blockIds = new ArrayList<Integer>();
         this.addValue(this.opacityValue, this.caveModeValue, this.blocksValue);
         this.opacityValue.addChangeListener(this::onOpacityChanged);
+        // 1.7.10 hides non-target blocks entirely (cancelled render), so the
+        // opacity slider has no effect there; hide it to avoid confusion.
+        if (ForgeVersion.MC_1_7_10.L()) {
+            this.opacityValue.setHidden(true);
+        }
+        // Cave mode toggling changes which blocks render; force a full reload
+        // so the change is visible without manually re-toggling XRay.
+        this.caveModeValue.addChangeListener(value -> {
+            if (this.isEnabled()) {
+                this.needsReload = true;
+                this.lastOpacity = -1.0;
+            }
+        });
     }
 
     public int getOpacity() {
