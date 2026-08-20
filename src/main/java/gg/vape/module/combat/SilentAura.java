@@ -338,9 +338,8 @@ extends Mod {
     /** 1.7.10: attack the tracked target directly instead of letting MC attack
      *  whatever the crosshair ray-trace hits (the crosshair never points at the
      *  target because the legacy rotation path only rewrites outgoing packets).
-     *  The local camera is never touched: the outgoing packet rotation is
-     *  handled by updateAimLegacy via EventMotion, so the view stays fully
-     *  silent. */
+     *  The local camera is never touched; swingItem() plays the swing locally
+     *  and broadcasts the swing packet so other players see it. */
     @EventHandler(priority = EventPriority.HIGH)
     public void onSyntheticAttack(SyntheticAttackRequestEvent event) {
         if (event.getSource() == this) {
@@ -358,6 +357,7 @@ extends Mod {
         if (player.isNull()) {
             return;
         }
+        player.swingItem();
         PlayerControllerMP controller = Minecraft.playerController();
         if (controller != null && controller.isNotNull()) {
             controller.attackEntity(player, target);

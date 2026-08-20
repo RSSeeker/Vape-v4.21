@@ -111,6 +111,13 @@ extends Entity {
         MEntityLivingBase.P(EntityLivingBase.vapeInstance.getMappings().hx, this.I, object);
     }
 
+    /** Plays the swing animation locally and broadcasts the swing packet
+     *  (swingItem). Used by the 1.7.10 silent-aura attack so the local view
+     *  sees the swing while the camera itself is never rotated. */
+    public void swingItem() {
+        MEntityLivingBase.swingItem(EntityLivingBase.vapeInstance.getMappings().hx, this.I);
+    }
+
     public void B$src$V$14s4bmy() {
         if (ForgeVersion.MC_1_21_4.d()) {
             MEntityLivingBase.V(EntityLivingBase.vapeInstance.getMappings().hx, this.I);

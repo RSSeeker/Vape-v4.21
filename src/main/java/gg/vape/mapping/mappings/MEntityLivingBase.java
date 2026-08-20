@@ -174,6 +174,12 @@ extends Mapping {
         this.S.invokeVoidNoArgs(object);
     }
 
+    /** Public entry for the 1.7.10 silent-aura path: plays the local swing
+     *  animation (swingItem) without touching the camera. */
+    public static void swingItem(MEntityLivingBase mEntityLivingBase, Object object) {
+        mEntityLivingBase.c$src$V$85q5i8(object);
+    }
+
 
     public static boolean e(MEntityLivingBase mEntityLivingBase, Object object) {
         return mEntityLivingBase.z(object);
