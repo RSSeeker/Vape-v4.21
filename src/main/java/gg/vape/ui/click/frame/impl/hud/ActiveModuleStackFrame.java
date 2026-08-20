@@ -8,7 +8,6 @@ import gg.vape.ui.click.GuiMouseEvent;
 import gg.vape.ui.click.frame.Frame;
 import gg.vape.ui.font.SmoothFontRenderer;
 import gg.vape.utils.MathUtil;
-import gg.vape.wrapper.impl.FontRenderer;
 import gg.vape.wrapper.impl.ForgeVersion;
 import gg.vape.wrapper.impl.Minecraft;
 import gg.vape.wrapper.impl.ScaledResolution;
@@ -88,21 +87,22 @@ extends Frame {
         double centerY;
         double centerX;
         ScaledResolution scaledResolution = Minecraft.G();
-        SmoothFontRenderer smoothFontRenderer = null;
-        FontRenderer fontRenderer = null;
-        if (ForgeVersion.MC_26_1.d()) {
-            smoothFontRenderer = Vape.INSTANCE.getFontManager().p(1.0);
-        } else {
-            fontRenderer = Minecraft.getFontRenderer();
-        }
-        // Center of the screen: the HUD uses window-pixel coordinates scaled by
-        // the GUI scale. The original /4 (before the scale division) put the
-        // stack at the quarter point; /2 lands on the center. Keeping the same
-        // operations as the original code avoids changing the coordinate space.
-        centerX = (float)Minecraft.J() / 2.0f;
-        centerY = Minecraft.h() / 2;
-        centerX /= Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
-        centerY /= Vape.INSTANCE.getClientSettings().getGuiScaleFactor();
+        // Use Vape's own font renderer on every version: Minecraft's native
+        // FontRenderer.drawStringWithShadow has no compatible signature on
+        // 1.20.6+ (GuiGraphics-based), which silently draws nothing for the
+        // health text. The Vape renderer (SmoothFontRenderer) is used by other
+        // HUD frames (e.g. KeystrokesCpsCounterComponent) and works everywhere.
+        SmoothFontRenderer smoothFontRenderer = Vape.INSTANCE.getFontManager().p(1.0);
+        // Center of the screen. HUD frames render inside renderHudFrames()
+        // which pushes scale(guiScale), and EventRender2D's GuiRenderPrimitives.o()
+        // also pushes scale(2.0) - so the effective HUD coordinate space is
+        // window/(2*scale), exactly how ClockHudFrame etc. position themselves
+        // ((J()/2 - offset) / (2*scale)). The old /4 (== /(4*scale)) landed at
+        // the quarter point; /2*scale lands on the center.
+        centerX = (float)Minecraft.J() / 2.0f
+                / (2.0f * (float)Vape.INSTANCE.getClientSettings().getGuiScaleFactor());
+        centerY = (float)Minecraft.h() / 2.0f
+                / (2.0f * (float)Vape.INSTANCE.getClientSettings().getGuiScaleFactor());
         centerY += 10.0;
         gg.vape.Vape.debugLog("[CenterStack] window=" + Minecraft.J() + "x" + Minecraft.h()
                 + " scale=" + Vape.INSTANCE.getClientSettings().getGuiScaleFactor()
@@ -135,8 +135,7 @@ extends Frame {
                     ? Vape.INSTANCE.getFontSelector().W()
                             .s(entry.displayInfo.getDescription())
                     : translatedLabel;
-            double textWidth = smoothFontRenderer != null
-                    ? smoothFontRenderer.N(widthText) : (double)fontRenderer.getStringWidth(widthText);
+            double textWidth = smoothFontRenderer.N(widthText);
             double textX = centerX - (double)MathUtil.ceil(textWidth / 2.0);
             if (showModuleName) {
                 String moduleSuffix = entry.displayInfo.getSuffix();
@@ -146,13 +145,8 @@ extends Frame {
                 }
                 text += moduleSuffix;
             }
-            if (smoothFontRenderer != null) {
-                smoothFontRenderer.v(text, textX + 1.0, centerY, entry.displayInfo.getColor());
-                centerY += smoothFontRenderer.d(text) + 4.0;
-                continue;
-            }
-            fontRenderer.drawStringWithShadow(text, textX + 1.0, centerY, entry.displayInfo.getColor());
-            centerY += (double)(fontRenderer.FONT_HEIGHT(text) + 4);
+            smoothFontRenderer.v(text, textX + 1.0, centerY, entry.displayInfo.getColor());
+            centerY += smoothFontRenderer.d(text) + 4.0;
         }
         try {
             gg.vape.Vape.debugLog("[CenterStack] rendered " + entries.size() + " entries at x=" + (float)Minecraft.J() / 2.0f / (float)Vape.INSTANCE.getClientSettings().getGuiScaleFactor() + " y=" + ((float)Minecraft.h() / 2.0f / (float)Vape.INSTANCE.getClientSettings().getGuiScaleFactor() + 10.0f));
