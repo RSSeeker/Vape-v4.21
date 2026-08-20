@@ -184,7 +184,22 @@ bool ControllerModel::materializeEmbeddedDll(std::uint32_t processId,
     HANDLE file = CreateFileW(target, GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (file == INVALID_HANDLE_VALUE) return false;
+    if (file == INVALID_HANDLE_VALUE) {
+        // The same-pid artifact may still be mapped by a live process from a
+        // previous injection (same content). Reuse it instead of failing.
+        const DWORD createError = GetLastError();
+        if (createError == ERROR_SHARING_VIOLATION ||
+                createError == ERROR_ACCESS_DENIED) {
+            WIN32_FILE_ATTRIBUTE_DATA existing{};
+            if (GetFileAttributesExW(target, GetFileExInfoStandard, &existing) &&
+                    existing.nFileSizeLow == size &&
+                    existing.nFileSizeHigh == 0) {
+                output = target;
+                return true;
+            }
+        }
+        return false;
+    }
 
     DWORD offset = 0;
     bool ok = true;
