@@ -162,7 +162,15 @@ extends Mapping {
     }
 
     private Object n$src$Ljava_lang_Object_$3wfxxt(Object object) {
-        return this.C.getObject(object);
+        Object result = this.C.getObject(object);
+        try {
+            gg.vape.runtime.NativeBridge.sce("DBG window get: resolved=" + this.C.getResolvedName()
+                    + " owner=" + (this.C.getOwnerClass() == null ? "null" : this.C.getOwnerClass().getName())
+                    + " input=" + object + " result=" + result);
+        }
+        catch (Throwable ignored) {
+        }
+        return result;
     }
 
     private void S(Object object, Object object2) {
@@ -785,7 +793,8 @@ extends Mapping {
         }
         Class clazz47 = MappedClasses.lT;
         boolean bl37 = true;
-        String string43 = "gameSettings";
+        // 1.17+ renamed Minecraft.gameSettings to options.
+        String string43 = ForgeVersion.MC_1_17.d() ? "options" : "gameSettings";
         MMinecraft mMinecraft43 = this;
         this.s = this.J(string43, bl37, clazz47);
         if (ForgeVersion.MC_26_1.d()) {
