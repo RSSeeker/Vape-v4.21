@@ -277,7 +277,7 @@ public class MappingMethod {
         this.originalName = methodName;
         this.declaredReturnType = returnType;
         this.declaredParameterTypes = parameterTypes;
-        MemberLookupSignature memberLookupSignature = RuntimeNameMappingRegistry.lookupMethodMapping(ownerClass, methodName);
+        MemberLookupSignature memberLookupSignature = RuntimeNameMappingRegistry.lookupMethodMapping(ownerClass, methodName, parameterTypes);
         if (memberLookupSignature != null) {
             this.runtimeName = memberLookupSignature.runtimeName;
             this.resolvedReturnType = memberLookupSignature.resolvedType != null ? memberLookupSignature.resolvedType : returnType;
@@ -386,7 +386,9 @@ public class MappingMethod {
     }
 
     public static MappingMethod fromBuilder(MappingMethodBuilder mappingMethodBuilder) {
-        MemberLookupSignature memberLookupSignature = RuntimeNameMappingRegistry.lookupMethodMapping(mappingMethodBuilder.getOwnerClass(), mappingMethodBuilder.getMemberName());
+        MemberLookupSignature memberLookupSignature = RuntimeNameMappingRegistry.lookupMethodMapping(
+                mappingMethodBuilder.getOwnerClass(), mappingMethodBuilder.getMemberName(),
+                mappingMethodBuilder.getParameterTypes());
         if (memberLookupSignature != null) {
             mappingMethodBuilder.setMemberName(memberLookupSignature.runtimeName);
             if (memberLookupSignature.resolvedType != null) {

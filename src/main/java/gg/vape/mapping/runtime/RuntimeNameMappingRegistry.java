@@ -19,11 +19,34 @@ public class RuntimeNameMappingRegistry {
 
     @Nullable
     public static MemberLookupSignature lookupMethodMapping(Class ownerClass, String methodName) {
+        return lookupMethodMapping(ownerClass, methodName, null);
+    }
+
+    @Nullable
+    public static MemberLookupSignature lookupMethodMapping(Class ownerClass, String methodName, Class<?>[] parameterTypes) {
         if (memberNameRemapTable == null) {
             return null;
         }
         MemberLookupSignature signature = memberNameRemapTable.lookupMethodMapping(ownerClass, methodName);
         if (signature == null) {
+            // Vanilla (obfuscated) 1.20.1/1.21.1 runtimes: the V50/V51 member
+            // tables do not cover every 1.21+ member (e.g.
+            // DeltaTracker.getGameTimeDeltaTicks). Translate the mojmap name
+            // directly through the obfuscated member map instead.
+            int version = ForgeVersion.c();
+            if (version == 47 && !NativeBridge.isNeoForge1201Runtime()) {
+                String obfuscated = NeoForgeObfMap.lookupMethod1201(
+                        ownerClass, methodName, buildParamDesc(parameterTypes));
+                if (obfuscated != null) {
+                    return new MemberLookupSignature(obfuscated, null, null, parameterTypes);
+                }
+            } else if (version == 52 && !NativeBridge.isNeoForge1211Runtime()) {
+                String obfuscated = NeoForgeObfMap.lookupMethod1211(
+                        ownerClass, methodName, buildParamDesc(parameterTypes));
+                if (obfuscated != null) {
+                    return new MemberLookupSignature(obfuscated, null, null, parameterTypes);
+                }
+            }
             return null;
         }
         // Vanilla (obfuscated) 1.20.1/1.21.1 runtimes: V50/V51 method values are
@@ -48,6 +71,9 @@ public class RuntimeNameMappingRegistry {
     }
 
     private static String buildParamDesc(Class<?>[] parameterTypes) {
+        if (parameterTypes == null) {
+            return "()";
+        }
         StringBuilder descriptor = new StringBuilder("(");
         for (Class<?> parameterType : parameterTypes) {
             if (parameterType == Integer.TYPE) {
@@ -90,6 +116,22 @@ public class RuntimeNameMappingRegistry {
         }
         MemberLookupSignature signature = memberNameRemapTable.lookupFieldMapping(ownerClass, fieldName);
         if (signature == null) {
+            // Vanilla (obfuscated) 1.20.1/1.21.1 runtimes: the V50/V51 member
+            // tables do not cover every field (e.g. DamageSource.FALL moved to
+            // DamageTypes in 1.21). Translate the mojmap name directly through
+            // the obfuscated member map instead.
+            int version = ForgeVersion.c();
+            if (version == 47 && !NativeBridge.isNeoForge1201Runtime()) {
+                String obfuscated = NeoForgeObfMap.lookupField1201(ownerClass, fieldName);
+                if (obfuscated != null) {
+                    return new MemberLookupSignature(obfuscated, null, null);
+                }
+            } else if (version == 52 && !NativeBridge.isNeoForge1211Runtime()) {
+                String obfuscated = NeoForgeObfMap.lookupField1211(ownerClass, fieldName);
+                if (obfuscated != null) {
+                    return new MemberLookupSignature(obfuscated, null, null);
+                }
+            }
             return null;
         }
         // Mojmap runtimes: V50/V51 field values may be obfuscated names
