@@ -360,6 +360,12 @@ public class NativeBridge {
     }
 
     public static void start() throws Throwable {
+        // Force version detection up front: MappedClasses resolves classes
+        // during Vape's constructor, and the NeoForge/Forge mojmap flags must
+        // already be set so those lookups pick the direct-name path.
+        detectVanillaMappingVersion(
+                Thread.currentThread().getContextClassLoader(),
+                NativeBridge.class.getClassLoader());
         forgeAbsent = !isClassPresent("net.minecraftforge.common.ForgeVersion")
                 && !isClassPresent("net.minecraftforge.fml.loading.FMLLoader");
         Vape vape = new Vape();
