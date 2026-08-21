@@ -4,6 +4,7 @@ import gg.vape.Vape;
 import gg.vape.reflect.Badlion189Mappings;
 import gg.vape.reflect.Fabric12111Mappings;
 import gg.vape.reflect.Fabric262Mappings;
+import gg.vape.reflect.NeoForge1211Mappings;
 import gg.vape.reflect.Type;
 import gg.vape.reflect.Vanilla1122Mappings;
 import gg.vape.reflect.Vanilla1211Mappings;
@@ -41,6 +42,7 @@ public class NativeBridge {
     private static volatile int vanillaMappingVersion;
     private static volatile boolean badlion189Runtime;
     private static volatile boolean fabric12111Runtime;
+    private static volatile boolean neoForge1211Runtime;
     private static volatile boolean fabric262Runtime;
     static boolean alphaTestWasEnabled;
     private static Method glGetFloatMethod;
@@ -565,6 +567,7 @@ public class NativeBridge {
         boolean vanilla1122 = Vanilla1122Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla1201 = Vanilla1201Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla1211 = Vanilla1211Mappings.isRuntimePresent(preferredLoaders);
+        boolean neoForge1211 = NeoForge1211Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla1206 = Vanilla1206Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla12111 = Vanilla12111Mappings.isRuntimePresent(preferredLoaders);
         boolean fabric12111 = Fabric12111Mappings.isRuntimePresent(preferredLoaders);
@@ -573,13 +576,14 @@ public class NativeBridge {
         int matchingVersions = (vanilla1710 ? 1 : 0)
                 + (vanilla189 ? 1 : 0) + (vanilla1122 ? 1 : 0)
                 + (vanilla1201 ? 1 : 0)
-                + (vanilla1211 ? 1 : 0)
+                + (vanilla1211 || neoForge1211 ? 1 : 0)
                 + (vanilla1206 ? 1 : 0)
                 + (vanilla12111 || fabric12111 ? 1 : 0)
                 + (vanilla262 || fabric262 ? 1 : 0);
         if (matchingVersions == 1) {
             badlion189Runtime = badlion189;
             fabric12111Runtime = fabric12111;
+            neoForge1211Runtime = neoForge1211;
             fabric262Runtime = fabric262;
             if (vanilla1710) {
                 detectedVersion = 13;
@@ -589,7 +593,7 @@ public class NativeBridge {
                 detectedVersion = 23;
             } else if (vanilla1201) {
                 detectedVersion = 47;
-            } else if (vanilla1211) {
+            } else if (vanilla1211 || neoForge1211) {
                 detectedVersion = 52;
             } else if (vanilla1206) {
                 detectedVersion = 50;
@@ -714,6 +718,10 @@ public class NativeBridge {
                     internalName, contextLoader, bridgeLoader);
         }
         if (mappingVersion == 52) {
+            if (neoForge1211Runtime) {
+                return NeoForge1211Mappings.resolveClass(
+                        internalName, contextLoader, bridgeLoader);
+            }
             return Vanilla1211Mappings.resolveClass(
                     internalName, contextLoader, bridgeLoader);
         }

@@ -442,6 +442,15 @@ static int install_modular_payload_loader(
         if ((*env)->ExceptionCheck(env)) {
             (*env)->ExceptionClear(env);
         }
+        /* ModLauncher 10/11 (NeoForge 1.20.5+) renamed the routing map
+         * field to parentLoaders; same Map<String, ClassLoader> shape. */
+        package_routes_field = (*env)->GetFieldID(env, runtime_loader_class,
+                "parentLoaders", "Ljava/util/Map;");
+    }
+    if (package_routes_field == NULL) {
+        if ((*env)->ExceptionCheck(env)) {
+            (*env)->ExceptionClear(env);
+        }
         modular_loader_marker = (*env)->GetMethodID(env, runtime_loader_class,
                 "setFallbackClassLoader", "(Ljava/lang/ClassLoader;)V");
         if (modular_loader_marker != NULL) {
