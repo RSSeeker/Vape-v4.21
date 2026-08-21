@@ -64,20 +64,34 @@ public class RuntimeNameMappingRegistry {
         int version = ForgeVersion.c();
         if (version == 47 && !NativeBridge.isNeoForge1201Runtime()) {
             String obfuscated = NeoForgeObfMap.lookupMethod1201(
-                    ownerClass, signature.runtimeName, buildParamDesc(signature.parameterTypes));
+                    ownerClass, signature.runtimeName, buildParamDesc(descTypes(signature, parameterTypes)));
             if (obfuscated != null) {
                 return new MemberLookupSignature(obfuscated,
                         signature.getMappedMemberOverride(), signature.resolvedType, signature.parameterTypes);
             }
         } else if (version == 52 && !NativeBridge.isNeoForge1211Runtime()) {
             String obfuscated = NeoForgeObfMap.lookupMethod1211(
-                    ownerClass, signature.runtimeName, buildParamDesc(signature.parameterTypes));
+                    ownerClass, signature.runtimeName, buildParamDesc(descTypes(signature, parameterTypes)));
             if (obfuscated != null) {
                 return new MemberLookupSignature(obfuscated,
                         signature.getMappedMemberOverride(), signature.resolvedType, signature.parameterTypes);
             }
         }
         return signature;
+    }
+
+    /**
+     * The V50/V51 tables register methods without parameter types (the t()
+     * helper stores an empty array), so translating the member name through
+     * the obfuscated map must use the caller's parameter types when the
+     * table signature has none, otherwise lookups like runTick|fgo|() miss
+     * the real runTick|fgo|(Z) entry.
+     */
+    private static Class<?>[] descTypes(MemberLookupSignature signature, Class<?>[] parameterTypes) {
+        if (signature.parameterTypes != null && signature.parameterTypes.length > 0) {
+            return signature.parameterTypes;
+        }
+        return parameterTypes;
     }
 
     private static String buildParamDesc(Class<?>[] parameterTypes) {

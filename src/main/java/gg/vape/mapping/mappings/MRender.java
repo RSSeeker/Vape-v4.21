@@ -62,13 +62,14 @@ extends Mapping {
                     && ForgeVersion.MC_1_21_4.v()) {
                 // 1.21.0-1.21.3:
                 // render(E, double, double, double, float, float, PoseStack,
-                // MultiBufferSource, int)
+                // MultiBufferSource, int) lives on EntityRenderDispatcher,
+                // not EntityRenderer (which only has the 6-arg render).
                 Class[] classArray = new Class[]{MappedClasses.zc, Double.TYPE, Double.TYPE, Double.TYPE, Float.TYPE, Float.TYPE, MappedClasses.DQ, MappedClasses.ZK, Integer.TYPE};
                 Class<Void> clazz = Void.TYPE;
                 boolean bl = true;
                 String string = "render";
                 MRender mRender = this;
-                this.p = mRender.Y(string, bl, clazz, classArray);
+                this.p = mRender.registerInstanceMethodForOwner(MappedClasses.Dc, string, bl, clazz, classArray);
             } else if (ForgeVersion.MC_1_21_10.v()) {
                 Class[] classArray = new Class[]{MappedClasses.zc, Float.TYPE, Float.TYPE, MappedClasses.DQ, MappedClasses.ZK, Integer.TYPE};
                 Class<Void> clazz = Void.TYPE;

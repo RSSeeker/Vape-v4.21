@@ -407,11 +407,19 @@ extends Mapping {
             Class clazz56 = MappedClasses.uE;
             MWorld mWorld46 = this;
             this.Q = this.registerInstanceMethodForOwner(clazz56, string46, bl43, clazz55, classArray40);
-            Class[] classArray41 = new Class[]{Integer.TYPE, MappedClasses.zc};
+            Class[] classArray41;
+            String string47;
+            if (ForgeVersion.MC_1_21_0.d()) {
+                // 1.21.0+ ClientLevel.addEntity(Entity) drops the int param
+                // (1.20.x kept addEntity(int, Entity)).
+                classArray41 = new Class[]{MappedClasses.zc};
+                string47 = "addEntity";
+            } else {
+                classArray41 = new Class[]{Integer.TYPE, MappedClasses.zc};
+                string47 = ForgeVersion.MC_1_20_1.d() ? "addEntity" : "addEntityImpl";
+            }
             Class<Void> clazz57 = Void.TYPE;
             boolean bl44 = true;
-            // 1.20.x ClientLevel.addEntity(int, Entity); 1.16 used addEntityImpl.
-            String string47 = ForgeVersion.MC_1_20_1.d() ? "addEntity" : "addEntityImpl";
             Class clazz58 = MappedClasses.Z;
             MWorld mWorld47 = this;
             this.q = this.registerInstanceMethodForOwner(clazz58, string47, bl44, clazz57, classArray41);
