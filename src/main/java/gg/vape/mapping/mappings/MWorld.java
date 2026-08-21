@@ -410,7 +410,8 @@ extends Mapping {
             Class[] classArray41 = new Class[]{Integer.TYPE, MappedClasses.zc};
             Class<Void> clazz57 = Void.TYPE;
             boolean bl44 = true;
-            String string47 = "addEntityImpl";
+            // 1.20.x ClientLevel.addEntity(int, Entity); 1.16 used addEntityImpl.
+            String string47 = ForgeVersion.MC_1_20_1.d() ? "addEntity" : "addEntityImpl";
             Class clazz58 = MappedClasses.Z;
             MWorld mWorld47 = this;
             this.q = this.registerInstanceMethodForOwner(clazz58, string47, bl44, clazz57, classArray41);

@@ -20,7 +20,7 @@ extends ClassTransformer {
 
     @Override
     public void transform() {
-        if (ForgeVersion.MC_1_20_6.v()) {
+        if (ForgeVersion.MC_1_20_6.v() && !ForgeVersion.MC_1_20_1.d()) {
             this.injectEventAtEntry(Vape.INSTANCE.getMappings().U.q, EventClickMouse.class, new ITramsformNode[0]);
         }
         if (ForgeVersion.MC_26_2.v()) {
@@ -29,6 +29,12 @@ extends ClassTransformer {
                     EventGuiOpen.class,
                     new TypedIndexedLocal(1, DescUtils.getDescriptor(MappedClasses.VW))
                             .setDescriptorClass(Object.class));
+        }
+        if (ForgeVersion.MC_1_20_1.d()) {
+            // 1.20.1 Minecraft.startAttack() returns boolean and has no
+            // parameters; the event dispatch (which returns on cancel) would
+            // emit an IRETURN on an empty stack. Skip the click event here.
+            return;
         }
         this.injectEventAtEntry(Vape.INSTANCE.getMappings().U.g, EventRightClickMouse.class, new ITramsformNode[0]);
         this.injectEventAtEntry(Vape.INSTANCE.getMappings().U.Of, EventSendClickBlockToController.class, new ITramsformNode[0]);

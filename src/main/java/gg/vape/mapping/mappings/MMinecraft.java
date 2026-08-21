@@ -584,9 +584,10 @@ extends Mapping {
             MMinecraft mMinecraft12 = this;
             this.Oy = this.J(string12, bl12, clazz12);
             Class[] classArray = new Class[]{};
-            Class<Void> clazz13 = Void.TYPE;
+            // 1.19.3+ renamed Minecraft.clickMouse to startAttack, which
+            // returns boolean (true if an attack was started).
+            Class clazz13 = ForgeVersion.MC_1_20_1.d() ? Boolean.TYPE : Void.TYPE;
             boolean bl13 = true;
-            // 1.19.3+ renamed Minecraft.clickMouse to startAttack.
             String string13 = ForgeVersion.MC_1_20_1.d() ? "startAttack" : "clickMouse";
             MMinecraft mMinecraft13 = this;
             this.q = this.Y(string13, bl13, clazz13, classArray);
