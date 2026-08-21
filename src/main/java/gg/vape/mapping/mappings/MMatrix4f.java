@@ -39,7 +39,8 @@ extends Mapping {
     }
 
     private void O(Object object, FloatBuffer floatBuffer) {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
+            // joml Matrix4f.get(FloatBuffer) returns the matrix (chainable).
             this.M.invokeObject(object, floatBuffer);
             return;
         }
@@ -91,6 +92,32 @@ extends Mapping {
                 if (ForgeVersion.MC_1_20_6.d()) {
                     Class[] classArray2 = new Class[]{FloatBuffer.class};
                     Class<FloatBuffer> clazz2 = FloatBuffer.class;
+                    boolean bl2 = false;
+                    String string2 = "get";
+                    MMatrix4f mMatrix4f2 = this;
+                    this.M = this.Y(string2, bl2, clazz2, classArray2);
+                    Class[] classArray3 = new Class[]{FloatBuffer.class};
+                    Class<Void> clazz3 = Void.TYPE;
+                    boolean bl3 = false;
+                    String string3 = "<init>";
+                    MMatrix4f mMatrix4f3 = this;
+                    this.X = this.Y(string3, bl3, clazz3, classArray3);
+                    Class[] classArray4 = new Class[]{MappedClasses.q2};
+                    Class clazz4 = MappedClasses.qr;
+                    boolean bl4 = false;
+                    String string4 = "mul";
+                    MMatrix4f mMatrix4f4 = this;
+                    this.L = this.Y(string4, bl4, clazz4, classArray4);
+                    Class[] classArray5 = new Class[]{Float.TYPE, Float.TYPE, Float.TYPE};
+                    Class clazz5 = MappedClasses.qr;
+                    boolean bl5 = false;
+                    String string5 = "scaling";
+                    MMatrix4f mMatrix4f5 = this;
+                    this.z = this.Y(string5, bl5, clazz5, classArray5);
+                } else if (ForgeVersion.MC_1_20_1.d()) {
+                    // 1.20.1 joml Matrix4f.get(FloatBuffer) instance method.
+                    Class[] classArray2 = new Class[]{FloatBuffer.class};
+                    Class clazz2 = MappedClasses.qr;
                     boolean bl2 = false;
                     String string2 = "get";
                     MMatrix4f mMatrix4f2 = this;
