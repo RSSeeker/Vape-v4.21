@@ -76,6 +76,11 @@ public class RuntimeNameMappingRegistry {
         }
         StringBuilder descriptor = new StringBuilder("(");
         for (Class<?> parameterType : parameterTypes) {
+            if (parameterType == null) {
+                // Unresolved MappedClasses reference (class absent in this
+                // runtime); the descriptor cannot name it, so omit it.
+                continue;
+            }
             if (parameterType == Integer.TYPE) {
                 descriptor.append('I');
             } else if (parameterType == Boolean.TYPE) {
