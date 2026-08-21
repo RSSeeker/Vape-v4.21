@@ -1209,6 +1209,11 @@ public class MappedClasses {
         if (ForgeVersion.MC_1_20_1.d()) {
             // 1.20.1 wraps option settings in OptionInstance too.
             l4 = MappedClasses.m("net/minecraft/client/OptionInstance");
+            // 1.20.x font rendering dependencies (mojmap names; the legacy
+            // MCP vector classes only exist pre-1.17).
+            qr = MappedClasses.m("org/joml/Matrix4f");
+            ZK = MappedClasses.m("net/minecraft/client/renderer/MultiBufferSource");
+            Y8 = MappedClasses.m("net/minecraft/client/gui/Font$DisplayMode");
         }
         if (ForgeVersion.MC_1_20_6.d()) {
             if (ForgeVersion.MC_1_21_10.v()) {

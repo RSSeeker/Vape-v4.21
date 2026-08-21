@@ -83,7 +83,7 @@ extends Wrapper {
     }
 
     public int V(String string, double d, double d2, int n, MatrixStack matrixStack) {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             return this.s(string, d, d2, n, true, matrixStack, null);
         }
         if (ForgeVersion.MC_1_16_5.d()) {
@@ -188,7 +188,7 @@ extends Wrapper {
     }
 
     public int s(String string, double d, double d2, int n, boolean bl, MatrixStack matrixStack, GlScissorRect glScissorRect) {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             return this.B(string, d, d2, n, bl, matrixStack.F().getMatrix().m$src$Lgg_vape_utils_render_RenderMatrix4f_$1hodrum(), SharedMonsterAttributes.V(), glScissorRect);
         }
         if (ForgeVersion.MC_1_16_5.d()) {

@@ -115,7 +115,22 @@ extends Mapping {
                 this.m = this.registerInstanceMethodForOwner(clazz7, string5, bl5, clazz6, classArray5);
             }
         } else {
-            if (ForgeVersion.MC_1_7_10.L()) {
+            if (ForgeVersion.MC_1_20_1.d()) {
+                // 1.20.1-1.20.5: Font.drawInBatch(String,float,float,int,boolean,
+                // Matrix4f,MultiBufferSource,DisplayMode,int,int); the legacy
+                // MatrixStack overloads do not exist here.
+                Class[] classArray = new Class[]{String.class, Float.TYPE, Float.TYPE, Integer.TYPE, Boolean.TYPE, MappedClasses.qr, MappedClasses.ZK, MappedClasses.Y8, Integer.TYPE, Integer.TYPE};
+                Class<Integer> clazz = Integer.TYPE;
+                boolean bl = true;
+                String string = "drawInBatch";
+                MFontRenderer mFontRenderer = this;
+                this.P = mFontRenderer.Y(string, bl, clazz, classArray);
+                this.b = null;
+                this.X = null;
+                this.g = null;
+                this.h = null;
+                this.W = null;
+            } else if (ForgeVersion.MC_1_16_5.d()) {
                 Class[] classArray = new Class[]{String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE};
                 Class<Integer> clazz = Integer.TYPE;
                 boolean bl = true;
