@@ -19,7 +19,10 @@ public final class NeoForge1211Mappings {
             "net/minecraft/client/multiplayer/ClientLevel",
             "net/minecraft/client/player/LocalPlayer",
             "net/minecraft/client/player/AbstractClientPlayer",
-            "net/minecraft/world/level/Level");
+            "net/minecraft/world/level/Level",
+            // 1.20.5+ data-component class: absent on 1.20.1, so it cleanly
+            // distinguishes the 1.21.1 mojmap runtime from 1.20.1.
+            "net/minecraft/world/item/component/ItemContainerContents");
 
     private NeoForge1211Mappings() {
     }
