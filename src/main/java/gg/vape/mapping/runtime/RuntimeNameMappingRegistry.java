@@ -38,7 +38,24 @@ public class RuntimeNameMappingRegistry {
         if (memberNameRemapTable == null) {
             return null;
         }
-        return memberNameRemapTable.lookupFieldMapping(ownerClass, fieldName);
+        MemberLookupSignature signature = memberNameRemapTable.lookupFieldMapping(ownerClass, fieldName);
+        if (signature == null) {
+            return null;
+        }
+        // Mojmap runtimes: V50/V51 field values may be obfuscated names
+        // (e.g. "a"); translate them to the mojmap field names that exist.
+        if (NativeBridge.isNeoForge1211Runtime()) {
+            String mojmap = NeoForgeFieldMap.lookup1211(ownerClass, signature.runtimeName);
+            if (mojmap != null) {
+                return new MemberLookupSignature(mojmap, signature.getMappedMemberOverride(), signature.resolvedType);
+            }
+        } else if (NativeBridge.isNeoForge1201Runtime()) {
+            String mojmap = NeoForgeFieldMap.lookup1201(ownerClass, signature.runtimeName);
+            if (mojmap != null) {
+                return new MemberLookupSignature(mojmap, signature.getMappedMemberOverride(), signature.resolvedType);
+            }
+        }
+        return signature;
     }
 
     public static void initializeRegistry() {
@@ -54,11 +71,8 @@ public class RuntimeNameMappingRegistry {
                 break;
             }
             case 47: {
-                // 1.20.1 shares the 1.20.x mojmap member names with 1.20.6;
-                // the Forge (mojmap) runtime needs an identity table instead.
-                memberNameRemapTable = NativeBridge.isNeoForge1201Runtime()
-                        ? new MemberNameRemapTableIdentity()
-                        : new MemberNameRemapTableV50();
+                // 1.20.1 shares the 1.20.x mojmap member names with 1.20.6.
+                memberNameRemapTable = new MemberNameRemapTableV50();
                 break;
             }
             case 50: {
@@ -70,11 +84,8 @@ public class RuntimeNameMappingRegistry {
                 break;
             }
             case 52: {
-                // 1.21.1 is a bugfix of 1.21.0; the NeoForge (mojmap) runtime
-                // needs an identity table instead of the obfuscated V51 names.
-                memberNameRemapTable = NativeBridge.isNeoForge1211Runtime()
-                        ? new MemberNameRemapTableIdentity()
-                        : new MemberNameRemapTableV51();
+                // 1.21.1 is a bugfix of 1.21.0; mojmap member names match.
+                memberNameRemapTable = new MemberNameRemapTableV51();
                 break;
             }
             case 54: {

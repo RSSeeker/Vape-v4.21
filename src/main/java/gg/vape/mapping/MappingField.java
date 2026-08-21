@@ -336,6 +336,13 @@ public class MappingField {
                 MappingProfileSnapshotRegistry.n(this);
             }
             this.resolutionFailed = true;
+            try {
+                gg.vape.runtime.NativeBridge.sce("DBG fieldFAILED id=" + this.fieldId
+                        + " name=" + this.runtimeName + " owner="
+                        + (this.ownerClass == null ? "null" : this.ownerClass.getName()));
+            }
+            catch (Throwable ignored) {
+            }
         }
         return this;
     }

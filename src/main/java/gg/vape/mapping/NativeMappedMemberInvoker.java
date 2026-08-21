@@ -181,7 +181,17 @@ public class NativeMappedMemberInvoker {
     }
 
     public static void setBooleanField(int id, Object instance, boolean value) throws Exception {
-        Reflections.FIELDS_BY_ID.get(id).setBoolean(instance, value);
+        java.lang.reflect.Field field = Reflections.FIELDS_BY_ID.get(id);
+        if (field == null) {
+            try {
+                gg.vape.runtime.NativeBridge.sce("DBG setBooleanField MISS id=" + id
+                        + " fields=" + Reflections.FIELDS_BY_ID.size()
+                        + " instance=" + (instance == null ? "null" : instance.getClass().getName()));
+            }
+            catch (Throwable ignored) {
+            }
+        }
+        field.setBoolean(instance, value);
     }
 
     public static void setCharField(int id, Object instance, char value) throws Exception {
