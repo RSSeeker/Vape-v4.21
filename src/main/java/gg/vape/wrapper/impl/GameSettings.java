@@ -210,7 +210,9 @@ extends Wrapper {
     }
 
     public float b() {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
+            // 1.20.1+ wraps options in OptionInstance<Double>; read the value
+            // through the wrapper instead of getFloat on the object field.
             GameSettingsValue gameSettingsValue = new GameSettingsValue(MGameSettings.H$src$Ljava_lang_Object_$1jqua4d(GameSettings.vapeInstance.getMappings().RM, this.I));
             return (float)((Double)gameSettingsValue.i()).doubleValue();
         }
