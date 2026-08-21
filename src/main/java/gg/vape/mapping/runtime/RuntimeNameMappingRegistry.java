@@ -22,7 +22,57 @@ public class RuntimeNameMappingRegistry {
         if (memberNameRemapTable == null) {
             return null;
         }
-        return memberNameRemapTable.lookupMethodMapping(ownerClass, methodName);
+        MemberLookupSignature signature = memberNameRemapTable.lookupMethodMapping(ownerClass, methodName);
+        if (signature == null) {
+            return null;
+        }
+        // Vanilla (obfuscated) 1.20.1/1.21.1 runtimes: V50/V51 method values are
+        // mojmap names (e.g. "render"); translate them to the obfuscated names.
+        int version = ForgeVersion.c();
+        if (version == 47 && !NativeBridge.isNeoForge1201Runtime()) {
+            String obfuscated = NeoForgeObfMap.lookupMethod1201(
+                    ownerClass, signature.runtimeName, buildParamDesc(signature.parameterTypes));
+            if (obfuscated != null) {
+                return new MemberLookupSignature(obfuscated,
+                        signature.getMappedMemberOverride(), signature.resolvedType, signature.parameterTypes);
+            }
+        } else if (version == 52 && !NativeBridge.isNeoForge1211Runtime()) {
+            String obfuscated = NeoForgeObfMap.lookupMethod1211(
+                    ownerClass, signature.runtimeName, buildParamDesc(signature.parameterTypes));
+            if (obfuscated != null) {
+                return new MemberLookupSignature(obfuscated,
+                        signature.getMappedMemberOverride(), signature.resolvedType, signature.parameterTypes);
+            }
+        }
+        return signature;
+    }
+
+    private static String buildParamDesc(Class<?>[] parameterTypes) {
+        StringBuilder descriptor = new StringBuilder("(");
+        for (Class<?> parameterType : parameterTypes) {
+            if (parameterType == Integer.TYPE) {
+                descriptor.append('I');
+            } else if (parameterType == Boolean.TYPE) {
+                descriptor.append('Z');
+            } else if (parameterType == Float.TYPE) {
+                descriptor.append('F');
+            } else if (parameterType == Double.TYPE) {
+                descriptor.append('D');
+            } else if (parameterType == Long.TYPE) {
+                descriptor.append('J');
+            } else if (parameterType == Short.TYPE) {
+                descriptor.append('S');
+            } else if (parameterType == Byte.TYPE) {
+                descriptor.append('B');
+            } else if (parameterType == Character.TYPE) {
+                descriptor.append('C');
+            } else if (parameterType == Void.TYPE) {
+                descriptor.append('V');
+            } else {
+                descriptor.append('L').append(parameterType.getName().replace('.', '/')).append(';');
+            }
+        }
+        return descriptor.append(')').toString();
     }
 
     @Nullable
@@ -53,6 +103,23 @@ public class RuntimeNameMappingRegistry {
             String mojmap = NeoForgeFieldMap.lookup1201(ownerClass, signature.runtimeName);
             if (mojmap != null) {
                 return new MemberLookupSignature(mojmap, signature.getMappedMemberOverride(), signature.resolvedType);
+            }
+        } else {
+            // Vanilla (obfuscated) runtimes: V50/V51 field values may be mojmap
+            // names (e.g. "level"); translate them to the obfuscated names.
+            int version = ForgeVersion.c();
+            if (version == 47) {
+                String obfuscated = NeoForgeObfMap.lookupField1201(ownerClass, signature.runtimeName);
+                if (obfuscated != null) {
+                    return new MemberLookupSignature(obfuscated,
+                            signature.getMappedMemberOverride(), signature.resolvedType);
+                }
+            } else if (version == 52) {
+                String obfuscated = NeoForgeObfMap.lookupField1211(ownerClass, signature.runtimeName);
+                if (obfuscated != null) {
+                    return new MemberLookupSignature(obfuscated,
+                            signature.getMappedMemberOverride(), signature.resolvedType);
+                }
             }
         }
         return signature;

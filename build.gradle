@@ -215,6 +215,7 @@ tasks.register('verifyInjectionPayload') {
                     'gg/vape/reflect/NeoForge1211Mappings.class',
                     'gg/vape/mapping/runtime/NeoForgeClassMap.class',
                     'gg/vape/mapping/runtime/NeoForgeFieldMap.class',
+                    'gg/vape/mapping/runtime/NeoForgeObfMap.class',
                     'gg/vape/mapping/runtime/MemberNameRemapTableIdentity.class',
                     'gg/vape/mapping/runtime/ClassNameRemapTableIdentity.class',
                     'gg/vape/reflect/Vanilla12111Mappings.class',
