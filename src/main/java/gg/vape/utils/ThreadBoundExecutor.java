@@ -47,6 +47,15 @@ implements Executor {
                     java.io.StringWriter stack = new java.io.StringWriter();
                     taskFailure.printStackTrace(new java.io.PrintWriter(stack));
                     gg.vape.Vape.debugLog(stack.toString());
+                    Throwable cause = taskFailure.getCause();
+                    int depth = 0;
+                    while (cause != null && depth < 8) {
+                        java.io.StringWriter causeStack = new java.io.StringWriter();
+                        cause.printStackTrace(new java.io.PrintWriter(causeStack));
+                        gg.vape.Vape.debugLog("TBE cause[" + depth + "]: " + causeStack);
+                        cause = cause.getCause();
+                        ++depth;
+                    }
                 }
             }
         }

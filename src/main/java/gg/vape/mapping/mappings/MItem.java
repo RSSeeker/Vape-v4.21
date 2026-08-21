@@ -199,7 +199,10 @@ extends Mapping {
             Class clazz6 = MappedClasses.lz;
             boolean bl5 = true;
             String string5 = "ITEM";
-            Class clazz7 = MappedClasses.Fk;
+            // 1.19.3+ moved the ITEM registry instance to BuiltInRegistries;
+            // the legacy MCP owner net.minecraft.core.Registry has no field.
+            Class clazz7 = ForgeVersion.MC_1_20_1.d()
+                    ? MappedClasses.R : MappedClasses.Fk;
             MItem mItem5 = this;
             this.r = this.registerStaticFieldForOwner(clazz7, string5, bl5, clazz6);
             Class[] classArray4 = new Class[]{MappedClasses.zX, MappedClasses.Vd};

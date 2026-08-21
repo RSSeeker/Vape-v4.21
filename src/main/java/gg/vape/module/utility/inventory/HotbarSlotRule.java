@@ -87,15 +87,25 @@ public class HotbarSlotRule {
     }
 
     public ItemStack createItemStack() {
-        Item item = Item.T(this.itemId);
-        if (item.isNull()) {
-            return null;
+        try {
+            Item item = Item.T(this.itemId);
+            if (item.isNull()) {
+                gg.vape.Vape.debugLog("HBR createItemStack: item null for id " + this.itemId);
+                return null;
+            }
+            ItemStack itemStack = ItemStack.S(item);
+            if (itemStack.isNotNull()) {
+                itemStack.s(this.getMetadata());
+            }
+            return itemStack;
         }
-        ItemStack itemStack = ItemStack.S(item);
-        if (itemStack.isNotNull()) {
-            itemStack.s(this.getMetadata());
+        catch (Throwable failure) {
+            gg.vape.Vape.debugLog("HBR createItemStack failed for id " + this.itemId + ": " + failure);
+            java.io.StringWriter stack = new java.io.StringWriter();
+            failure.printStackTrace(new java.io.PrintWriter(stack));
+            gg.vape.Vape.debugLog(stack.toString());
+            throw failure;
         }
-        return itemStack;
     }
 
     public Item getItem() {
