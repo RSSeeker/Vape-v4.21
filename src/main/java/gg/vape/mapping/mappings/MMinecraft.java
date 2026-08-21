@@ -320,7 +320,16 @@ extends Mapping {
     }
 
     public Object J() {
-        return this.o.invokeObject(null, new Object[0]);
+        Object result = this.o.invokeObject(null, new Object[0]);
+        try {
+            gg.vape.runtime.NativeBridge.sce("DBG getInstance: owner="
+                    + (this.o.getOwnerClass() == null ? "null" : this.o.getOwnerClass().getName())
+                    + " resolved=" + this.o.getResolvedName()
+                    + " result=" + result);
+        }
+        catch (Throwable ignored) {
+        }
+        return result;
     }
 
     private Object H(Object object) {
@@ -648,7 +657,8 @@ extends Mapping {
             this.X = this.J(string21, bl17, clazz21);
             Class clazz22 = MappedClasses.Fi;
             boolean bl18 = true;
-            String string22 = "mainWindow";
+            // 1.17+ renamed Minecraft.mainWindow to window.
+            String string22 = ForgeVersion.MC_1_17.d() ? "window" : "mainWindow";
             MMinecraft mMinecraft22 = this;
             this.C = this.J(string22, bl18, clazz22);
             Class clazz23 = MappedClasses.FO;
