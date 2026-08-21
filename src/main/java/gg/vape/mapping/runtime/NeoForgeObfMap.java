@@ -1,4 +1,4 @@
-package gg.vape.mapping.runtime;
+﻿package gg.vape.mapping.runtime;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,7 +30,7 @@ public final class NeoForgeObfMap {
     public static String lookupMethod1201(Class<?> ownerClass, String mojmapName, String paramDesc) {
         Map<String, String> table = methods1201;
         if (table == null) {
-            methods1201 = load("M", "/mappings/neoforge1201/obfmembers.map");
+            methods1201 = load('M', "/mappings/neoforge1201/obfmembers.map");
             table = methods1201;
         }
         return table.get(mojmapName + "|" + ownerName(ownerClass) + "|" + paramDesc);
@@ -39,7 +39,7 @@ public final class NeoForgeObfMap {
     public static String lookupField1201(Class<?> ownerClass, String mojmapName) {
         Map<String, String> table = fields1201;
         if (table == null) {
-            fields1201 = load("F", "/mappings/neoforge1201/obfmembers.map");
+            fields1201 = load('F', "/mappings/neoforge1201/obfmembers.map");
             table = fields1201;
         }
         return table.get(mojmapName + "|" + ownerName(ownerClass));
@@ -48,7 +48,7 @@ public final class NeoForgeObfMap {
     public static String lookupMethod1211(Class<?> ownerClass, String mojmapName, String paramDesc) {
         Map<String, String> table = methods1211;
         if (table == null) {
-            methods1211 = load("M", "/mappings/neoforge1211/obfmembers.map");
+            methods1211 = load('M', "/mappings/neoforge1211/obfmembers.map");
             table = methods1211;
         }
         return table.get(mojmapName + "|" + ownerName(ownerClass) + "|" + paramDesc);
@@ -57,7 +57,7 @@ public final class NeoForgeObfMap {
     public static String lookupField1211(Class<?> ownerClass, String mojmapName) {
         Map<String, String> table = fields1211;
         if (table == null) {
-            fields1211 = load("F", "/mappings/neoforge1211/obfmembers.map");
+            fields1211 = load('F', "/mappings/neoforge1211/obfmembers.map");
             table = fields1211;
         }
         return table.get(mojmapName + "|" + ownerName(ownerClass));
