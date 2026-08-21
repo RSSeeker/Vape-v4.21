@@ -584,17 +584,20 @@ public class NativeBridge {
         boolean vanilla1122 = Vanilla1122Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla1201 = Vanilla1201Mappings.isRuntimePresent(preferredLoaders);
         boolean neoForge1211Detected = NeoForge1211Mappings.isRuntimePresent(preferredLoaders);
+        // The 26.1.2/26.2 runtimes are unobfuscated mojmap environments whose
+        // anchor classes (Minecraft, getInstance, instance, ItemContainerContents,
+        // ...) also satisfy the NeoForge 1.21.1 probes; exclude them explicitly.
+        boolean vanilla262 = Vanilla262Mappings.isRuntimePresent(preferredLoaders);
+        boolean fabric262 = Fabric262Mappings.isRuntimePresent(preferredLoaders);
+        boolean neoForge1211 = neoForge1211Detected && !vanilla262 && !fabric262;
         // 1.20.1 and 1.21.1 share identical mojmap anchor classes, so a 1.21.1
         // runtime also matches the 1.20.1 probes; exclude it explicitly.
         boolean neoForge1201 = NeoForge1201Mappings.isRuntimePresent(preferredLoaders)
-                && !neoForge1211Detected;
+                && !neoForge1211;
         boolean vanilla1211 = Vanilla1211Mappings.isRuntimePresent(preferredLoaders);
-        boolean neoForge1211 = neoForge1211Detected;
         boolean vanilla1206 = Vanilla1206Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla12111 = Vanilla12111Mappings.isRuntimePresent(preferredLoaders);
         boolean fabric12111 = Fabric12111Mappings.isRuntimePresent(preferredLoaders);
-        boolean vanilla262 = Vanilla262Mappings.isRuntimePresent(preferredLoaders);
-        boolean fabric262 = Fabric262Mappings.isRuntimePresent(preferredLoaders);
         int matchingVersions = (vanilla1710 ? 1 : 0)
                 + (vanilla189 ? 1 : 0) + (vanilla1122 ? 1 : 0)
                 + (vanilla1201 || neoForge1201 ? 1 : 0)
