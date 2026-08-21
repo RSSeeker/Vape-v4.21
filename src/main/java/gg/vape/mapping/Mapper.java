@@ -1077,13 +1077,13 @@ public class Mapper {
             if (ForgeVersion.MC_1_21_6.v()) {
                 this.bakedModel = new MChannel();
             }
-            this.Cl = new MVoxelShapeBridge();
         }
         if (ForgeVersion.MC_1_20_1.d()) {
             // 1.20.1+ wraps option settings in OptionInstance; the value
             // bridge is needed from 1.20.1, not only 1.20.6.
             this.DM = new MGameSettingsValue();
             this.h3 = new MSharedMonsterAttributesBridge();
+            this.Cl = new MVoxelShapeBridge();
         }
         if (ForgeVersion.MC_1_20_6.d()) {
             if (ForgeVersion.MC_1_21_10.v()) {

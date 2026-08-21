@@ -10,7 +10,7 @@ extends Mapping {
 
     public MVoxelShapeBridge() {
         super(MappedClasses.ZL);
-        this.bufferSourceMethod = this.Y("bufferSource", true, MappedClasses.lp, new Class[]{});
+        this.bufferSourceMethod = this.Y("bufferSource", true, MappedClasses.q6, new Class[]{});
     }
 
     public Object getBufferSource(Object renderer) {

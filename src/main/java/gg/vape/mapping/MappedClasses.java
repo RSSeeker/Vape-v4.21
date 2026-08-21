@@ -1214,6 +1214,10 @@ public class MappedClasses {
             qr = MappedClasses.m("org/joml/Matrix4f");
             ZK = MappedClasses.m("net/minecraft/client/renderer/MultiBufferSource");
             Y8 = MappedClasses.m("net/minecraft/client/gui/Font$DisplayMode");
+            // Minecraft.renderBuffers().bufferSource() for font drawInBatch.
+            ZL = MappedClasses.m("net/minecraft/client/renderer/RenderBuffers");
+            lp = MappedClasses.m("net/minecraft/client/renderer/MultiBufferSource");
+            q6 = MappedClasses.m("net/minecraft/client/renderer/MultiBufferSource$BufferSource");
         }
         if (ForgeVersion.MC_1_20_6.d()) {
             if (ForgeVersion.MC_1_21_10.v()) {
