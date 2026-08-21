@@ -53,11 +53,21 @@ public class RuntimeNameMappingRegistry {
                 memberNameRemapTable = new MemberNameRemapTableV37();
                 break;
             }
+            case 47: {
+                // 1.20.1 shares the 1.20.x mojmap member names with 1.20.6.
+                memberNameRemapTable = new MemberNameRemapTableV50();
+                break;
+            }
             case 50: {
                 memberNameRemapTable = new MemberNameRemapTableV50();
                 break;
             }
             case 51: {
+                memberNameRemapTable = new MemberNameRemapTableV51();
+                break;
+            }
+            case 52: {
+                // 1.21.1 is a bugfix of 1.21.0; mojmap member names match.
                 memberNameRemapTable = new MemberNameRemapTableV51();
                 break;
             }
@@ -115,11 +125,19 @@ public class RuntimeNameMappingRegistry {
                 classNameRemapTable = new ClassNameRemapTableV37();
                 break;
             }
+            case 47: {
+                classNameRemapTable = new ClassNameRemapTableV50();
+                break;
+            }
             case 50: {
                 classNameRemapTable = new ClassNameRemapTableV50();
                 break;
             }
             case 51: {
+                classNameRemapTable = new ClassNameRemapTableV51();
+                break;
+            }
+            case 52: {
                 classNameRemapTable = new ClassNameRemapTableV51();
                 break;
             }
