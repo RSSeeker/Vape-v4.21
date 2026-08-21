@@ -17,9 +17,19 @@ extends EventRenderTickBase {
         super(f);
     }
 
+    // 1.21.x GameRenderer.render(DeltaTracker, boolean) injects $1 (DeltaTracker).
+    public EventPostRenderTick(Object deltaTrackerHandle) {
+        super(new gg.vape.wrapper.impl.DeltaTracker(deltaTrackerHandle));
+    }
+
 
     @Override
     public boolean fire() {
+        try {
+            gg.vape.runtime.NativeBridge.sce("DBG postRenderTick fired");
+        }
+        catch (Throwable ignored) {
+        }
         GuiScreenNativeCallbackBridge.drawScreen(null, 0, 0, 0.0f);
         if (GuiRenderPrimitives.d()) {
             RenderThreadTaskQueue.runPendingTasks();
