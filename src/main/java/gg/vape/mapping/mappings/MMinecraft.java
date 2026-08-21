@@ -586,13 +586,15 @@ extends Mapping {
             Class[] classArray = new Class[]{};
             Class<Void> clazz13 = Void.TYPE;
             boolean bl13 = true;
-            String string13 = "clickMouse";
+            // 1.19.3+ renamed Minecraft.clickMouse to startAttack.
+            String string13 = ForgeVersion.MC_1_20_1.d() ? "startAttack" : "clickMouse";
             MMinecraft mMinecraft13 = this;
             this.q = this.Y(string13, bl13, clazz13, classArray);
             Class[] classArray6 = new Class[]{};
             Class<Void> clazz14 = Void.TYPE;
             boolean bl14 = true;
-            String string14 = "rightClickMouse";
+            // 1.19.3+ renamed Minecraft.rightClickMouse to startUseItem.
+            String string14 = ForgeVersion.MC_1_20_1.d() ? "startUseItem" : "rightClickMouse";
             MMinecraft mMinecraft14 = this;
             this.g = this.Y(string14, bl14, clazz14, classArray6);
             if (ForgeVersion.MC_26_1.d()) {
@@ -606,7 +608,8 @@ extends Mapping {
             Class[] classArray8 = new Class[]{Boolean.TYPE};
             Class<Void> clazz16 = Void.TYPE;
             boolean bl16 = true;
-            String string16 = "sendClickBlockToController";
+            // 1.19.3+ renamed Minecraft.sendClickBlockToController to continueAttack.
+            String string16 = ForgeVersion.MC_1_20_1.d() ? "continueAttack" : "sendClickBlockToController";
             MMinecraft mMinecraft16 = this;
             this.Of = this.Y(string16, bl16, clazz16, classArray8);
         }

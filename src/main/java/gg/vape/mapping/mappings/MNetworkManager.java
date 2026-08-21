@@ -106,6 +106,14 @@ extends Mapping {
             String string7 = "sendPacket";
             MNetworkManager mNetworkManager7 = this;
             this.O = this.Y(string7, bl7, clazz7, classArray);
+        } else if (ForgeVersion.MC_1_20_1.d()) {
+            Class[] classArray = new Class[]{MappedClasses.Fm};
+            Class<Void> clazz8 = Void.TYPE;
+            boolean bl8 = true;
+            // 1.19+ Connection.sendPacket(Packet) was renamed to send(Packet).
+            String string8 = "send";
+            MNetworkManager mNetworkManager8 = this;
+            this.O = this.Y(string8, bl8, clazz8, classArray);
         } else {
             Class[] classArray = new Class[]{MappedClasses.Fm};
             Class<Void> clazz8 = Void.TYPE;

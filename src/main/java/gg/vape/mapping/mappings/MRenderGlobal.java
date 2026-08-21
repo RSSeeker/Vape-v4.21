@@ -69,6 +69,12 @@ extends Mapping {
                         Float.TYPE, Long.TYPE, Boolean.TYPE, MappedClasses.lt, MappedClasses.FW,
                         MappedClasses.zH, MappedClasses.qr, MappedClasses.qr);
             }
+        } else if (ForgeVersion.MC_1_20_1.d()) {
+            // 1.20.1-1.20.5: LevelRenderer.renderLevel(PoseStack, float, long,
+            // boolean, Camera, GameRenderer, LightTexture, Matrix4f).
+            this.renderLevelMethod = this.Y("renderLevel", true, Void.TYPE,
+                    MappedClasses.DQ, Float.TYPE, Long.TYPE, Boolean.TYPE,
+                    MappedClasses.lt, MappedClasses.FW, MappedClasses.zH, MappedClasses.qr);
         } else if (ForgeVersion.MC_1_16_5.d()) {
             this.renderLevelMethod = this.Y("func_228426_a_", Wrapper.isNativeAvailable, Void.TYPE,
                     MappedClasses.DQ, Float.TYPE, Long.TYPE, Boolean.TYPE, MappedClasses.lt,

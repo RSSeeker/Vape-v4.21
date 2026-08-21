@@ -154,6 +154,14 @@ extends Mapping {
                     MTitledScreen mTitledScreen = this;
                     this.renderScoreboardMethod = mTitledScreen.Y(string, bl, clazz, classArray);
                 }
+            } else if (ForgeVersion.MC_1_20_1.d()) {
+                Class[] classArray = new Class[]{MappedClasses.m, MappedClasses.Y};
+                Class<Void> clazz = Void.TYPE;
+                boolean bl = true;
+                // 1.20.x Gui.renderScoreboard renamed to displayScoreboardSidebar.
+                String string = "displayScoreboardSidebar";
+                MTitledScreen mTitledScreen = this;
+                this.renderScoreboardMethod = mTitledScreen.Y(string, bl, clazz, classArray);
             } else {
                 Class[] classArray = new Class[]{MappedClasses.DQ, MappedClasses.Y};
                 Class<Void> clazz = Void.TYPE;
