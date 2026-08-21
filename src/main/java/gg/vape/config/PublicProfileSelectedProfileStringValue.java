@@ -18,6 +18,12 @@ extends StringValue {
         Profile activeProfile = Vape.INSTANCE.getProfilesManager().getActiveProfile();
         UUID onlineId = activeProfile.getOnlineId();
         if (onlineId == null) {
+            // Built-in profiles have no online id; persist the stable local
+            // id instead so the selection survives restarts.
+            UUID localId = activeProfile.getLocalId();
+            if (localId != null) {
+                return localId.toString();
+            }
             Vape.debugLog(activeProfile.getName() + MISSING_ONLINE_UUID_SUFFIX);
             return "";
         }
@@ -34,7 +40,10 @@ extends StringValue {
         super.setValue(profileIdentifier);
         boolean isUuid = StringUtils.n(profileIdentifier);
         if (isUuid) {
-            Profile profile = Vape.INSTANCE.getProfilesManager().getProfileByOnlineId(UUID.fromString(profileIdentifier));
+            Profile profile = Vape.INSTANCE.getProfilesManager().getProfileByLocalId(UUID.fromString(profileIdentifier));
+            if (profile == null) {
+                profile = Vape.INSTANCE.getProfilesManager().getProfileByOnlineId(UUID.fromString(profileIdentifier));
+            }
             if (profile != null) {
                 PublicProfileSettings.setSelectedProfile(this.settings, profile);
             }
