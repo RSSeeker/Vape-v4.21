@@ -630,7 +630,15 @@ extends Mapping {
             MEntityRenderer mEntityRenderer30 = this;
             this.Z = this.J(string31, bl27, clazz35);
             if (ForgeVersion.MC_1_16_5.d()) {
-                if ((ForgeVersion.MC_1_21_0.d()
+                if (ForgeVersion.MC_26_2.d()) {
+                    // 26.2: GameRenderer.update(DeltaTracker) replaces
+                    // render (V110 table: update -> update (uy)).
+                    Class[] classArray13 = new Class[]{MappedClasses.uy};
+                    Class<Void> clazz36 = Void.TYPE;
+                    boolean bl28 = true;
+                    MEntityRenderer mEntityRenderer31 = this;
+                    this.J = this.Y("update", bl28, clazz36, classArray13);
+                } else if ((ForgeVersion.MC_1_21_0.d()
                         && ForgeVersion.MC_1_21_4.v())
                         // 26.1 keeps render(DeltaTracker, boolean); 26.2
                         // switches to update(DeltaTracker) (V110 table).
