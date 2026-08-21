@@ -331,7 +331,9 @@ extends Mapping {
                     Class clazz21 = MappedClasses.lz;
                     boolean bl17 = true;
                     String string18 = "ITEM";
-                    Class clazz22 = MappedClasses.Fk;
+                    // 1.19.3+ moved the ITEM registry to BuiltInRegistries.
+                    Class clazz22 = ForgeVersion.MC_1_20_1.d()
+                            ? MappedClasses.R : MappedClasses.Fk;
                     MItem mItem18 = this;
                     this.r = this.registerStaticFieldForOwner(clazz22, string18, bl17, clazz21);
                     Class[] classArray15 = new Class[]{MappedClasses.zX, MappedClasses.Vd};
