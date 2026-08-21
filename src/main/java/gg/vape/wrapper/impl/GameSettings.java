@@ -15,7 +15,7 @@ extends Wrapper {
     }
 
     public boolean k() {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             GameSettingsValue gameSettingsValue = new GameSettingsValue(MGameSettings.R(GameSettings.vapeInstance.getMappings().RM, this.I));
             return (Boolean)gameSettingsValue.i();
         }
@@ -23,7 +23,7 @@ extends Wrapper {
     }
 
     public void O(boolean bl) {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             GameSettingsValue gameSettingsValue = new GameSettingsValue(MGameSettings.R(GameSettings.vapeInstance.getMappings().RM, this.I));
             gameSettingsValue.a(bl);
             return;
@@ -32,7 +32,7 @@ extends Wrapper {
     }
 
     public void y(float f) {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             GameSettingsValue gameSettingsValue = new GameSettingsValue(MGameSettings.H$src$Ljava_lang_Object_$1jqua4d(GameSettings.vapeInstance.getMappings().RM, this.I));
             gameSettingsValue.f(Double.valueOf((double)f));
             return;
@@ -69,7 +69,7 @@ extends Wrapper {
     }
 
     public int v() {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             GameSettingsValue gameSettingsValue = new GameSettingsValue(MGameSettings.B(GameSettings.vapeInstance.getMappings().RM, this.I));
             return (Integer)gameSettingsValue.i();
         }
@@ -120,7 +120,7 @@ extends Wrapper {
     }
 
     public float y() {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             GameSettingsValue gameSettingsValue = new GameSettingsValue(MGameSettings.k(GameSettings.vapeInstance.getMappings().RM, this.I));
             return (float)((Double)gameSettingsValue.i()).doubleValue();
         }
@@ -148,7 +148,7 @@ extends Wrapper {
     }
 
     public void R(int n) {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             GameSettingsValue gameSettingsValue = new GameSettingsValue(MGameSettings.r(GameSettings.vapeInstance.getMappings().RM, this.getObject()));
             gameSettingsValue.a(n);
             return;
@@ -169,7 +169,8 @@ extends Wrapper {
     }
 
     public int T() {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
+            // 1.20.1+ wraps guiScale in an OptionInstance<Integer>.
             GameSettingsValue gameSettingsValue = new GameSettingsValue(MGameSettings.r(GameSettings.vapeInstance.getMappings().RM, this.getObject()));
             return (Integer)gameSettingsValue.i();
         }
@@ -181,7 +182,7 @@ extends Wrapper {
     }
 
     public float f() {
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             GameSettingsValue gameSettingsValue = new GameSettingsValue(MGameSettings.w(GameSettings.vapeInstance.getMappings().RM, this.I));
             return (float)((Double)gameSettingsValue.i()).doubleValue();
         }
