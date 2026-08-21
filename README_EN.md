@@ -86,11 +86,16 @@ Injection into Lunar Client and Badlion Client 1.8.9 instances is also supported
 
 Support for Minecraft 1.16.5 is poor; certain mappings, rendering, and module features may not function properly.
 
-**1.20.1 and 1.21.1 are experimental adaptations**: injection, GUI, HUD and
-most modules work, but some mapping tasks (mouse click events, entity join
-events, 3D render events, network packet events, scoreboard rendering) may
-report an "injection error" notification on 1.20.1 / 1.21.1, which only
-disables those specific features. If you hit a crash, please report the log.
+**1.20.1 and 1.21.1 are experimental adaptations and may have the following issues**:
+
+- Some mapping tasks (mouse click events, entity join events, 3D render events,
+  network packet events, scoreboard rendering) may report an "injection error"
+  notification on 1.20.1 / 1.21.1, which only disables those specific features
+- Some HUD overlays (e.g. the health overlay) may be positioned incorrectly
+  (rendered offset, such as at the bottom-right corner)
+- If smooth font initialization fails, rendering falls back to the legacy font,
+  which can occasionally cause black edges around the GUI
+- If you hit a crash, please report the log.
 
 **For versions 26.1.2 and 26.2, please inject after joining a server or singleplayer world.**
 

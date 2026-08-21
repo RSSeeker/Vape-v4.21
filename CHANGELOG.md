@@ -1,5 +1,21 @@
 # 更新日志
 
+## v4.21.18 (2026-08-21)
+
+**1.20.1 / 1.21.1 实验性适配补强（修复剩余映射任务）**
+
+- **1.20.1 Forge**：修复剩余 2 个映射任务通知（鼠标点击方法映射 id=521、实体加入事件 id=659）——`Minecraft.startAttack()` 1.19.3+ 返回 `boolean`（方法映射按正确描述符注册；鼠标点击事件因 boolean 返回方法无法安全注入而跳过，对应功能不受影响）；`ClientLevel.addEntity(int, Entity)` 名称（替代 1.16 的 `addEntityImpl`）
+- **原版 1.21.1**：修复 3 个映射任务通知（`MinecraftTickEventMappingTask`、`WorldEntityJoinEventMappingTask`、`EntityRenderPreEventMappingTask`）——
+  - V50/V51 表未带参数的方法在混淆名翻译时使用调用方参数描述符（`runTick` 按 `(Z)` 而非 `()` 查询）
+  - 1.21.0+ `ClientLevel.addEntity(Entity)` 为单参数（1.20.x 为 `addEntity(int, Entity)`），按版本注册正确签名
+  - 1.21.0-1.21.3 的 9 参数 `render` 属于 `EntityRenderDispatcher`（此前注册在 `EntityRenderer` 上导致失败）
+- 验证：1.20.1 Forge 与 1.21.1 原版启动日志均无映射任务失败，`OK initializeManagers` + `injection is active`，渲染钩子正常触发
+- **已知限制（实验性适配，可能存在问题）**：1.20.1 / 1.21.1 仍为实验性适配，可能存在以下问题：
+  - 部分 HUD 覆盖层（如生命值覆盖层）定位可能异常（渲染位置偏移，如出现在右下角）
+  - 平滑字体初始化失败时回退 legacy 字体渲染，偶发 GUI 边缘黑边
+  - 部分映射任务（鼠标点击事件等）按设计跳过注入，对应功能不可用
+  - 若遇崩溃请反馈日志
+
 ## v4.21.17 (2026-08-21)
 
 **新增 1.20.1 与 1.21.1 实验性适配**
