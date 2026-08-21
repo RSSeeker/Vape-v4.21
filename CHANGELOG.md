@@ -1,5 +1,19 @@
 # 更新日志
 
+## v4.21.17 (2026-08-21)
+
+**新增 1.20.1 与 1.21.1 实验性适配**
+
+- 新增 **1.20.1** 与 **1.21.1** 的 Vanilla / Forge / NeoForge 运行时适配（实验性）：版本检测、映射加载、注入、GUI、HUD 与大部分模块可正常工作
+- 1.21.1：修复原版（混淆名）运行时成员名翻译（obfmembers 映射按混淆 owner + 混淆参数描述符生成，V50/V51 表未覆盖成员回退 ObfMap）、NeoForge 1.21.1 渲染钩子（`render(DeltaTracker, boolean)`）、`GameRenderer` 9 参数实体渲染注入
+- 1.20.1 Forge（mojmap 类名 + SRG 成员名）：修复启动阶段 23 死锁（`GameRenderer.render(float,long,boolean)` 方法名）、Item `getId`/`byId`、ITEM 注册表迁移到 `BuiltInRegistries`、`OptionInstance` 包裹的设置项（gamma/guiScale/mouseSensitivity/fov 等）读写、字体 `drawInBatch`（Matrix4f/MultiBufferSource/DisplayMode）适配、`GlStateManager$BooleanState` 字段 SRG 名
+- 版本检测修正：26.1.2/26.2 不再被 NeoForge 1.20.1/1.21.1 探针误判（`matching=2` → 注入中断）
+- **已知限制**：1.20.1 / 1.21.1 上部分映射任务（鼠标点击事件、实体加入事件、3D 渲染事件、网络包事件、计分板渲染）可能提示「注入出错」，仅影响对应功能；若遇崩溃请反馈日志
+
+**配置持久化**
+
+- 修复选中配置档（profile）重启后未恢复：内置 profile（Classic/Modern PVP）无 online id，改为持久化稳定 local id，重启后按 local id 恢复选中
+
 ## v4.21.16 (2026-08-20)
 
 **配置保存修复（1.7.10 / 1.8.9 / 1.12.2 / 1.16.5 等老版本）**
