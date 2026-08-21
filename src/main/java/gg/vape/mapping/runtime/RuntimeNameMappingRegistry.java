@@ -132,9 +132,9 @@ public class RuntimeNameMappingRegistry {
                 break;
             }
             case 47: {
-                classNameRemapTable = NativeBridge.isNeoForge1201Runtime()
-                        ? new ClassNameRemapTableIdentity()
-                        : new ClassNameRemapTableV50();
+                // Class-name table values are already mojmap names, so the
+                // same table works for the Forge (mojmap) runtime.
+                classNameRemapTable = new ClassNameRemapTableV50();
                 break;
             }
             case 50: {
@@ -146,9 +146,9 @@ public class RuntimeNameMappingRegistry {
                 break;
             }
             case 52: {
-                classNameRemapTable = NativeBridge.isNeoForge1211Runtime()
-                        ? new ClassNameRemapTableIdentity()
-                        : new ClassNameRemapTableV51();
+                // Class-name table values are already mojmap names, so the
+                // same table works for the NeoForge (mojmap) runtime.
+                classNameRemapTable = new ClassNameRemapTableV51();
                 break;
             }
             case 54: {
