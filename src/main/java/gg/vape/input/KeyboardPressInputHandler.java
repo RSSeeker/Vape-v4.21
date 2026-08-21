@@ -23,11 +23,6 @@ implements InputEventHandler {
 
     @Override
     public boolean handle(long virtualKey, long keyMetadata) {
-        try {
-            gg.vape.runtime.NativeBridge.sce("DBG keyPress vk=" + virtualKey + " meta=" + keyMetadata);
-        }
-        catch (Throwable ignored) {
-        }
         int translatedCharacter = NativeBridge.mvk((int)virtualKey, 2);
         if (this.navigationKeys.contains((int)virtualKey)) {
             GuiKeyTypedDispatcher.dispatch((char)translatedCharacter, (int)virtualKey);

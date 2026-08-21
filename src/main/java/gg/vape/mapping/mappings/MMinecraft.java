@@ -162,15 +162,7 @@ extends Mapping {
     }
 
     private Object n$src$Ljava_lang_Object_$3wfxxt(Object object) {
-        Object result = this.C.getObject(object);
-        try {
-            gg.vape.runtime.NativeBridge.sce("DBG window get: resolved=" + this.C.getResolvedName()
-                    + " owner=" + (this.C.getOwnerClass() == null ? "null" : this.C.getOwnerClass().getName())
-                    + " input=" + object + " result=" + result);
-        }
-        catch (Throwable ignored) {
-        }
-        return result;
+        return this.C.getObject(object);
     }
 
     private void S(Object object, Object object2) {
@@ -328,16 +320,7 @@ extends Mapping {
     }
 
     public Object J() {
-        Object result = this.o.invokeObject(null, new Object[0]);
-        try {
-            gg.vape.runtime.NativeBridge.sce("DBG getInstance: owner="
-                    + (this.o.getOwnerClass() == null ? "null" : this.o.getOwnerClass().getName())
-                    + " resolved=" + this.o.getResolvedName()
-                    + " result=" + result);
-        }
-        catch (Throwable ignored) {
-        }
-        return result;
+        return this.o.invokeObject(null, new Object[0]);
     }
 
     private Object H(Object object) {
