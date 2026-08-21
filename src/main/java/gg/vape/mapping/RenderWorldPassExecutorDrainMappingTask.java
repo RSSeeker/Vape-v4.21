@@ -19,6 +19,9 @@ extends JavassistMappingTask {
 
     @Override
     public void transform() {
+        Vape.debugLog("RWP: target=" + this.E + " J=" + Vape.INSTANCE.getMappings().RY.J
+                + " resolved=" + (Vape.INSTANCE.getMappings().RY.J == null ? "null"
+                        : Vape.INSTANCE.getMappings().RY.J.getResolvedName()));
         this.V();
     }
 

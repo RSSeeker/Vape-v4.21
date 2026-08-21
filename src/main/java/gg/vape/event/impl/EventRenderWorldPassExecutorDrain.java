@@ -23,6 +23,7 @@ extends Event {
     @Override
     public boolean fire() {
         try {
+            gg.vape.Vape.debugLog("ERWPD fire on " + Thread.currentThread().getName());
             EXECUTOR.runPending();
         }
         catch (Throwable throwable) {

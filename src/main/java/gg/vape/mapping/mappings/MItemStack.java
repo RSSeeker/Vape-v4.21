@@ -240,13 +240,15 @@ extends Mapping {
             Class[] classArray26 = new Class[]{};
             Class<Integer> clazz30 = Integer.TYPE;
             boolean bl28 = true;
-            String string28 = "getDamage";
+            // 1.20.2+ renamed getDamage() to getDamageValue().
+            String string28 = ForgeVersion.MC_1_20_1.d() ? "getDamageValue" : "getDamage";
             MItemStack mItemStack28 = this;
             this.B = this.Y(string28, bl28, clazz30, classArray26);
             Class[] classArray27 = new Class[]{Integer.TYPE};
             Class<Void> clazz31 = Void.TYPE;
             boolean bl29 = true;
-            String string29 = "setDamage";
+            // 1.20.2+ renamed setDamage(int) to setDamageValue(int).
+            String string29 = ForgeVersion.MC_1_20_1.d() ? "setDamageValue" : "setDamage";
             MItemStack mItemStack29 = this;
             this.e = this.Y(string29, bl29, clazz31, classArray27);
         } else {
