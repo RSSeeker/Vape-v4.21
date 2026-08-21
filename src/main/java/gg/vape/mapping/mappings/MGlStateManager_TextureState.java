@@ -13,7 +13,7 @@ extends Mapping {
     public MGlStateManager_TextureState() {
         super(MappedClasses.Zn);
         this.textureNameField = ((MappingFieldBuilder)this.fieldBuilder("textureName", Integer.TYPE)
-                .setNameForVersion(ForgeVersion.MC_1_20_6.n(), "binding"))
+                .setNameForVersion(ForgeVersion.MC_1_17.n(), "binding"))
                 .buildField();
     }
 

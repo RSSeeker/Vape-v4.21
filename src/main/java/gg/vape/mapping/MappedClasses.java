@@ -1165,6 +1165,14 @@ public class MappedClasses {
             l8 = MappedClasses.m("net/minecraft/enchantment/EnchantmentHelper$ModifierDamage");
             V3 = MappedClasses.m("net/minecraft/util/IThreadListener");
         }
+        if (ForgeVersion.MC_1_20_1.d()) {
+            // 1.20.1 exposes the registries through BuiltInRegistries (mojmap
+            // names); the legacy MCP registry references only exist pre-1.17.
+            // The 1.20.6+ block below also assigns R, so this only fills the
+            // 1.20.1-1.20.5 gap.
+            R = MappedClasses.m("net/minecraft/core/registries/BuiltInRegistries");
+            Fk = MappedClasses.m("net/minecraft/core/Registry");
+        }
         if (ForgeVersion.MC_1_20_6.d()) {
             YF = MappedClasses.m("com/mojang/blaze3d/vertex/VertexFormat$Mode");
             lQ = MappedClasses.m("net/minecraft/world/level/block/entity/ChestLidController");

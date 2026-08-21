@@ -73,7 +73,8 @@ extends Mapping {
                     Class clazz = MappedClasses.Fk;
                     boolean bl = true;
                     String string4 = "ENCHANTMENT";
-                    Class clazz3 = MappedClasses.Fk;
+                    Class clazz3 = ForgeVersion.MC_1_20_1.d()
+                            ? MappedClasses.R : MappedClasses.Fk;
                     MEnchantment mEnchantment = this;
                     this.A = mEnchantment.registerStaticFieldForOwner(clazz3, string4, bl, clazz);
                 }
