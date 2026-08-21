@@ -289,13 +289,15 @@ extends Mapping {
         Class[] classArray = new Class[]{MappedClasses.lb};
         Class<Integer> clazz = Integer.TYPE;
         boolean bl = true;
-        String string = "getIdFromItem";
+        // 1.19.3+ renamed Item.getIdFromItem to getId.
+        String string = ForgeVersion.MC_1_20_1.d() ? "getId" : "getIdFromItem";
         MItem mItem = this;
         this.F = mItem.registerStaticMethod(string, bl, clazz, classArray);
         Class[] classArray12 = new Class[]{Integer.TYPE};
         Class clazz16 = MappedClasses.lb;
         boolean bl13 = true;
-        String string14 = "getItemById";
+        // 1.19.3+ renamed Item.getItemById to byId.
+        String string14 = ForgeVersion.MC_1_20_1.d() ? "byId" : "getItemById";
         MItem mItem14 = this;
         this.f = this.registerStaticMethod(string14, bl13, clazz16, classArray12);
         if (ForgeVersion.MC_1_7_10.L()) {
