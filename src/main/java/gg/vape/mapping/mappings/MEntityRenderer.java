@@ -630,12 +630,22 @@ extends Mapping {
             MEntityRenderer mEntityRenderer30 = this;
             this.Z = this.J(string31, bl27, clazz35);
             if (ForgeVersion.MC_1_16_5.d()) {
-                Class[] classArray13 = new Class[]{Float.TYPE, Long.TYPE, Boolean.TYPE};
-                Class<Void> clazz36 = Void.TYPE;
-                boolean bl28 = true;
-                String string32 = "updateCameraAndRender";
-                MEntityRenderer mEntityRenderer31 = this;
-                this.J = this.Y(string32, bl28, clazz36, classArray13);
+                if (ForgeVersion.MC_1_21_0.d()
+                        && ForgeVersion.MC_1_21_4.v()) {
+                    // 1.21.0-1.21.3: GameRenderer.render(DeltaTracker, boolean)
+                    Class[] classArray13 = new Class[]{MappedClasses.uy, Boolean.TYPE};
+                    Class<Void> clazz36 = Void.TYPE;
+                    boolean bl28 = true;
+                    MEntityRenderer mEntityRenderer31 = this;
+                    this.J = this.Y("render", bl28, clazz36, classArray13);
+                } else {
+                    Class[] classArray13 = new Class[]{Float.TYPE, Long.TYPE, Boolean.TYPE};
+                    Class<Void> clazz36 = Void.TYPE;
+                    boolean bl28 = true;
+                    String string32 = "updateCameraAndRender";
+                    MEntityRenderer mEntityRenderer31 = this;
+                    this.J = this.Y(string32, bl28, clazz36, classArray13);
+                }
             } else {
                 if (Vape.INSTANCE.isVanillaMinecraftPresent()) {
                     Class[] classArray14 = new Class[]{Float.TYPE, Long.TYPE};
