@@ -46,6 +46,14 @@ public class NativeBridge {
     private static volatile boolean neoForge1201Runtime;
     private static volatile boolean neoForge1211Runtime;
     private static volatile boolean fabric262Runtime;
+
+    public static boolean isNeoForge1201Runtime() {
+        return neoForge1201Runtime;
+    }
+
+    public static boolean isNeoForge1211Runtime() {
+        return neoForge1211Runtime;
+    }
     static boolean alphaTestWasEnabled;
     private static Method glGetFloatMethod;
     private static Method glGetIntegerVectorMethod;
@@ -534,6 +542,7 @@ public class NativeBridge {
         int vanillaVersion = detectVanillaMappingVersion(
                 Thread.currentThread().getContextClassLoader(),
                 NativeBridge.class.getClassLoader());
+        NativeBridge.sce("DBG gmv vanillaVersion=" + vanillaVersion);
         if (vanillaVersion != 0) {
             return vanillaVersion;
         }
@@ -587,6 +596,13 @@ public class NativeBridge {
                 + (vanilla1206 ? 1 : 0)
                 + (vanilla12111 || fabric12111 ? 1 : 0)
                 + (vanilla262 || fabric262 ? 1 : 0);
+        NativeBridge.sce("DBG detect: v1710=" + vanilla1710 + " v189=" + vanilla189
+                + " v1122=" + vanilla1122 + " v1201=" + vanilla1201
+                + " nf1201=" + neoForge1201 + " v1211=" + vanilla1211
+                + " nf1211=" + neoForge1211 + " v1206=" + vanilla1206
+                + " v12111=" + vanilla12111 + " fabric12111=" + fabric12111
+                + " v262=" + vanilla262 + " fabric262=" + fabric262
+                + " matching=" + matchingVersions);
         if (matchingVersions == 1) {
             badlion189Runtime = badlion189;
             fabric12111Runtime = fabric12111;
@@ -617,6 +633,7 @@ public class NativeBridge {
         if (detectedVersion != 0) {
             vanillaMappingVersion = detectedVersion;
         }
+        NativeBridge.sce("DBG detect result=" + detectedVersion);
         return detectedVersion;
     }
 

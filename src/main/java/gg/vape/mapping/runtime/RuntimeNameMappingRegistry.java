@@ -54,8 +54,11 @@ public class RuntimeNameMappingRegistry {
                 break;
             }
             case 47: {
-                // 1.20.1 shares the 1.20.x mojmap member names with 1.20.6.
-                memberNameRemapTable = new MemberNameRemapTableV50();
+                // 1.20.1 shares the 1.20.x mojmap member names with 1.20.6;
+                // the Forge (mojmap) runtime needs an identity table instead.
+                memberNameRemapTable = NativeBridge.isNeoForge1201Runtime()
+                        ? new MemberNameRemapTableIdentity()
+                        : new MemberNameRemapTableV50();
                 break;
             }
             case 50: {
@@ -67,8 +70,11 @@ public class RuntimeNameMappingRegistry {
                 break;
             }
             case 52: {
-                // 1.21.1 is a bugfix of 1.21.0; mojmap member names match.
-                memberNameRemapTable = new MemberNameRemapTableV51();
+                // 1.21.1 is a bugfix of 1.21.0; the NeoForge (mojmap) runtime
+                // needs an identity table instead of the obfuscated V51 names.
+                memberNameRemapTable = NativeBridge.isNeoForge1211Runtime()
+                        ? new MemberNameRemapTableIdentity()
+                        : new MemberNameRemapTableV51();
                 break;
             }
             case 54: {
@@ -126,7 +132,9 @@ public class RuntimeNameMappingRegistry {
                 break;
             }
             case 47: {
-                classNameRemapTable = new ClassNameRemapTableV50();
+                classNameRemapTable = NativeBridge.isNeoForge1201Runtime()
+                        ? new ClassNameRemapTableIdentity()
+                        : new ClassNameRemapTableV50();
                 break;
             }
             case 50: {
@@ -138,7 +146,9 @@ public class RuntimeNameMappingRegistry {
                 break;
             }
             case 52: {
-                classNameRemapTable = new ClassNameRemapTableV51();
+                classNameRemapTable = NativeBridge.isNeoForge1211Runtime()
+                        ? new ClassNameRemapTableIdentity()
+                        : new ClassNameRemapTableV51();
                 break;
             }
             case 54: {

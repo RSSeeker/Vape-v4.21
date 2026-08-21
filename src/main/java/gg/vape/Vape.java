@@ -330,6 +330,12 @@ public class Vape {
         if (this.isLabyModPresent()) {
             return false;
         }
+        // NeoForge/Forge 1.20.1 and 1.21.1 run mojmap names, so the
+        // obfuscated-name remap path does not apply to them.
+        if (NativeBridge.isNeoForge1201Runtime()
+                || NativeBridge.isNeoForge1211Runtime()) {
+            return false;
+        }
         return ForgeVersion.MC_26_1.v();
     }
 

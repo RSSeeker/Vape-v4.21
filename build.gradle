@@ -213,6 +213,8 @@ tasks.register('verifyInjectionPayload') {
                     'gg/vape/reflect/NeoForge1201Mappings.class',
                     'gg/vape/reflect/Vanilla1211Mappings.class',
                     'gg/vape/reflect/NeoForge1211Mappings.class',
+                    'gg/vape/mapping/runtime/MemberNameRemapTableIdentity.class',
+                    'gg/vape/mapping/runtime/ClassNameRemapTableIdentity.class',
                     'gg/vape/reflect/Vanilla12111Mappings.class',
                     'gg/vape/reflect/Vanilla1710Mappings.class',
                     'gg/vape/reflect/Vanilla189Mappings.class',
