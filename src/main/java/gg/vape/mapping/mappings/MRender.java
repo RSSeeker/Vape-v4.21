@@ -58,7 +58,18 @@ extends Mapping {
             this.z = mRender.Y(string, bl, clazz, classArray);
         }
         if (ForgeVersion.MC_1_16_5.d()) {
-            if (ForgeVersion.MC_1_21_10.v()) {
+            if (ForgeVersion.MC_1_21_0.d()
+                    && ForgeVersion.MC_1_21_4.v()) {
+                // 1.21.0-1.21.3:
+                // render(E, double, double, double, float, float, PoseStack,
+                // MultiBufferSource, int)
+                Class[] classArray = new Class[]{MappedClasses.zc, Double.TYPE, Double.TYPE, Double.TYPE, Float.TYPE, Float.TYPE, MappedClasses.DQ, MappedClasses.ZK, Integer.TYPE};
+                Class<Void> clazz = Void.TYPE;
+                boolean bl = true;
+                String string = "render";
+                MRender mRender = this;
+                this.p = mRender.Y(string, bl, clazz, classArray);
+            } else if (ForgeVersion.MC_1_21_10.v()) {
                 Class[] classArray = new Class[]{MappedClasses.zc, Float.TYPE, Float.TYPE, MappedClasses.DQ, MappedClasses.ZK, Integer.TYPE};
                 Class<Void> clazz = Void.TYPE;
                 boolean bl = true;

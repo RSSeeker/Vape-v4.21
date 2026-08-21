@@ -188,6 +188,8 @@ extends ClassNameRemapTable {
         this.Q("net/minecraft/inventory/ClickType", "net/minecraft/world/inventory/ClickType");
         this.Q("net/minecraft/util/EnumActionResult", "net/minecraft/world/InteractionResult");
         this.Q("net/minecraft/util/ActionResult", "net/minecraft/world/InteractionResultHolder");
+        this.Q("net/minecraft/util/Direction$Axis", "net/minecraft/core/Direction$Axis");
+        this.Q("net/minecraft/util/Direction$AxisDirection", "net/minecraft/core/Direction$AxisDirection");
         this.Q("net/minecraft/inventory/EntityEquipmentSlot", "net/minecraft/world/entity/EquipmentSlot");
         this.Q("net/minecraft/item/ItemSplashPotion", "net/minecraft/world/item/SplashPotionItem");
         this.Q("net/minecraft/tileentity/TileEntityShulkerBox", "net/minecraft/world/level/block/entity/ShulkerBoxBlockEntity");
