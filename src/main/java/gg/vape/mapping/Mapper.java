@@ -1079,11 +1079,15 @@ public class Mapper {
             }
             this.Cl = new MVoxelShapeBridge();
         }
+        if (ForgeVersion.MC_1_20_1.d()) {
+            // 1.20.1+ wraps option settings in OptionInstance; the value
+            // bridge is needed from 1.20.1, not only 1.20.6.
+            this.DM = new MGameSettingsValue();
+        }
         if (ForgeVersion.MC_1_20_6.d()) {
             if (ForgeVersion.MC_1_21_10.v()) {
                 this.sessionType = new MSessionType();
             }
-            this.DM = new MGameSettingsValue();
             this.hQ = new MSPacketExplosion();
             this.vecDeltaCodec = new MGameSettingsGuiScale();
             this.playerSkin = new MPlayerSkin();

@@ -1206,6 +1206,10 @@ public class MappedClasses {
             YC = MappedClasses.m("net/minecraft/network/play/server/S32PacketConfirmTransaction");
             zy = MappedClasses.m("net/minecraft/network/play/client/C0FPacketConfirmTransaction");
         }
+        if (ForgeVersion.MC_1_20_1.d()) {
+            // 1.20.1 wraps option settings in OptionInstance too.
+            l4 = MappedClasses.m("net/minecraft/client/OptionInstance");
+        }
         if (ForgeVersion.MC_1_20_6.d()) {
             if (ForgeVersion.MC_1_21_10.v()) {
                 SESSION_TYPE = MappedClasses.m("net/minecraft/client/User$Type");
