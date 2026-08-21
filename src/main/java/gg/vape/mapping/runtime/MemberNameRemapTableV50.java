@@ -334,7 +334,11 @@ extends MemberNameRemapTable {
     }
 
     protected void AC() {
-        if (this.isVanillaMinecraftAbsent()) {
+        // Vanilla (obfuscated) 1.20.1 names these "a"/"b"; Forge 1.20.1 runs
+        // SRG member names, so only apply the obfuscated values when Forge is
+        // absent.
+        if (this.isVanillaMinecraftAbsent()
+                && NativeBridge.isForgeAbsent()) {
             this.f(MappedClasses.U, "state", "a", false);
             this.f(MappedClasses.U, "enabled", "b", false);
         }
