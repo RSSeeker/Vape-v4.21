@@ -3,6 +3,7 @@ package gg.vape.mapping.runtime;
 import gg.vape.Vape;
 import gg.vape.mapping.MappedClasses;
 import gg.vape.mapping.runtime.MemberNameRemapTable;
+import gg.vape.runtime.NativeBridge;
 import java.util.List;
 import java.util.UUID;
 
@@ -500,7 +501,11 @@ extends MemberNameRemapTable {
     }
 
     protected void C$src$V$r2isui() {
-        if (this.isVanillaMinecraftAbsent()) {
+        // Vanilla (obfuscated) 1.20.1 names the field "a"; Forge 1.20.1 runs
+        // SRG member names (f_84801_), so only apply the obfuscated value when
+        // Forge is absent.
+        if (this.isVanillaMinecraftAbsent()
+                && NativeBridge.isForgeAbsent()) {
             this.f(MappedClasses.Zn, "binding", "a", false);
         }
     }

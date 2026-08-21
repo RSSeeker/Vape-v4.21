@@ -33,6 +33,11 @@ public class RuntimeNameMappingRegistry {
             // tables do not cover every 1.21+ member (e.g.
             // DeltaTracker.getGameTimeDeltaTicks). Translate the mojmap name
             // directly through the obfuscated member map instead.
+            // Forge runtimes use SRG member names; the obfuscated-name
+            // translation only applies when Forge is absent.
+            if (!NativeBridge.isForgeAbsent()) {
+                return null;
+            }
             int version = ForgeVersion.c();
             if (version == 47 && !NativeBridge.isNeoForge1201Runtime()) {
                 String obfuscated = NeoForgeObfMap.lookupMethod1201(
@@ -51,6 +56,11 @@ public class RuntimeNameMappingRegistry {
         }
         // Vanilla (obfuscated) 1.20.1/1.21.1 runtimes: V50/V51 method values are
         // mojmap names (e.g. "render"); translate them to the obfuscated names.
+        // Forge 1.20.1/1.21.1 run SRG member names, so the obfuscated-name
+        // translation only applies when Forge is absent.
+        if (!NativeBridge.isForgeAbsent()) {
+            return signature;
+        }
         int version = ForgeVersion.c();
         if (version == 47 && !NativeBridge.isNeoForge1201Runtime()) {
             String obfuscated = NeoForgeObfMap.lookupMethod1201(
@@ -125,6 +135,10 @@ public class RuntimeNameMappingRegistry {
             // tables do not cover every field (e.g. DamageSource.FALL moved to
             // DamageTypes in 1.21). Translate the mojmap name directly through
             // the obfuscated member map instead.
+            // Forge runtimes use SRG member names; skip the translation.
+            if (!NativeBridge.isForgeAbsent()) {
+                return null;
+            }
             int version = ForgeVersion.c();
             if (version == 47 && !NativeBridge.isNeoForge1201Runtime()) {
                 String obfuscated = NeoForgeObfMap.lookupField1201(ownerClass, fieldName);
@@ -154,6 +168,11 @@ public class RuntimeNameMappingRegistry {
         } else {
             // Vanilla (obfuscated) runtimes: V50/V51 field values may be mojmap
             // names (e.g. "level"); translate them to the obfuscated names.
+            // Forge 1.20.1/1.21.1 run SRG member names, so the obfuscated-name
+            // translation only applies when Forge is absent.
+            if (!NativeBridge.isForgeAbsent()) {
+                return signature;
+            }
             int version = ForgeVersion.c();
             if (version == 47) {
                 String obfuscated = NeoForgeObfMap.lookupField1201(ownerClass, signature.runtimeName);
@@ -319,7 +338,10 @@ public class RuntimeNameMappingRegistry {
         String mapped = classNameRemapTable == null ? null
                 : classNameRemapTable.lookupRemappedClassName(sourceClassName);
         boolean mojmapRuntime = NativeBridge.isNeoForge1201Runtime()
-                || NativeBridge.isNeoForge1211Runtime();
+                || NativeBridge.isNeoForge1211Runtime()
+                // Forge 1.20.1 runs mojmap class names (with SRG member names),
+                // so its class names must resolve like a mojmap runtime too.
+                || (!NativeBridge.isForgeAbsent() && ForgeVersion.c() == 47);
         if (mapped != null) {
             if (mojmapRuntime) {
                 // V50/V51 table values may be obfuscated names (e.g.
@@ -333,10 +355,12 @@ public class RuntimeNameMappingRegistry {
         }
         // Mojmap runtimes: some module code still uses obfuscated class names
         // (e.g. GlStateManager$b) which the V50/V51 legacy tables do not cover.
+        boolean forge1201Mojmap = !NativeBridge.isForgeAbsent()
+                && ForgeVersion.c() == 47;
         if (NativeBridge.isNeoForge1211Runtime()) {
             return NeoForgeClassMap.lookupObfuscated1211(sourceClassName);
         }
-        if (NativeBridge.isNeoForge1201Runtime()) {
+        if (NativeBridge.isNeoForge1201Runtime() || forge1201Mojmap) {
             return NeoForgeClassMap.lookupObfuscated1201(sourceClassName);
         }
         return null;

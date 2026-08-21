@@ -335,6 +335,9 @@ public class MappingField {
             } else {
                 MappingProfileSnapshotRegistry.n(this);
             }
+            Vape.debugLog("Field register failed: " + this.ownerClass + "#"
+                    + this.runtimeName + " orig=" + this.originalName
+                    + " -> " + throwable);
             this.resolutionFailed = true;
         }
         return this;

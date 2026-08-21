@@ -585,6 +585,8 @@ public class NativeBridge {
         boolean vanilla1201 = Vanilla1201Mappings.isRuntimePresent(preferredLoaders);
         boolean neoForge1211Detected = NeoForge1211Mappings.isRuntimePresent(preferredLoaders);
         boolean neoForge1201Detected = NeoForge1201Mappings.isRuntimePresent(preferredLoaders);
+        NativeBridge.sce("DBG nf1201raw=" + neoForge1201Detected + " v1201raw=" + vanilla1201
+                + " nf1211raw=" + neoForge1211Detected);
         // The 26.1.2/26.2 runtimes are unobfuscated mojmap environments whose
         // anchor classes (Minecraft, getInstance, instance, ItemContainerContents,
         // ...) also satisfy the NeoForge 1.20.1/1.21.1 probes; exclude them

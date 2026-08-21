@@ -638,6 +638,14 @@ extends Mapping {
                     boolean bl28 = true;
                     MEntityRenderer mEntityRenderer31 = this;
                     this.J = this.Y("render", bl28, clazz36, classArray13);
+                } else if (ForgeVersion.MC_1_20_1.d()) {
+                    // 1.20.1-1.20.5: GameRenderer.render(float, long, boolean)
+                    // (renamed from updateCameraAndRender in 1.19.3).
+                    Class[] classArray13 = new Class[]{Float.TYPE, Long.TYPE, Boolean.TYPE};
+                    Class<Void> clazz36 = Void.TYPE;
+                    boolean bl28 = true;
+                    MEntityRenderer mEntityRenderer31 = this;
+                    this.J = this.Y("render", bl28, clazz36, classArray13);
                 } else {
                     Class[] classArray13 = new Class[]{Float.TYPE, Long.TYPE, Boolean.TYPE};
                     Class<Void> clazz36 = Void.TYPE;
