@@ -51,7 +51,8 @@ extends Mapping {
         super(MappedClasses.DR);
         Class<Boolean> clazz = Boolean.TYPE;
         boolean bl = true;
-        String string = "pressed";
+        // 1.17+ (KeyMapping) renamed KeyBinding.pressed to isDown.
+        String string = ForgeVersion.MC_1_17.d() ? "isDown" : "pressed";
         MKeyBinding mKeyBinding = this;
         this.x = this.J(string, bl, clazz);
         Class<Integer> clazz2 = Integer.TYPE;
