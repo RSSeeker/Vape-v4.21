@@ -25,11 +25,6 @@ extends EventRenderTickBase {
 
     @Override
     public boolean fire() {
-        try {
-            gg.vape.runtime.NativeBridge.sce("DBG postRenderTick fired");
-        }
-        catch (Throwable ignored) {
-        }
         GuiScreenNativeCallbackBridge.drawScreen(null, 0, 0, 0.0f);
         if (GuiRenderPrimitives.d()) {
             RenderThreadTaskQueue.runPendingTasks();

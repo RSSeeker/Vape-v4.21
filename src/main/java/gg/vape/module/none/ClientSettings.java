@@ -751,11 +751,6 @@ extends Mod {
 
     public void renderGui() {
         try {
-            try {
-                gg.vape.runtime.NativeBridge.sce("DBG renderGui called inputEnabled=" + this.inputEnabled);
-            }
-            catch (Throwable ignored) {
-            }
             GuiRenderPrimitives.Y();
             RenderUtils.g();
             RenderUtils.C();

@@ -40,7 +40,12 @@ public class MappingTaskSet {
                     + " -> " + MappingTaskSet.targetName(mappingTask));
             }
             if (Vape.INSTANCE.getNotificationManager() == null) continue;
-            Vape.INSTANCE.getNotificationManager().show("Error with injection", "Please report to support:\nError code " + string + "\n\nSome features may not function", NotificationType.ALERT, 30000L, true);
+            gg.vape.ui.font.FontOption fontSelector = Vape.INSTANCE.getFontSelector().W();
+            String errorTitle = fontSelector.s("Error with injection");
+            String errorDescription = fontSelector.s("Please report to support") + ":\n"
+                    + fontSelector.s("Error code") + " " + string + "\n\n"
+                    + fontSelector.s("Some features may not function");
+            Vape.INSTANCE.getNotificationManager().show(errorTitle, errorDescription, NotificationType.ALERT, 30000L, true);
         }
     }
 
