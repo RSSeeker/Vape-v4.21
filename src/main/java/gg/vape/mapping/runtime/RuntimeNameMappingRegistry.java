@@ -193,7 +193,17 @@ public class RuntimeNameMappingRegistry {
     public static String remapClassName(String sourceClassName) {
         String mapped = classNameRemapTable == null ? null
                 : classNameRemapTable.lookupRemappedClassName(sourceClassName);
+        boolean mojmapRuntime = NativeBridge.isNeoForge1201Runtime()
+                || NativeBridge.isNeoForge1211Runtime();
         if (mapped != null) {
+            if (mojmapRuntime) {
+                // V50/V51 table values may be obfuscated names (e.g.
+                // GlStateManager$l); translate them to mojmap names.
+                String mojmap = NativeBridge.isNeoForge1211Runtime()
+                        ? NeoForgeClassMap.lookupObfuscated1211(mapped)
+                        : NeoForgeClassMap.lookupObfuscated1201(mapped);
+                return mojmap != null ? mojmap : mapped;
+            }
             return mapped;
         }
         // Mojmap runtimes: some module code still uses obfuscated class names
