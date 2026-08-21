@@ -706,8 +706,8 @@ public class Vape {
     static {
         Vape.setOpaqueState(66);
         VERSION = "4.21";
-        supportedVersionIds = new int[]{13, 15, 23, 35, 36, 37, 50, 51, 54,
-                55, 56, 60, 61, 100, 110};
+        supportedVersionIds = new int[]{13, 15, 23, 35, 36, 37, 47, 50, 51, 52,
+                54, 55, 56, 60, 61, 100, 110};
         buildDate = new Date(1710640988922L);
         renderReady = false;
         mappingsLoaded = false;

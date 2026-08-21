@@ -6,6 +6,8 @@ import gg.vape.reflect.Fabric12111Mappings;
 import gg.vape.reflect.Fabric262Mappings;
 import gg.vape.reflect.Type;
 import gg.vape.reflect.Vanilla1122Mappings;
+import gg.vape.reflect.Vanilla1211Mappings;
+import gg.vape.reflect.Vanilla1201Mappings;
 import gg.vape.reflect.Vanilla1206Mappings;
 import gg.vape.reflect.Vanilla12111Mappings;
 import gg.vape.reflect.Vanilla1710Mappings;
@@ -561,6 +563,8 @@ public class NativeBridge {
         boolean vanilla189 = badlion189
                 || Vanilla189Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla1122 = Vanilla1122Mappings.isRuntimePresent(preferredLoaders);
+        boolean vanilla1201 = Vanilla1201Mappings.isRuntimePresent(preferredLoaders);
+        boolean vanilla1211 = Vanilla1211Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla1206 = Vanilla1206Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla12111 = Vanilla12111Mappings.isRuntimePresent(preferredLoaders);
         boolean fabric12111 = Fabric12111Mappings.isRuntimePresent(preferredLoaders);
@@ -568,6 +572,8 @@ public class NativeBridge {
         boolean fabric262 = Fabric262Mappings.isRuntimePresent(preferredLoaders);
         int matchingVersions = (vanilla1710 ? 1 : 0)
                 + (vanilla189 ? 1 : 0) + (vanilla1122 ? 1 : 0)
+                + (vanilla1201 ? 1 : 0)
+                + (vanilla1211 ? 1 : 0)
                 + (vanilla1206 ? 1 : 0)
                 + (vanilla12111 || fabric12111 ? 1 : 0)
                 + (vanilla262 || fabric262 ? 1 : 0);
@@ -581,6 +587,10 @@ public class NativeBridge {
                 detectedVersion = 15;
             } else if (vanilla1122) {
                 detectedVersion = 23;
+            } else if (vanilla1201) {
+                detectedVersion = 47;
+            } else if (vanilla1211) {
+                detectedVersion = 52;
             } else if (vanilla1206) {
                 detectedVersion = 50;
             } else if (vanilla12111 || fabric12111) {
@@ -645,7 +655,7 @@ public class NativeBridge {
     private static boolean isKnownVersionId(int version) {
         switch (version) {
             case 13: case 15: case 23: case 28: case 35: case 36: case 37:
-            case 50: case 51: case 54: case 55: case 56: case 60: case 61:
+            case 47: case 50: case 51: case 52: case 54: case 55: case 56: case 60: case 61:
             case 100: case 110:
                 return true;
             default:
@@ -697,6 +707,14 @@ public class NativeBridge {
         }
         if (mappingVersion == 23) {
             return Vanilla1122Mappings.resolveClass(
+                    internalName, contextLoader, bridgeLoader);
+        }
+        if (mappingVersion == 47) {
+            return Vanilla1201Mappings.resolveClass(
+                    internalName, contextLoader, bridgeLoader);
+        }
+        if (mappingVersion == 52) {
+            return Vanilla1211Mappings.resolveClass(
                     internalName, contextLoader, bridgeLoader);
         }
         if (mappingVersion == 50) {

@@ -209,6 +209,8 @@ tasks.register('verifyInjectionPayload') {
                     'gg/vape/reflect/Fabric262Mappings.class',
                     'gg/vape/reflect/Vanilla1122Mappings.class',
                     'gg/vape/reflect/Vanilla1206Mappings.class',
+                    'gg/vape/reflect/Vanilla1201Mappings.class',
+                    'gg/vape/reflect/Vanilla1211Mappings.class',
                     'gg/vape/reflect/Vanilla12111Mappings.class',
                     'gg/vape/reflect/Vanilla1710Mappings.class',
                     'gg/vape/reflect/Vanilla189Mappings.class',
