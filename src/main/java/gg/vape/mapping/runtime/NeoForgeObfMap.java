@@ -1,4 +1,4 @@
-﻿package gg.vape.mapping.runtime;
+package gg.vape.mapping.runtime;
 
 import java.io.BufferedReader;
 import java.io.IOException;
