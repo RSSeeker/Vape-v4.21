@@ -758,10 +758,17 @@ public class Vape {
         int opaqueBranch = opaqueSeed;
         EventRenderWorldPassExecutorDrain.EXECUTOR.execute(ClientSettings::initializeFrames);
         try {
+            long deadline = System.currentTimeMillis() + 30000L;
             while (!ClientSettings.framesInitialized) {
                 try {
                     Thread.sleep(10L);
                     if (opaqueBranch != 0) return;
+                    // 防死锁：GL 上下文迟迟未就绪（如 26.2 fabric 注入点时机问题）
+                    // 时超时降级，避免注入线程无限等待。
+                    if (System.currentTimeMillis() > deadline) {
+                        ClientSettings.framesInitialized = true;
+                        break;
+                    }
                 }
                 catch (InterruptedException interrupted) {
                     Vape.logThrowable(interrupted);

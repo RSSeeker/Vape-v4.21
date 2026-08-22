@@ -108,6 +108,17 @@ Support for Minecraft 1.16.5 is poor; certain mappings, rendering, and module fe
   unstable
 - If you hit a crash, please report the log.
 
+**26.2 requires the OpenGL graphics backend**:
+
+- 26.2 is the first version to introduce the Vulkan graphics backend. Vape is
+  built on the OpenGL rendering pipeline and **cannot work under the Vulkan
+  backend**: GL initialization during injection triggers a JVM fatal error
+  ("No context is current"), or the GUI fails to open after injection
+- In Video Settings, switch the "Graphics API" to **OpenGL** (or edit
+  `options.txt` in the version folder and set `preferredGraphicsBackend` to
+  `"opengl"`), then restart the game before injecting
+- 26.1.2 and earlier are unaffected (no such option)
+
 **For versions 26.1.2 and 26.2, please inject after joining a server or singleplayer world.**
 
 All target instances must use a 64-bit JVM.
