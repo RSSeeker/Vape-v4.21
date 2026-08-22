@@ -14,7 +14,9 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 
 | File | Description |
 | --- | --- |
-| `Vape-v4.21.exe` | **The only artifact**: GUI single-file loader (embeds the complete DLL, Java payload and icon; no extra files required) |
+| `Vape-v4.21.exe` | GUI single-file loader (embeds the complete DLL, Java payload and icon) |
+
+**Optional external DLL**: if `Vape-v4.21Native.dll` sits next to the exe, it is loaded preferentially (handy for replacing/updating the native layer yourself); otherwise the embedded copy is extracted, so no extra files are required.
 
 **Usage**:
 
@@ -28,7 +30,7 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 
 - Integrated the upstream VapeLoader graphical UI (GDI+, fully Chinese): process selection / injection progress / loading complete
 - Removed the login page and cache prompt: start directly into process selection, token generated locally
-- Embedded-DLL only: both the GUI and `-nogui` command-line modes extract the DLL from the exe resource; no external DLL is loaded
+- **External DLL support**: if `Vape-v4.21Native.dll` exists next to the exe it is injected preferentially; otherwise the DLL is extracted from the exe resource — both modes need no extra files
 - Window title "Vape v4", icon matches the product
 - All runtime artifacts are kept inside the hidden `<exe>\.vapeclient` folder (extracted DLL/JAR, logs, config, service data, texture cache); **nothing is ever written to %TEMP%**
 
