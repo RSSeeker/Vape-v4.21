@@ -63,10 +63,6 @@ public class MovementInputHelper {
         };
         double strafeDistance = distanceToTargetAfterMove(player, projectedPosition,
                 strafeDelta, targetOffsetX, targetOffsetZ);
-        Vape.debugLog("Vector " + strafeDelta[0] + " " + strafeDelta[1]
-                + " | Potential Dist: " + strafeDistance + " | Final Dist: " + currentDistance
-                + " | " + relativeYaw + " " + targetYaw + " " + EnumFacing.p(targetYaw)
-                + " " + forwardFactor + " " + strafeFactor);
         if (strafeDistance < currentDistance) {
             KeyBinding leftKey = settings.x$src$Lgg_vape_wrapper_impl_KeyBinding_$1cf7isg();
             KeyBinding rightKey = settings.g$src$Lgg_vape_wrapper_impl_KeyBinding_$qqn5n3();

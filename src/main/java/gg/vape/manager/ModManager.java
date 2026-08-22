@@ -38,6 +38,7 @@ import gg.vape.module.render.BedPlates;
 import gg.vape.module.world.MurderFinder;
 import gg.vape.module.none.ClientSettings;
 import gg.vape.module.none.MouseDelayFix;
+import gg.vape.module.other.MotionBlur;
 import gg.vape.module.render.Search;
 import gg.vape.module.none.TextGuiSettings;
 import gg.vape.module.world.XRay;
@@ -226,6 +227,10 @@ implements EventListener {
         this.registerModules(Stream.of(new AntiBot()));
         this.registerModules(Stream.of(new Triggerbot(), new HitSwap(), new AutoMace(), new AutoAnchor(), new WindCharge(), new CrystalAura(), new AutoTotem(), new ShieldBreaker(), new PearlCatch()), ModManager::addMinecraft1214Constraint);
         this.registerModules(Stream.of(new NoFall(), new NoSlowdown(), new Speed(), new NoItemRelease(), new Timer()), ModManager::addModernMinecraftConstraint);
+        // 动态模糊：帧混合后处理，需要现代 GL（1.17+）且 26.2 之前。
+        ModRegistrationBuilder.create().setModule(new MotionBlur())
+                .addVersionConstraints(ForgeVersion.MC_1_17.n(), ForgeVersion.MC_26_2.b())
+                .registerWith(this);
         this.registerTextGuiSettings();
         this.registerHudModules();
         if (preservedLegacyComponents == null) {

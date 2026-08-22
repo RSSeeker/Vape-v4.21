@@ -30,15 +30,9 @@ implements Executor {
         catch (Throwable error) {
             throw ThreadBoundExecutor.sneakyThrow(ThreadBoundExecutor.propagateThrowable(error));
         }
-        if (gg.vape.Vape.INSTANCE != null) {
-            gg.vape.Vape.debugLog("TBE runPending on " + Thread.currentThread().getName() + " pending=" + this.pendingTasks.size());
-        }
         while ((this.currentTask = this.pendingTasks.poll()) != null) {
             try {
                 this.currentTask.run();
-                if (gg.vape.Vape.INSTANCE != null) {
-                    gg.vape.Vape.debugLog("TBE task completed: " + this.currentTask.getClass().getName());
-                }
             }
             catch (Throwable taskFailure) {
                 if (gg.vape.Vape.INSTANCE != null) {
@@ -71,10 +65,6 @@ implements Executor {
 
     @Override
     public synchronized void execute(@NotNull Runnable runnable) {
-        if (gg.vape.Vape.INSTANCE != null) {
-            gg.vape.Vape.debugLog("TBE execute on " + Thread.currentThread().getName()
-                    + " owner=" + (this.ownerThread == null ? "null" : this.ownerThread.getName()));
-        }
         boolean onOwnerThread = this.ownerThread != null && Thread.currentThread().equals(this.ownerThread);
         if (onOwnerThread) {
             runnable.run();
