@@ -4,8 +4,9 @@
 
 **修复 26.2 Fabric 注入后 GUI 无响应（右 Shift 打不开）**
 
-- **根因**：26.2 首次引入 Vulkan 图形后端，若 `options.txt` 中 `preferredGraphicsBackend` 设为 `vulkan`，游戏内不存在 OpenGL 上下文。Vape 基于 OpenGL 渲染管线，在 Vulkan 后端下：注入时 GL 初始化直接触发 JVM FATAL（"No context is current"）导致崩溃；加入 GL 就绪检测后则因 `glfwGetCurrentContext()` 恒为 0 而永久跳过帧初始化，最终 30 秒超时后提示"加载完成"但 GUI 无法打开
+- **根因**：26.2 首次引入 Vulkan 图形后端，若 `options.txt` 中 `preferredGraphicsBackend` 设为 `vulkan`，游戏内不存在 OpenGL 上下文。Vape 基于 OpenGL 渲染管线，在 Vulkan 后端下：注入时 GL 初始化直接触发 JVM FATAL（"No context is current"）导致崩溃；加入 GL 就绪检测后则因 `glfwGetCurrentContext()` 恒为 0 而永久跳过帧初始化，GUI 无法打开
 - **修复**：26.2 需使用 OpenGL 图形后端（视频设置中图形 API 切换为 OpenGL，或 `options.txt` 中 `preferredGraphicsBackend:"opengl"`）。已在 `EventRenderWorldPassExecutorDrain` 中保留 GL 上下文就绪检测（避免在无上下文时崩溃），并在检测失败时输出提示日志说明可能原因
+- **移除注入超时降级**：此前 GL 迟迟未就绪时 30 秒后强制标记初始化完成并显示"加载完成"，容易让用户误以为注入成功（实际 GUI 打不开）；现在改为持续等待帧初始化，GL 未就绪时注入保持"进行中"状态，不再虚假报告完成
 - **验证**：26.2 Fabric 注入 4.5 秒完成（无超时），`GRRT: injected render`、`SamplerFix: GL33`、`ClickGUI ... framebuffer=21` 正常，GUI 可正常打开
 - ⚠️ **开发中**：动态模糊（MotionBlur）仍仅限 1.17–26.1，26.2 不支持
 
