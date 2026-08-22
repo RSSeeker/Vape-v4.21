@@ -1,5 +1,19 @@
 # 更新日志
 
+## v4.21.19 (2026-08-22)
+
+**26.1 / 26.2 渲染适配修复与版本兼容性核查**
+
+- **26.1.2**：修复 `GameRenderer.render` 映射——26.1 保持 `render(DeltaTracker, boolean)`（此前误注册 `render(float,long,boolean)` 导致阶段 23 渲染钩子失败）
+- **26.2**：修复 `GameRenderer.update(DeltaTracker)` 映射（26.2 将 `render` 改名为 `update`）；修复 GUI 不显示——ClickGUI/HUD 改为在 `GuiRenderer.render()` 前后注入（HUD 在游戏 HUD 之下、ClickGUI 在游戏 HUD 之上），每帧一次，绘制到实际参与合成的渲染目标；不再依赖 `RenderBuffers.drawFromBuffers`（每帧数百次调用的低层命令点，会造成闪烁/叠层/贴图污染）
+- **1.21.4-1.21.11**：修正 `GameRenderer.render` 签名——1.21.0+ 全部为 `render(DeltaTracker, boolean)`（此前 1.21.4+ 误用 `render(float,long,boolean)`，可能导致映射注册失败/阶段 23 卡死）
+- **跨版本回归修复**：恢复非 26.2 版本的游戏内通知渲染（26.2 的通知在 GUI pass 后绘制以避免字体方块）；26.2 消除 HUD 双重绘制；`flushGuiBatches` 不再改写世界渲染的 framebuffer 绑定状态；字体未就绪时的跳过逻辑仅限 26.x
+- **已知限制（实验性适配，可能存在问题）**：
+  - 26.2 注入后首条通知（"按右Shift打开GUI"）文字可能显示为方块，打开 ClickGUI 后字体正常——26.x 的 Minecraft 字体桥（FontSet）在 GUI 渲染前未完全就绪
+  - 26.x 的 GUI/HUD 层级与官方客户端存在差异（HUD 模块在游戏 HUD 之下，ClickGUI 覆盖游戏 HUD）
+  - 1.20.1 / 1.21.1 仍为实验性：部分 HUD 覆盖层定位可能异常、平滑字体初始化失败时回退 legacy 字体
+  - 若遇崩溃请反馈日志
+
 ## v4.21.18 (2026-08-21)
 
 **1.20.1 / 1.21.1 实验性适配补强（修复剩余映射任务）**

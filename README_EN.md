@@ -79,8 +79,8 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 | 1.20.1 | △ Experimental | △ Experimental | - |
 | 1.21.1 | △ Experimental | △ Experimental | - |
 | 1.21.11 | ✓ | ✓ | ✓ |
-| 26.1.2 | ✓ | ✓ | ✓ |
-| 26.2 | ✓ | ✓ | ✓ |
+| 26.1.2 | △ Experimental | △ Experimental | △ Experimental |
+| 26.2 | △ Experimental | △ Experimental | △ Experimental |
 
 Injection into Lunar Client and Badlion Client 1.8.9 instances is also supported.
 
@@ -95,6 +95,17 @@ Support for Minecraft 1.16.5 is poor; certain mappings, rendering, and module fe
   (rendered offset, such as at the bottom-right corner)
 - If smooth font initialization fails, rendering falls back to the legacy font,
   which can occasionally cause black edges around the GUI
+- If you hit a crash, please report the log.
+
+**26.1.2 / 26.2 are experimental adaptations and may have the following issues**:
+
+- The first notification after injection ("Press RSHIFT to open GUI") may render
+  as boxes until the ClickGUI is opened (the Minecraft font bridge is not fully
+  ready before the GUI pass on 26.x)
+- GUI/HUD layering differs from the official client: HUD modules render below
+  the game HUD, the ClickGUI covers the game HUD
+- On 26.2 (Fabric) with the RT ray-tracing pipeline, some render hooks may be
+  unstable
 - If you hit a crash, please report the log.
 
 **For versions 26.1.2 and 26.2, please inject after joining a server or singleplayer world.**
