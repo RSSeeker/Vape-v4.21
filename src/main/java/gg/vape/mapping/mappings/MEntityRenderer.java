@@ -638,12 +638,12 @@ extends Mapping {
                     boolean bl28 = true;
                     MEntityRenderer mEntityRenderer31 = this;
                     this.J = this.Y("update", bl28, clazz36, classArray13);
-                } else if ((ForgeVersion.MC_1_21_0.d()
-                        && ForgeVersion.MC_1_21_4.v())
-                        // 26.1 keeps render(DeltaTracker, boolean); 26.2
-                        // switches to update(DeltaTracker) (V110 table).
+                } else if (ForgeVersion.MC_1_21_0.d()
+                        // 1.21.0+ keep render(DeltaTracker, boolean)
+                        // (V51/V54/V55/V56/V60/V61 tables all use (uy, boolean));
+                        // only 1.20.1-1.20.5 use render(float, long, boolean).
                         || ForgeVersion.MC_26_1.S().y()) {
-                    // 1.21.0-1.21.3 and 26.1: GameRenderer.render(DeltaTracker,
+                    // 1.21.0+ and 26.1: GameRenderer.render(DeltaTracker,
                     // boolean) (renamed from updateCameraAndRender in 1.19.3).
                     Class[] classArray13 = new Class[]{MappedClasses.uy, Boolean.TYPE};
                     Class<Void> clazz36 = Void.TYPE;

@@ -503,8 +503,13 @@ extends Mod {
             OpenGlBackendHolder.backend.scale(guiScale, guiScale, guiScale);
             if (INSTANCE.isInputEnabled()) {
                 this.renderFrames();
-                NotificationManager notificationManager = Vape.INSTANCE.getNotificationManager();
-                notificationManager.renderNotifications();
+                if (!ForgeVersion.MC_26_2.d()) {
+                    // 26.2 draws notifications in the post-GUI pass
+                    // (EventRender2D.createGui) where the font is ready; all
+                    // other versions render them here with the HUD.
+                    NotificationManager notificationManager = Vape.INSTANCE.getNotificationManager();
+                    notificationManager.renderNotifications();
+                }
             }
             OpenGlBackendHolder.backend.popMatrix();
         }

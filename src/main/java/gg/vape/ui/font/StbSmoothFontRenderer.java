@@ -64,7 +64,10 @@ extends SmoothFontRenderer {
             // empty catch block
         }
         if (fontIdentity != -1) {
-            if (fontIdentity == this.V) {
+            if (fontIdentity == this.V && this.w.u$src$Z$1yysxfx()) {
+                // FontSet already bound; nothing to refresh. If the cache is
+                // not initialized yet (first H() ran before the FontSet was
+                // available), keep retrying instead of returning forever.
                 return;
             }
             this.V = fontIdentity;
@@ -218,6 +221,11 @@ extends SmoothFontRenderer {
             return;
         }
         if (!this.w.u$src$Z$1yysxfx() && !this.x()) {
+            if (ForgeVersion.MC_26_1.d()) {
+                // 26.x: the Minecraft font bridge is not available before the
+                // FontSet is ready; skip drawing rather than rendering boxes.
+                return;
+            }
             this.y(string2, d, d2, n, true);
             return;
         }

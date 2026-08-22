@@ -31,6 +31,10 @@ extends MappingTaskSet {
         JavassistMappingTask.p(EventFogDensity.class);
         JavassistMappingTask.p(RenderBatchFlushCallbackMarker.class);
         JavassistMappingTask.p(InsertedCallbackLockMarker.class);
+        if (ForgeVersion.MC_26_2.d()) {
+            JavassistMappingTask.p(EventRender2DHudCallback.class);
+            JavassistMappingTask.p(EventRender2DGuiCallback.class);
+        }
         if (ForgeVersion.MC_1_20_6.d()) {
             JavassistMappingTask.p(EventChatMessageRender.class);
         }

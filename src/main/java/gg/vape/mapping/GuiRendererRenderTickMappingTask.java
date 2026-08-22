@@ -7,9 +7,10 @@ import javassist.CannotCompileException;
 import javassist.CtBehavior;
 
 /**
- * 26.x-specific: the game GUI is rendered by GuiRenderer.render(); draw the
- * Vape HUD/ClickGUI right after it, once per frame, on whatever target the
- * game leaves bound (the main render target during the GUI pass).
+ * 26.x-specific: the game GUI is rendered by GuiRenderer.render(). Inject the
+ * HUD modules before it (so they sit below the game HUD) and the ClickGUI
+ * after it (so it sits above the game HUD), once per frame, on the main render
+ * target that participates in the composite.
  */
 public class GuiRendererRenderTickMappingTask
 extends JavassistMappingTask {
@@ -28,8 +29,10 @@ extends JavassistMappingTask {
             return;
         }
         try {
+            ctBehavior.insertBefore("{"
+                    + EventRender2DHudCallback.class.getName() + "#call();}");
             ctBehavior.insertAfter("{"
-                    + EventRender2DStaticCallback.class.getName() + "#call();}");
+                    + EventRender2DGuiCallback.class.getName() + "#call();}");
         }
         catch (CannotCompileException cannotCompileException) {
             Vape.logThrowable(cannotCompileException);

@@ -102,6 +102,12 @@ extends JavassistMappingTask {
     }
 
     private void B$src$V$f0x8xm() throws CannotCompileException {
+        if (ForgeVersion.MC_26_2.d()) {
+            // 26.2 draws the HUD and ClickGUI through GuiRendererRenderTickMappingTask
+            // (EventRender2DHudCallback/EventRender2DGuiCallback); the generic
+            // EventRender2D.create injection would draw the HUD a second time.
+            return;
+        }
         EntityRendererEventMappingTask.p(EventRender2DStaticCallback.class);
         MappingMethod mappingMethod = Vape.INSTANCE.getMappings().Ca.z;
         MappingMethod mappingMethod2 = Vape.INSTANCE.getMappings().RY.J;

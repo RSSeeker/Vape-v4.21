@@ -4,6 +4,7 @@ import gg.vape.Vape;
 import gg.vape.event.Event;
 import gg.vape.event.EventListeners;
 import gg.vape.module.none.ClientSettings;
+import gg.vape.notification.NotificationManager;
 import gg.vape.render.OffscreenRenderContext;
 import gg.vape.runtime.NativeBridge;
 import gg.vape.ui.click.GuiScreenNativeCallbackBridge;
@@ -37,12 +38,6 @@ extends Event {
         ClientSettings clientSettings = Vape.INSTANCE.getModManager()
                 .getMod(ClientSettings.class);
         clientSettings.renderHudOverlay();
-        // 26.x: draw the ClickGUI here at the GUI pass (GuiRenderer.render
-        // injection point, once per frame); EventPostRenderTick at the
-        // GameRenderer.update exit would be overwritten by the composite pass.
-        if (ForgeVersion.MC_26_1.d() && !clientSettings.isInputEnabled()) {
-            new EventPostRenderTick().fire();
-        }
         EventRender2D eventRender2D = new EventRender2D();
         eventRender2D.fire();
         GuiRenderPrimitives.L(displayWidth, displayHeight);
@@ -56,6 +51,57 @@ extends Event {
             GuiScreenNativeCallbackBridge.drawScreen(
                     null, 0, 0, 0.0f);
         }
+    }
+
+    /**
+     * 26.x GUI pass, invoked before GuiRenderer.render(): draw only the HUD
+     * modules so they sit below the game's own HUD.
+     */
+    public static void createHud() {
+        if (OffscreenRenderContext.isRenderingOffscreen()) {
+            return;
+        }
+        if (ForgeVersion.MC_1_17.d() && Minecraft.thePlayer().isNull()) {
+            return;
+        }
+        displayWidth = Minecraft.J();
+        displayHeight = Minecraft.h();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GuiRenderPrimitives.o(displayWidth, displayHeight);
+        ClientSettings clientSettings = Vape.INSTANCE.getModManager()
+                .getMod(ClientSettings.class);
+        clientSettings.renderHudOverlay();
+        GuiRenderPrimitives.L(displayWidth, displayHeight);
+    }
+
+    /**
+     * 26.x GUI pass, invoked after GuiRenderer.render(): draw the notifications
+     * (font is ready here) and the ClickGUI, above the game's HUD.
+     */
+    public static void createGui() {
+        if (OffscreenRenderContext.isRenderingOffscreen()) {
+            return;
+        }
+        if (ForgeVersion.MC_1_17.d() && Minecraft.thePlayer().isNull()) {
+            return;
+        }
+        displayWidth = Minecraft.J();
+        displayHeight = Minecraft.h();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GuiRenderPrimitives.o(displayWidth, displayHeight);
+        ClientSettings clientSettings = Vape.INSTANCE.getModManager()
+                .getMod(ClientSettings.class);
+        if (clientSettings.isInputEnabled()) {
+            // In-game: render notifications above the game HUD (the font is
+            // ready after GuiRenderer.render).
+            NotificationManager notificationManager = Vape.INSTANCE.getNotificationManager();
+            if (notificationManager != null) {
+                notificationManager.renderNotifications();
+            }
+        } else {
+            new EventPostRenderTick().fire();
+        }
+        GuiRenderPrimitives.L(displayWidth, displayHeight);
     }
 
     @Override
