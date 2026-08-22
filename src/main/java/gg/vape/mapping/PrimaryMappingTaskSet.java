@@ -113,6 +113,9 @@ extends MappingTaskSet {
         if (ForgeVersion.MC_1_21_4.d()) {
             this.D.add(new RenderWorldPassEventMappingTask());
         }
+        if (ForgeVersion.MC_1_20_1.d() && ForgeVersion.MC_26_2.v()) {
+            this.D.add(new RenderTargetBlitMappingTask());
+        }
         if (ForgeVersion.MC_1_21_6.d()) {
             this.D.add(new GlStateManagerBlendFuncMappingTask());
         }

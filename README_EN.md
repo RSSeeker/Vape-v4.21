@@ -32,6 +32,13 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 - Window title "Vape v4", icon matches the product
 - All runtime artifacts are kept inside the hidden `<exe>\.vapeclient` folder (extracted DLL/JAR, logs, config, service data, texture cache); **nothing is ever written to %TEMP%**
 
+**Motion Blur (v4.21.20+)**
+
+- **HUD module "Motion Blur"** (Game group, same area as the block overlay): frame-blending post-processing that leaves a motion trail as the camera moves
+- Options: blur strength (default 5, doubled, capped at 0.95), velocity adaptive (scales with camera movement), smooth blur, FPS modulate, faded grayscale trail, apply on Vape menu / game menu
+- Works on **1.17+ up to 26.1** across Vanilla / Forge / NeoForge / Fabric runtimes (26.2's render pipeline has no end-of-frame hook, so it is unsupported there)
+- Rendering timing and GL state are specially adapted: it runs at the `RenderTarget.blitToScreen` exit (after the frame is presented to the screen, before swap) and synchronizes the game's `GlStateManager` cache so font/texture sampling is not corrupted
+
 **Feature integration (v4.21.8)**
 
 - Merged upstream modules: **AutoMace** (mace selection / stun slam / aim range / auto unequip Elytra / smash only / show hotbar), **NoItemRelease**, **PearlCatch**, **InventoryOverlay**
@@ -57,9 +64,13 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 - Custom rounded-corner icon embedded into `Vape-v4.21.exe`
 - Chinese-localized injector console with UTF-8 output
 
-**Engineering**
+**Engineering & stability (v4.21.20+)**
 
-- Added runtime detection for the 26.1.x / 26.2.x family (matched by `version.json`, protocol 100/110); verified on 26.1.2
+- **Performance fix**: removed per-frame high-frequency log writes on the render thread, fixing the "100+ FPS counter but ~30 perceived FPS" stutter
+- **Removed injection timeout fallback**: no longer falsely reports "injection complete" before frame initialization; when GL is not ready the injection stays "in progress" instead of misleading the user
+- **26.2 graphics backend fix**: 26.2 introduces the Vulkan backend; Vape is OpenGL-based, so switch the graphics API to OpenGL before use (see compatibility notes below)
+- Render-pipeline adaptation for 1.21.0+ / 26.x (end-of-frame `blitToScreen` hook) so post-processing like Motion Blur works across versions
+- Enhanced runtime detection distinguishing Vanilla / Forge / NeoForge / Fabric, avoiding false matches on older Fabric runtimes (except 1.20.1-Fabric, see the compatibility table)
 - Local configuration persistence: module settings, profiles, friends and frame positions saved to `.vapeclient\config.json`, auto-saved plus shutdown fallback
 - Native and Java logs unified under `.vapeclient\log\`, with a new log file per injection
 - Single-file injector: `Vape-v4.21.exe` embeds the complete DLL and Java payload

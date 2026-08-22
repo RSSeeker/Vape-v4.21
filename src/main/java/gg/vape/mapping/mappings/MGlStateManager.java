@@ -577,6 +577,13 @@ extends Mapping {
         this.c.invokeVoid(null, n);
     }
 
+    /** 通过游戏 GlStateManager._bindTexture 绑定纹理（同步其缓存）。 */
+    public static void bindTextureViaGame(MGlStateManager mGlStateManager, int textureId) {
+        if (mGlStateManager != null) {
+            mGlStateManager.N(textureId);
+        }
+    }
+
     public static void B(MGlStateManager mGlStateManager, int n, int n2, int n3, int n4) {
         mGlStateManager.x(n, n2, n3, n4);
     }

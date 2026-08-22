@@ -51,6 +51,7 @@ import gg.vape.mapping.mappings.MCPacketUseEntityPacket;
 import gg.vape.mapping.mappings.MCaughtEntityActionBridge;
 import gg.vape.mapping.mappings.MChannel;
 import gg.vape.mapping.mappings.MChatMessageRenderTarget;
+import gg.vape.mapping.mappings.MRenderTarget;
 import gg.vape.mapping.mappings.MChestType;
 import gg.vape.mapping.mappings.MChestTypeHolder;
 import gg.vape.mapping.mappings.MChunk;
@@ -524,6 +525,7 @@ public class Mapper {
     public MITooltipFlagBridge clipContextFluidMode;
     public MTeam qW;
     public MChatMessageRenderTarget chatMessageRenderTarget;
+    public MRenderTarget renderTargetBlit;
     public MScoreObjective scoreObjective;
     public MModelBiped Ct;
     public MTextureObject textureObject;
@@ -1193,8 +1195,9 @@ public class Mapper {
             this.packRepository = new MResourceManager();
         }
         this.enderPearlProjectileBridge = new MEnderPearlProjectileBridge();
-        if (ForgeVersion.MC_1_20_6.d()) {
+        if (ForgeVersion.MC_1_20_1.d()) {
             this.chatMessageRenderTarget = new MChatMessageRenderTarget();
+            this.renderTargetBlit = new MRenderTarget();
             this.mutableComponent = new MTextComponentBaseBridge();
             this.vanillaRegistries = new MEnchantmentHelperBridge();
             this.R2 = new MResourceKeyRegistryLookupStreamBridge();

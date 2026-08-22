@@ -14,7 +14,12 @@ public final class Fabric12111Mappings {
             "net/minecraft/class_638",
             "net/minecraft/class_746",
             "net/minecraft/class_742",
-            "net/minecraft/class_1937");
+            "net/minecraft/class_1937",
+            // 1.21.11 新渲染器独有的类（intermediary 名稳定），用于把
+            // 1.20.1/1.21.1 等旧版 Fabric 运行时（同样有 class_310 等
+            // 稳定 intermediary 锚点）排除在外，避免版本误判。
+            "com/mojang/blaze3d/buffers/GpuBuffer",
+            "com/mojang/blaze3d/systems/CommandEncoder");
 
     private Fabric12111Mappings() {
     }

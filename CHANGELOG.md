@@ -1,14 +1,21 @@
 # 更新日志
 
-## v4.21.21 (2026-08-22)
+## v4.21.21 (2026-08-23)
 
-**修复 26.2 Fabric 注入后 GUI 无响应（右 Shift 打不开）**
+**动态模糊全版本支持 + 26.2 修复 + 跨版本稳定性**
 
-- **根因**：26.2 首次引入 Vulkan 图形后端，若 `options.txt` 中 `preferredGraphicsBackend` 设为 `vulkan`，游戏内不存在 OpenGL 上下文。Vape 基于 OpenGL 渲染管线，在 Vulkan 后端下：注入时 GL 初始化直接触发 JVM FATAL（"No context is current"）导致崩溃；加入 GL 就绪检测后则因 `glfwGetCurrentContext()` 恒为 0 而永久跳过帧初始化，GUI 无法打开
-- **修复**：26.2 需使用 OpenGL 图形后端（视频设置中图形 API 切换为 OpenGL，或 `options.txt` 中 `preferredGraphicsBackend:"opengl"`）。已在 `EventRenderWorldPassExecutorDrain` 中保留 GL 上下文就绪检测（避免在无上下文时崩溃），并在检测失败时输出提示日志说明可能原因
-- **移除注入超时降级**：此前 GL 迟迟未就绪时 30 秒后强制标记初始化完成并显示"加载完成"，容易让用户误以为注入成功（实际 GUI 打不开）；现在改为持续等待帧初始化，GL 未就绪时注入保持"进行中"状态，不再虚假报告完成
-- **验证**：26.2 Fabric 注入 4.5 秒完成（无超时），`GRRT: injected render`、`SamplerFix: GL33`、`ClickGUI ... framebuffer=21` 正常，GUI 可正常打开
-- ⚠️ **开发中**：动态模糊（MotionBlur）仍仅限 1.17–26.1，26.2 不支持
+- **动态模糊（MotionBlur）改为 HUD 模块**：从「其他」分类移到 HUD 模块区（Game 分组，与方块彩色边框同区域），名称/设置不变；注册保留版本约束（1.17+ 且 <26.2）
+- **动态模糊全版本支持**：
+  - 新增 `EventFramePresent` 帧呈现事件，注入到 `RenderTarget.blitToScreen()` 出口（画面已 blit 到屏幕 framebuffer 0、swap 前）——1.20.1 / 1.21.1 / 1.21.11 / 26.1 的 Vanilla、Forge、NeoForge 运行时均可用
+  - 1.20.1 / 1.21.0-1.21.3 的 `blitToScreen(int,int)` 与 1.21.4+ 的无参 `blitToScreen()` 按版本分别注册；Forge 用 mojmap 类名解析，Vanilla 混淆运行时用 srg 映射
+  - 修复 26.1 上启用即黑屏：26.1.2 用 sampler 对象管理采样，解绑 sampler + 生成 mipmap 后纹理可正常采样
+  - 修复启用后游戏 GUI 字体变彩色乱码：所有 GL 状态修改（纹理绑定、active 单元、sampler、framebuffer）走游戏 `GlStateManager` 路径，同步其缓存，避免后续渲染采样错乱
+  - **模糊强度 ×2**（上限 0.95 防过曝）
+- **26.2 修复（Vulkan 后端）**：26.2 首次引入 Vulkan 图形后端，Vape 基于 OpenGL，需将图形 API 切换为 OpenGL（或 `options.txt` 中 `preferredGraphicsBackend:"opengl"`）；保留 GL 就绪检测并在未就绪时提示
+- **移除注入超时降级**：不再虚假报告"注入完成"，GL 未就绪时注入保持"进行中"
+- **版本探测增强**：Fabric 1.21.11 探测增加 `GpuBuffer`/`CommandEncoder` 独有锚点，避免旧版 Fabric（如 1.20.1-Fabric）误判导致"Unable to determine Minecraft/Forge version"
+- **1.20.1 Forge 注入修复**：`RenderTarget` 类解析在 Forge（mojmap 类名）与 Vanilla（srg 混淆）间正确切换
+- ⚠️ **已知限制**：1.20.1-Fabric 的 Knot ClassLoader 存在 SLF4J 服务冲突，无法注入（兼容表标注不支持）；26.2 渲染管线无帧末钩子，动态模糊不支持
 
 ## v4.21.20 (2026-08-22)
 
