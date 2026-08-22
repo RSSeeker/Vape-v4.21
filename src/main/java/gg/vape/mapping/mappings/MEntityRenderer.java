@@ -641,18 +641,18 @@ extends Mapping {
                 } else if (ForgeVersion.MC_1_21_0.d()
                         // 1.21.0+ keep render(DeltaTracker, boolean)
                         // (V51/V54/V55/V56/V60/V61 tables all use (uy, boolean));
-                        // only 1.20.1-1.20.5 use render(float, long, boolean).
+                        // only 1.20.1-1.20.6 use render(float, long, boolean).
                         || ForgeVersion.MC_26_1.S().y()) {
                     // 1.21.0+ and 26.1: GameRenderer.render(DeltaTracker,
-                    // boolean) (renamed from updateCameraAndRender in 1.19.3).
+                    // boolean) (renamed from updateCameraAndRender in 1.17,
+                    // per the V37 table).
                     Class[] classArray13 = new Class[]{MappedClasses.uy, Boolean.TYPE};
                     Class<Void> clazz36 = Void.TYPE;
                     boolean bl28 = true;
                     MEntityRenderer mEntityRenderer31 = this;
                     this.J = this.Y("render", bl28, clazz36, classArray13);
                 } else if (ForgeVersion.MC_1_20_1.d()) {
-                    // 1.20.1-1.20.5: GameRenderer.render(float, long, boolean)
-                    // (renamed from updateCameraAndRender in 1.19.3).
+                    // 1.20.1-1.20.6: GameRenderer.render(float, long, boolean).
                     Class[] classArray13 = new Class[]{Float.TYPE, Long.TYPE, Boolean.TYPE};
                     Class<Void> clazz36 = Void.TYPE;
                     boolean bl28 = true;
