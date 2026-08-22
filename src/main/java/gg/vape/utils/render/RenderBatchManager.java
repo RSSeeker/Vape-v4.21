@@ -165,6 +165,12 @@ public class RenderBatchManager {
         }
         this.captureGlBindings();
         this.saveAndPrepareGlState();
+        // 26.x: the GUI pass (GuiRenderer.render) binds the main render target;
+        // after it returns the game leaves framebuffer 0 bound, which the RT
+        // pipeline does not display. Bind Vape's owned framebuffer (wrapping
+        // the main render target color/depth textures) so the GUI lands on a
+        // target that participates in the composite.
+        this.skipWorldFramebufferBind = false;
         try {
             for (RenderBatch renderBatch : this.guiBatches) {
                 this.ensureBatchResourcesBound();
@@ -197,6 +203,7 @@ public class RenderBatchManager {
             }
         }
         finally {
+            this.skipWorldFramebufferBind = false;
             this.guiBatches.clear();
             this.lastGuiBuilder = null;
             OpenGlBackendHolder.backend.disableCapability(3089);
@@ -227,22 +234,22 @@ public class RenderBatchManager {
 
     public static String buildInitializationDiagnostics(String phase, Throwable throwable) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("现代渲染器初始化失败\n");
-        stringBuilder.append("阶段: ").append(phase).append('\n');
+        stringBuilder.append("鐜颁唬娓叉煋鍣ㄥ垵濮嬪寲澶辫触\n");
+        stringBuilder.append("闃舵: ").append(phase).append('\n');
         OpenGlDeviceInfo.appendDeviceInfo(stringBuilder);
         try {
-            stringBuilder.append("当前着色器程序: ").append(GL11.glGetInteger((int)35725)).append('\n');
-            stringBuilder.append("当前 VAO: ").append(GL11.glGetInteger((int)34229)).append('\n');
-            stringBuilder.append("数组缓冲: ").append(GL11.glGetInteger((int)34964)).append('\n');
-            stringBuilder.append("元素缓冲: ").append(GL11.glGetInteger((int)34965)).append('\n');
-            stringBuilder.append("帧缓冲: ").append(GL11.glGetInteger((int)36006)).append('\n');
-            stringBuilder.append("GL 错误: ").append(GL11.glGetError()).append('\n');
+            stringBuilder.append("褰撳墠鐫€鑹插櫒绋嬪簭: ").append(GL11.glGetInteger((int)35725)).append('\n');
+            stringBuilder.append("褰撳墠 VAO: ").append(GL11.glGetInteger((int)34229)).append('\n');
+            stringBuilder.append("鏁扮粍缂撳啿: ").append(GL11.glGetInteger((int)34964)).append('\n');
+            stringBuilder.append("鍏冪礌缂撳啿: ").append(GL11.glGetInteger((int)34965)).append('\n');
+            stringBuilder.append("甯х紦鍐? ").append(GL11.glGetInteger((int)36006)).append('\n');
+            stringBuilder.append("GL 閿欒: ").append(GL11.glGetError()).append('\n');
         }
         catch (Throwable throwable2) {
-            stringBuilder.append("GL 诊断错误: ").append(throwable2.getClass().getSimpleName()).append(": ").append(throwable2.getMessage()).append('\n');
+            stringBuilder.append("GL 璇婃柇閿欒: ").append(throwable2.getClass().getSimpleName()).append(": ").append(throwable2.getMessage()).append('\n');
         }
         if (throwable != null) {
-            stringBuilder.append("异常: ").append(throwable.getClass().getName());
+            stringBuilder.append("寮傚父: ").append(throwable.getClass().getName());
             if (throwable.getMessage() != null) {
                 stringBuilder.append(": ").append(throwable.getMessage());
             }

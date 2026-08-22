@@ -37,6 +37,12 @@ extends Event {
         ClientSettings clientSettings = Vape.INSTANCE.getModManager()
                 .getMod(ClientSettings.class);
         clientSettings.renderHudOverlay();
+        // 26.x: draw the ClickGUI here at the GUI pass (GuiRenderer.render
+        // injection point, once per frame); EventPostRenderTick at the
+        // GameRenderer.update exit would be overwritten by the composite pass.
+        if (ForgeVersion.MC_26_1.d() && !clientSettings.isInputEnabled()) {
+            new EventPostRenderTick().fire();
+        }
         EventRender2D eventRender2D = new EventRender2D();
         eventRender2D.fire();
         GuiRenderPrimitives.L(displayWidth, displayHeight);

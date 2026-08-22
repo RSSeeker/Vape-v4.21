@@ -113,6 +113,12 @@ extends MappingTaskSet {
             this.D.add(new GlStateManagerBlendFuncMappingTask());
         }
         this.D.add(new ThreadBoundTickEventMappingTask());
+        if (ForgeVersion.MC_26_2.d()) {
+            // 26.2: draw the GUI right after the game's GuiRenderer.render()
+            // (once per frame, GUI pass); the target bound there participates
+            // in the composite, unlike framebuffer 0.
+            this.D.add(new GuiRendererRenderTickMappingTask());
+        }
         if (ForgeVersion.MC_1_20_6.d()) {
             this.D.add(new ChatMessageRenderMappingTask());
         }

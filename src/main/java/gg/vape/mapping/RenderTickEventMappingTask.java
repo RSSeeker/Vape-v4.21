@@ -19,7 +19,13 @@ extends ClassTransformer {
         MappingMethod mappingMethod = Vape.INSTANCE.getMappings().RY.J;
         if (ForgeVersion.MC_1_21_4.d()) {
             this.injectEventAtEntry(mappingMethod, EventPreRenderTick.class, new TypedIndexedLocal(1, DescUtils.getDescriptor(MappedClasses.uy)).setDescriptorClass(Object.class));
-            this.injectEventAtExit(mappingMethod, EventPostRenderTick.class, new ITramsformNode[0]);
+            if (!ForgeVersion.MC_26_2.d()) {
+                // 26.2 draws the ClickGUI at the GuiRenderer.render injection
+                // point (EventRender2D.create, once per frame); the
+                // GameRenderer.update exit is before the frame composite, so
+                // anything drawn there would be overwritten anyway.
+                this.injectEventAtExit(mappingMethod, EventPostRenderTick.class, new ITramsformNode[0]);
+            }
         }
     }
 
