@@ -913,7 +913,11 @@ public class GuiRenderPrimitives {
     }
 
     public static boolean d() {
-        return ForgeVersion.MC_1_17.d();
+        // 1.16.5 与 1.17+ 一样使用 LWJGL3 着色器管线（RenderSystem 投影
+        // 走着色器 uniform），不能走固定管线 glOrtho 路径——否则 HUD 钩子
+        // 里的 NativeBridge.rs() 会把游戏 GUI 投影改成全窗口尺寸，物品栏/
+        // 准星按缩放坐标画进全尺寸空间，缩到左上角。
+        return ForgeVersion.MC_1_16_5.d();
     }
 
     public static void p(double d, double d2, double d3, double d4, Color color, boolean bl, float f, float f2, float f3, Color color2, int n) {

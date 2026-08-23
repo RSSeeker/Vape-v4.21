@@ -28,8 +28,12 @@ public final class ZeusServer implements AutoCloseable {
     }
 
     public void start() throws InterruptedException {
-        bossGroup = new NioEventLoopGroup(1);
-        workerGroup = new NioEventLoopGroup();
+        bossGroup = new NioEventLoopGroup(1,
+                new io.netty.util.concurrent.DefaultThreadFactory(
+                        "vape-zeus-boss", true));
+        workerGroup = new NioEventLoopGroup(1,
+                new io.netty.util.concurrent.DefaultThreadFactory(
+                        "vape-zeus-worker", true));
         serverChannel = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)

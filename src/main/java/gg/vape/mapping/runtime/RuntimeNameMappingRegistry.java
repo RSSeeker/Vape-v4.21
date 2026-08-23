@@ -1,10 +1,12 @@
 package gg.vape.mapping.runtime;
 
 import gg.vape.Vape;
+import gg.vape.reflect.MappingRegistry;
 import gg.vape.runtime.NativeBridge;
 import gg.vape.wrapper.impl.ForgeVersion;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import org.jetbrains.annotations.Nullable;
 
 public class RuntimeNameMappingRegistry {
@@ -39,6 +41,25 @@ public class RuntimeNameMappingRegistry {
                 return null;
             }
             int version = ForgeVersion.c();
+            // 纯原版 1.16.5：SRG 名（func_xxx）方法请求反向查表（值 -> 源名），
+            // 得到 mojmap 名后由 vanilla1165 joined.srg 映射到运行时混淆名。
+            // 只对 SRG 形式的名字做反向：普通 mojmap/MCP 名可能是其他类的
+            // 表值（如 "x"、"name"），反向会误返回无关的 MCP 源名。
+            if ((version == 35 || version == 36)
+                    && (methodName.startsWith("func_") || methodName.startsWith("method_"))) {
+                MemberLookupSignature reversed =
+                        memberNameRemapTable.lookupMethodMappingByRuntimeName(methodName);
+                if (reversed != null) {
+                    return reversed;
+                }
+                // 链条补齐：SRG -> (CSV) -> MCP 名 -> (V35V36 表) -> mojmap 名
+                // 例如 func_228426_a_ -> updateCameraAndRender -> renderLevel。
+                MemberLookupSignature bridged = lookupVanilla1165SrgBridge(
+                        methodName, ownerClass, false);
+                if (bridged != null) {
+                    return bridged;
+                }
+            }
             if (version == 47 && !NativeBridge.isNeoForge1201Runtime()) {
                 String obfuscated = NeoForgeObfMap.lookupMethod1201(
                         ownerClass, methodName, buildParamDesc(parameterTypes));
@@ -92,6 +113,34 @@ public class RuntimeNameMappingRegistry {
             return signature.parameterTypes;
         }
         return parameterTypes;
+    }
+
+    /**
+     * 纯原版 1.16.5 的 SRG 名补齐链：SRG -> (forge1165 CSV) -> MCP 可读名
+     * -> (V35V36 成员表) -> mojmap 名。例如 func_228426_a_ 在 CSV 里是
+     * updateCameraAndRender，表里 updateCameraAndRender -> renderLevel。
+     */
+    @Nullable
+    private static MemberLookupSignature lookupVanilla1165SrgBridge(
+            String srgName, Class<?> ownerClass, boolean field) {
+        if (memberNameRemapTable == null) {
+            return null;
+        }
+        Set<String> readableNames = field
+                ? MappingRegistry.FIELDS_REVERSED.get(srgName)
+                : MappingRegistry.METHODS_REVERSED.get(srgName);
+        if (readableNames == null || readableNames.isEmpty()) {
+            return null;
+        }
+        for (String readableName : readableNames) {
+            MemberLookupSignature signature = field
+                    ? memberNameRemapTable.lookupFieldMapping(ownerClass, readableName)
+                    : memberNameRemapTable.lookupMethodMapping(ownerClass, readableName);
+            if (signature != null) {
+                return signature;
+            }
+        }
+        return null;
     }
 
     private static String buildParamDesc(Class<?>[] parameterTypes) {
@@ -154,6 +203,24 @@ public class RuntimeNameMappingRegistry {
                 return null;
             }
             int version = ForgeVersion.c();
+            // 纯原版 1.16.5：SRG 名（field_xxx）字段请求反向查表（值 -> 源名），
+            // 得到 mojmap 名后由 vanilla1165 joined.srg 映射到运行时混淆名。
+            // 只对 SRG 形式的名字做反向：普通 mojmap/MCP 名可能是其他类的
+            // 表值（如 "x"、"name"），反向会误返回无关的 MCP 源名。
+            if ((version == 35 || version == 36)
+                    && (fieldName.startsWith("field_") || fieldName.startsWith("f_"))) {
+                MemberLookupSignature reversed =
+                        memberNameRemapTable.lookupFieldMappingByRuntimeName(fieldName);
+                if (reversed != null) {
+                    return reversed;
+                }
+                // 链条补齐：SRG -> (CSV) -> MCP 名 -> (V35V36 表) -> mojmap 名
+                MemberLookupSignature bridged = lookupVanilla1165SrgBridge(
+                        fieldName, ownerClass, true);
+                if (bridged != null) {
+                    return bridged;
+                }
+            }
             if (version == 47 && !NativeBridge.isNeoForge1201Runtime()) {
                 String obfuscated = NeoForgeObfMap.lookupField1201(ownerClass, fieldName);
                 if (obfuscated != null) {

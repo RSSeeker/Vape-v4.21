@@ -50,11 +50,16 @@ final class VanillaSrgMappings {
         }
 
         Set<String> candidateNames = new LinkedHashSet<String>();
+        // 先试规范名（SRG/mojmap，如 net/minecraft/client/Minecraft）再试混淆名：
+        // NeoForge 1.21.11 运行时加载官方可读名的 patched jar，规范名直接命中
+        // 游戏真正使用的类；混淆名（gfj）只存在于 AppClassLoader 可见的"已认领"
+        // 混淆 jar 里（静态单例为空），若先试会解析到错误的拷贝。原版混淆运行时
+        // 规范名不存在（ClassNotFoundException），自然回退到混淆名，行为不变。
+        candidateNames.add(normalizedName);
         String remappedName = this.getData().classNames.get(normalizedName);
         if (remappedName != null) {
             candidateNames.add(remappedName);
         }
-        candidateNames.add(normalizedName);
 
         Set<ClassLoader> loaders = candidateLoaders(preferredLoaders);
         for (String candidateName : candidateNames) {
@@ -193,11 +198,20 @@ final class VanillaSrgMappings {
     private boolean matchesMinecraftStructure(Class<?> minecraftClass) {
         try {
             Method getter = minecraftClass.getDeclaredMethod(this.runtimeMinecraftGetter);
+            boolean getterOk = Modifier.isStatic(getter.getModifiers())
+                    && getter.getReturnType() == minecraftClass;
+            if (!getterOk) {
+                return false;
+            }
+            if (this.runtimeMinecraftInstanceField == null
+                    || this.runtimeMinecraftInstanceField.isEmpty()) {
+                // 部分版本（如 1.16.5）的单例只暴露 getInstance() 方法，
+                // 无静态 instance 字段；getter 验证通过即可。
+                return true;
+            }
             Field instance = minecraftClass.getDeclaredField(
                     this.runtimeMinecraftInstanceField);
-            return Modifier.isStatic(getter.getModifiers())
-                    && getter.getReturnType() == minecraftClass
-                    && Modifier.isStatic(instance.getModifiers())
+            return Modifier.isStatic(instance.getModifiers())
                     && instance.getType() == minecraftClass;
         }
         catch (NoSuchMethodException ignored) {

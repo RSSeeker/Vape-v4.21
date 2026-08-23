@@ -46,9 +46,11 @@ extends Mapping {
 
     private MStatusEffect(int[] nArray) {
         super(MappedClasses.D3);
-        if (nArray != null) {
-            return;
-        }
+        // 注意：MPotionEffect 在 Mapper 构造中先于本类执行，其尾部
+        // MPotion.U(new int[1]) 会把 MPotion.K() 置为非空，导致早期
+        // "if (nArray != null) return;" 直接跳过全部注册（O/getId 等为 null，
+        // PotionRegistry 初始化时 NPE）。这里无条件注册：各注册本身有版本
+        // 条件且失败会被捕获标记，重复注册（两次 Mapper 构造）也无害。
         if (ForgeVersion.MC_1_20_6.v()) {
             Class[] classArray = new Class[]{Integer.TYPE};
             Class clazz = MappedClasses.D3;

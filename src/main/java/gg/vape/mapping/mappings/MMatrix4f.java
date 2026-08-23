@@ -141,6 +141,14 @@ extends Mapping {
                     MMatrix4f mMatrix4f5 = this;
                     this.z = this.Y(string5, bl5, clazz5, classArray5);
                 } else {
+                    // 1.16.5: com.mojang.math.Matrix4f.store(FloatBuffer) 把
+                    // 矩阵元素写入缓冲区（1.16.5 的 mojmap 名是 store）。
+                    Class[] classArrayM2 = new Class[]{FloatBuffer.class};
+                    Class<Void> clazzM2 = Void.TYPE;
+                    boolean blM2 = false;
+                    String stringM2 = "store";
+                    MMatrix4f mMatrix4fM2 = this;
+                    this.M = this.Y(stringM2, blM2, clazzM2, classArrayM2);
                     Class[] classArray6 = new Class[]{MappedClasses.qr};
                     Class<Void> clazz6 = Void.TYPE;
                     boolean bl6 = Wrapper.isNativeAvailable;

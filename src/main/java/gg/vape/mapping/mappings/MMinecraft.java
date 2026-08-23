@@ -39,7 +39,7 @@ extends Mapping {
     private final MappingField E;
     private MappingField OX;
     private final MappingField S;
-    private final MappingField s;
+    private MappingField s;
     private MethodNodeMatcher k;
     private final MappingField A;
     private MappingMethod OD;
@@ -681,6 +681,9 @@ extends Mapping {
                 MMinecraft mMinecraft26 = this;
                 this.OV = this.registerInstanceMethodForOwner(clazz27, string26, bl22, clazz26, classArray11);
             }
+            // gameSettings/options field: register for 1.16.5+ too.
+            this.s = this.J(ForgeVersion.MC_1_17.d() ? "options" : "gameSettings",
+                    true, MappedClasses.lT);
         } else {
             Class<Boolean> clazz28 = Boolean.TYPE;
             boolean bl = true;

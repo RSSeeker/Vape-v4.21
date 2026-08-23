@@ -3,6 +3,7 @@ package gg.vape.runtime;
 import gg.vape.Vape;
 import gg.vape.reflect.Badlion189Mappings;
 import gg.vape.reflect.Fabric12111Mappings;
+import gg.vape.reflect.Vanilla1165Mappings;
 import gg.vape.reflect.Fabric262Mappings;
 import gg.vape.reflect.NeoForge1201Mappings;
 import gg.vape.reflect.NeoForge1211Mappings;
@@ -17,6 +18,7 @@ import gg.vape.reflect.Vanilla189Mappings;
 import gg.vape.reflect.Vanilla262Mappings;
 import gg.vape.ui.click.GuiScreenNativeCallbackBridge;
 import gg.vape.utils.Base64Util;
+import gg.vape.wrapper.impl.ForgeVersion;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.FloatBuffer;
@@ -46,6 +48,23 @@ public class NativeBridge {
     private static volatile boolean neoForge1201Runtime;
     private static volatile boolean neoForge1211Runtime;
     private static volatile boolean fabric262Runtime;
+
+    /**
+     * Fabric 运行时（Knot ClassLoader 存在）。Fabric 的 Knot 对 slf4j 的
+     * 类加载隔离可能导致访问 BuiltInRegistries（触发 LogUtils）时发生
+     * SLF4JServiceProvider 冲突，1.20.1 尤甚。
+     */
+    public static boolean isFabricRuntime() {
+        try {
+            Class<?> knot = Class.forName(
+                    "net.fabricmc.loader.impl.launch.knot.KnotClassLoader",
+                    false, NativeBridge.class.getClassLoader());
+            return knot != null;
+        }
+        catch (Throwable throwable) {
+            return false;
+        }
+    }
 
     public static boolean isNeoForge1201Runtime() {
         return neoForge1201Runtime;
@@ -360,26 +379,280 @@ public class NativeBridge {
     }
 
     public static void start() throws Throwable {
+        // NeoForge/FancyModLoader 的注入发生在 ModLauncher 类加载阶段，远早于
+        // 游戏 Minecraft 单例创建；此时解析出的混淆类拷贝的单例字段为空，
+        // getInstance 返回 null，且渲染钩子注入到尚未被游戏使用的类拷贝上，
+        // 导致帧等待永远不完成。等待渲染/客户端线程出现（游戏主循环就绪）
+        // 后再初始化，此时类加载器与类身份才稳定。
+        long startupWaitStart = System.currentTimeMillis();
+        while (findGameThreadClassLoader() == null
+                && System.currentTimeMillis() - startupWaitStart < 180000L) {
+            try {
+                Thread.sleep(50L);
+            }
+            catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        NativeBridge.sce("DBG gameReady=" + (findGameThreadClassLoader() != null)
+                + " waitMs=" + (System.currentTimeMillis() - startupWaitStart));
         // Force version detection up front: MappedClasses resolves classes
         // during Vape's constructor, and the NeoForge/Forge mojmap flags must
         // already be set so those lookups pick the direct-name path.
         detectVanillaMappingVersion(
                 Thread.currentThread().getContextClassLoader(),
                 NativeBridge.class.getClassLoader());
+        // 临时诊断：确认游戏类从哪个 loader 解析（NeoForge 下若解析出第二份
+        // 拷贝，静态单例字段为空会导致 getInstance 返回 null、渲染钩子失效）。
+        try {
+            Class<?> diagMc = Class.forName("gfj", false,
+                    Thread.currentThread().getContextClassLoader());
+            ClassLoader diagLoader = diagMc.getClassLoader();
+            NativeBridge.sce("DBG loader ctx="
+                    + Thread.currentThread().getContextClassLoader()
+                    + " gfj.loader=" + diagLoader);
+        }
+        catch (Throwable ignored) {
+            NativeBridge.sce("DBG loader ctx="
+                    + Thread.currentThread().getContextClassLoader()
+                    + " gfj NOT resolvable via ctx");
+        }
         forgeAbsent = !isClassPresent("net.minecraftforge.common.ForgeVersion")
                 && !isClassPresent("net.minecraftforge.fml.loading.FMLLoader");
-        Vape vape = new Vape();
-        NativeBridge.invokeVoidInit(vape, "loadMappings");
-        if (badlion189Runtime) {
-            NativeBridge.sce("Runtime profile: Badlion Client 1.8.9 (vanilla SRG namespace)");
+        // 1.20.1-Fabric / 1.21.1-Fabric 不支持：Fabric Knot 的类名隔离（无法
+        // 主动加载游戏类）与双份 slf4j（ServiceLoader 冲突）是环境级问题，
+        // Java 层无法解决；直接中止注入，避免半可用状态误导用户。
+        int detectedGameVersion = ForgeVersion.c();
+        if ((detectedGameVersion == 47 || detectedGameVersion == 52)
+                && NativeBridge.isFabricRuntime()) {
+            NativeBridge.sce("UNSUPPORTED: Minecraft " + detectedGameVersion
+                    + " Fabric 不受支持（Fabric Knot 类加载隔离 + slf4j 冲突），"
+                    + "请使用对应版本的 Forge / NeoForge 或 1.21.11+ / 26.x 版本");
+            return;
         }
-        NativeBridge.sce("LOAD initAccountInfo");
-        if (!vape.initAccountInfo()) {
-            NativeBridge.sce("WARN initAccountInfo; continuing without account information");
-        } else {
-            NativeBridge.sce("OK initAccountInfo");
+        // Fabric（Knot）等运行时：注入可能发生在任意线程，其 context
+        // ClassLoader 不是游戏加载器。slf4j 的 ServiceLoader 按线程 context
+        // ClassLoader 发现 provider，若与 Knot 的 slf4j-api 版本不一致，访问
+        // 游戏日志类（LogUtils）时会报 "SLF4JServiceProvider not a subtype"。
+        // 这里临时把 context ClassLoader 切到游戏类加载器，覆盖整个初始化。
+        ClassLoader originalContext = Thread.currentThread().getContextClassLoader();
+        ClassLoader gameLoader = NativeBridge.resolveGameClassLoader();
+        NativeBridge.sce("DBG gameLoader=" + gameLoader + " ctx=" + originalContext
+                + " forgeAbsent=" + forgeAbsent);
+        // 临时诊断：比较 AppClassLoader 与游戏加载器的 gfj 单例字段 A。
+        try {
+            Class<?> appGfj = Class.forName("gfj", false,
+                    ClassLoader.getSystemClassLoader());
+            java.lang.reflect.Field appA = appGfj.getDeclaredField("A");
+            appA.setAccessible(true);
+            NativeBridge.sce("DBG app.gfj.A=" + appA.get(null));
         }
-        NativeBridge.invokeVoidInit(vape, "initializeManagers");
+        catch (Throwable ignored) {
+            NativeBridge.sce("DBG app.gfj.A=unresolvable");
+        }
+        if (gameLoader != null) {
+            try {
+                Class<?> gameGfj = Class.forName("gfj", false, gameLoader);
+                java.lang.reflect.Field gameA = gameGfj.getDeclaredField("A");
+                gameA.setAccessible(true);
+                NativeBridge.sce("DBG game.gfj.loader=" + gameGfj.getClassLoader()
+                        + " A=" + gameA.get(null));
+            }
+            catch (Throwable ignored) {
+                NativeBridge.sce("DBG game.gfj.A=unresolvable");
+            }
+        }
+        // 临时诊断：扫描所有线程 context 加载器及父链，找持有 Minecraft 单例
+        // 的 gfj 拷贝（A 非空的那份就是游戏真正使用的）。
+        try {
+            java.util.LinkedHashSet<ClassLoader> loaders =
+                    new java.util.LinkedHashSet<ClassLoader>();
+            for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                ClassLoader loader = thread.getContextClassLoader();
+                while (loader != null) {
+                    loaders.add(loader);
+                    loader = loader.getParent();
+                }
+            }
+            loaders.add(ClassLoader.getSystemClassLoader());
+            boolean foundGameCopy = false;
+            for (ClassLoader loader : loaders) {
+                try {
+                    Class<?> g = Class.forName("gfj", false, loader);
+                    java.lang.reflect.Field a = g.getDeclaredField("A");
+                    a.setAccessible(true);
+                    Object instance = a.get(null);
+                    if (instance != null) {
+                        NativeBridge.sce("DBG foundGameGfj loader=" + loader
+                                + " A=" + instance);
+                        foundGameCopy = true;
+                        break;
+                    }
+                }
+                catch (Throwable ignored) {
+                    // 该加载器解析不了 gfj，跳过。
+                }
+            }
+            if (!foundGameCopy) {
+                NativeBridge.sce("DBG foundGameGfj=NONE across "
+                        + loaders.size() + " loaders");
+            }
+        }
+        catch (Throwable ignored) {
+            // 诊断失败不影响主流程。
+        }
+        // 临时诊断：JVMTI 枚举所有已加载的 gfj 拷贝（线程 context 扫描可能漏掉
+        // 不在任何线程 context 链上的加载器）。
+        try {
+            String loadedGfj = NativeBridge.dbgLoadedGfj();
+            if (loadedGfj != null) {
+                NativeBridge.sce("DBG loadedGfj:\n" + loadedGfj);
+            }
+        }
+        catch (Throwable ignored) {
+            NativeBridge.sce("DBG loadedGfj=unavailable");
+        }
+        // 修复路径：JVMTI 找到真正持有 Minecraft 单例的 gfj 拷贝，用它的
+        // 加载器覆盖 gameLoader。此后按名字解析（Class.forName 经该加载器的
+        // loadClass 先查自身缓存）都会命中游戏真正使用的类，而不是
+        // AppClassLoader 里那份静态单例为 null 的拷贝。
+        try {
+            ClassLoader realGameLoader =
+                    (ClassLoader) NativeBridge.dbgGameGfjLoader();
+            if (realGameLoader != null) {
+                Class<?> g = Class.forName("gfj", false, realGameLoader);
+                java.lang.reflect.Field a = g.getDeclaredField("A");
+                a.setAccessible(true);
+                NativeBridge.sce("DBG realGameLoader=" + realGameLoader
+                        + " gfj.A=" + a.get(null));
+                gameLoader = realGameLoader;
+            } else {
+                NativeBridge.sce("DBG realGameLoader=none");
+            }
+        }
+        catch (Throwable ignored) {
+            NativeBridge.sce("DBG realGameLoader=failed: " + ignored);
+        }
+        if (gameLoader != null && gameLoader != originalContext) {
+            Thread.currentThread().setContextClassLoader(gameLoader);
+        }
+        // 临时诊断：验证类解析链路（先规范名后混淆名）在 NeoForge 1.21.11
+        // 上命中 patched 真类并拿到 Minecraft 单例。
+        try {
+            Class<?> resolvedMc = NativeBridge.gvc("net/minecraft/client/Minecraft");
+            NativeBridge.sce("DBG gvc Minecraft=" + resolvedMc + " loader="
+                    + (resolvedMc == null ? "null" : resolvedMc.getClassLoader()));
+            if (resolvedMc != null) {
+                java.lang.reflect.Method getInstance =
+                        resolvedMc.getDeclaredMethod("getInstance");
+                Object instance = getInstance.invoke(null);
+                NativeBridge.sce("DBG gvc getInstance()=" + instance);
+            }
+        }
+        catch (Throwable ignored) {
+            NativeBridge.sce("DBG gvc Minecraft failed: " + ignored);
+        }
+        try {
+            Vape vape = new Vape();
+            NativeBridge.invokeVoidInit(vape, "loadMappings");
+            if (badlion189Runtime) {
+                NativeBridge.sce("Runtime profile: Badlion Client 1.8.9 (vanilla SRG namespace)");
+            }
+            NativeBridge.sce("LOAD initAccountInfo");
+            if (!vape.initAccountInfo()) {
+                NativeBridge.sce("WARN initAccountInfo; continuing without account information");
+            } else {
+                NativeBridge.sce("OK initAccountInfo");
+            }
+            NativeBridge.invokeVoidInit(vape, "initializeManagers");
+        }
+        finally {
+            if (gameLoader != null && gameLoader != originalContext) {
+                Thread.currentThread().setContextClassLoader(originalContext);
+            }
+        }
+    }
+
+    /**
+     * 解析游戏主类加载器（Fabric Knot / Forge Launch / 系统）。
+     * 优先用 Minecraft 类确定；失败则回退到当前 context 加载器。
+     * NeoForge（FancyModLoader）下游戏类由 ModuleClassLoader 定义，而注入
+     * 线程的 context 加载器（ForgePayloadClassLoader）委托到 AppClassLoader，
+     * 会解析出第二份混淆类拷贝（静态单例字段为空）。渲染线程的 context
+     * 加载器就是游戏真正的 ModuleClassLoader，优先使用它。
+     */
+    private static ClassLoader resolveGameClassLoader() {
+        ClassLoader gameThreadLoader = findGameThreadClassLoader();
+        if (gameThreadLoader != null) {
+            try {
+                if (Class.forName("gfj", false, gameThreadLoader) != null
+                        || Class.forName("net.minecraft.client.Minecraft", false, gameThreadLoader) != null) {
+                    return gameThreadLoader;
+                }
+            }
+            catch (Throwable ignored) {
+                // 继续尝试其他路径。
+            }
+        }
+        try {
+            Class<?> minecraft = Class.forName("net.minecraft.client.Minecraft");
+            ClassLoader loader = minecraft.getClassLoader();
+            if (loader != null) {
+                return loader;
+            }
+        }
+        catch (Throwable ignored) {
+            // 混淆/其他命名空间下按版本探测加载器。
+        }
+        // Fabric intermediary 运行时（Minecraft 类名稳定为 class_310）。
+        try {
+            Class<?> minecraft = Class.forName("net.minecraft.class_310");
+            ClassLoader loader = minecraft.getClassLoader();
+            if (loader != null) {
+                return loader;
+            }
+        }
+        catch (Throwable ignored) {
+            // 继续回退。
+        }
+        try {
+            // 1.20.1 混淆运行时锚点（BuiltInRegistries）。
+            Class<?> builtin = Class.forName("jb");
+            ClassLoader loader = builtin.getClassLoader();
+            if (loader != null) {
+                return loader;
+            }
+        }
+        catch (Throwable ignored) {
+            // 继续回退。
+        }
+        return Thread.currentThread().getContextClassLoader();
+    }
+
+    /**
+     * 游戏渲染/客户端线程的 context ClassLoader：NeoForge/FancyModLoader 下
+     * 就是定义游戏类的 ModuleClassLoader。找不到时返回 null。
+     */
+    private static ClassLoader findGameThreadClassLoader() {
+        try {
+            for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                String name = thread.getName();
+                if (name == null) {
+                    continue;
+                }
+                if (name.equals("Render thread") || name.equals("Client thread")) {
+                    ClassLoader loader = thread.getContextClassLoader();
+                    if (loader != null) {
+                        return loader;
+                    }
+                }
+            }
+        }
+        catch (Throwable ignored) {
+            // 回退到其他加载器解析路径。
+        }
+        return null;
     }
 
     private static void invokeVoidInit(Vape vape, String name) {
@@ -582,6 +855,7 @@ public class NativeBridge {
         boolean vanilla189 = badlion189
                 || Vanilla189Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla1122 = Vanilla1122Mappings.isRuntimePresent(preferredLoaders);
+        boolean vanilla1165 = Vanilla1165Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla1201 = Vanilla1201Mappings.isRuntimePresent(preferredLoaders);
         boolean neoForge1211Detected = NeoForge1211Mappings.isRuntimePresent(preferredLoaders);
         boolean neoForge1201Detected = NeoForge1201Mappings.isRuntimePresent(preferredLoaders);
@@ -594,23 +868,33 @@ public class NativeBridge {
         boolean vanilla262 = Vanilla262Mappings.isRuntimePresent(preferredLoaders);
         boolean fabric262 = Fabric262Mappings.isRuntimePresent(preferredLoaders);
         boolean excludesModern = vanilla262 || fabric262;
-        boolean neoForge1211 = neoForge1211Detected && !excludesModern;
-        // 1.20.1 and 1.21.1 share identical mojmap anchor classes, so a 1.21.1
-        // runtime also matches the 1.20.1 probes; exclude it explicitly.
-        boolean neoForge1201 = neoForge1201Detected && !neoForge1211 && !excludesModern;
-        boolean vanilla1211 = Vanilla1211Mappings.isRuntimePresent(preferredLoaders);
-        boolean vanilla1206 = Vanilla1206Mappings.isRuntimePresent(preferredLoaders);
         boolean vanilla12111 = Vanilla12111Mappings.isRuntimePresent(preferredLoaders);
         boolean fabric12111 = Fabric12111Mappings.isRuntimePresent(preferredLoaders);
+        // 1.21.11 原版运行时是 Mojang 混淆名（gfj 等）；NeoForge 1.21.11 运行时
+        // 加载官方可读名的 patched jar（net.minecraft.client.Minecraft），但其
+        // "已认领"的混淆 jar 仍在 AppClassLoader 可见，导致混淆 1.21.11 探测也
+        // 命中（v12111=true），且 NeoForge 1.20.1/1.21.1 mojmap 探测会误报。
+        // 排除两个 mojmap 探测后唯一命中 v12111 → 61；类解析由
+        // VanillaSrgMappings 先试规范名再试混淆名来适配两种运行时。
+        boolean obfuscated12111 = vanilla12111 || fabric12111;
+        boolean neoForge1211 = neoForge1211Detected && !excludesModern && !obfuscated12111;
+        // 1.20.1 and 1.21.1 share identical mojmap anchor classes, so a 1.21.1
+        // runtime also matches the 1.20.1 probes; exclude it explicitly.
+        boolean neoForge1201 = neoForge1201Detected && !neoForge1211 && !excludesModern
+                && !obfuscated12111;
+        boolean vanilla1211 = Vanilla1211Mappings.isRuntimePresent(preferredLoaders);
+        boolean vanilla1206 = Vanilla1206Mappings.isRuntimePresent(preferredLoaders);
         int matchingVersions = (vanilla1710 ? 1 : 0)
                 + (vanilla189 ? 1 : 0) + (vanilla1122 ? 1 : 0)
+                + (vanilla1165 ? 1 : 0)
                 + (vanilla1201 || neoForge1201 ? 1 : 0)
                 + (vanilla1211 || neoForge1211 ? 1 : 0)
                 + (vanilla1206 ? 1 : 0)
                 + (vanilla12111 || fabric12111 ? 1 : 0)
                 + (vanilla262 || fabric262 ? 1 : 0);
         NativeBridge.sce("DBG detect: v1710=" + vanilla1710 + " v189=" + vanilla189
-                + " v1122=" + vanilla1122 + " v1201=" + vanilla1201
+                + " v1122=" + vanilla1122 + " v1165=" + vanilla1165
+                + " v1201=" + vanilla1201
                 + " nf1201=" + neoForge1201 + " v1211=" + vanilla1211
                 + " nf1211=" + neoForge1211 + " v1206=" + vanilla1206
                 + " v12111=" + vanilla12111 + " fabric12111=" + fabric12111
@@ -628,6 +912,8 @@ public class NativeBridge {
                 detectedVersion = 15;
             } else if (vanilla1122) {
                 detectedVersion = 23;
+            } else if (vanilla1165) {
+                detectedVersion = 36;
             } else if (vanilla1201 || neoForge1201) {
                 detectedVersion = 47;
             } else if (vanilla1211 || neoForge1211) {
@@ -751,6 +1037,12 @@ public class NativeBridge {
             return Vanilla1122Mappings.resolveClass(
                     internalName, contextLoader, bridgeLoader);
         }
+        if (mappingVersion == 35 || mappingVersion == 36) {
+            // 1.16.5（原版或 Forge）运行时均为 Mojang 混淆命名（djz 等），
+            // 用同一套映射解析。
+            return Vanilla1165Mappings.resolveClass(
+                    internalName, contextLoader, bridgeLoader);
+        }
         if (mappingVersion == 47) {
             if (neoForge1201Runtime) {
                 return NeoForge1201Mappings.resolveClass(
@@ -796,6 +1088,13 @@ public class NativeBridge {
 
     //SendClientError
     public static native void sce(String message);
+
+    // 临时诊断：JVMTI 枚举所有已加载的 gfj 拷贝及其 A 字段（找到真正持有
+    // Minecraft 单例的那份，定位 1.21.11 NeoForge 的类加载器）。
+    public static native String dbgLoadedGfj();
+
+    // 临时诊断/修复：返回持有 Minecraft 单例（gfj.A 非空）的类加载器。
+    public static native Object dbgGameGfjLoader();
 
     public static native Object inv(Method method, Object target, Object ... arguments);
 

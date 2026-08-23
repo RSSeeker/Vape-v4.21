@@ -1,5 +1,6 @@
 package gg.vape.utils;
 
+import gg.vape.Vape;
 import gg.vape.wrapper.impl.Enchantment;
 import gg.vape.wrapper.impl.EnchantmentHelper;
 import gg.vape.wrapper.impl.EnchantmentHelperBridge;
@@ -81,7 +82,15 @@ public class EnchantmentUtil {
 
     private static EnchantmentRegistryAccess z() {
         if (j == null) {
-            j = EnchantmentHelperBridge.createLookup();
+            // NeoForge 1.21.11 在游戏引导完成前调用 VanillaRegistries.createLookup()
+            // 会触发 BuiltInRegistries.<clinit> 并抛 "Not bootstrapped"。失败时
+            // 不缓存，等游戏引导完成后下次调用再重试（此时注册表已就绪）。
+            try {
+                j = EnchantmentHelperBridge.createLookup();
+            }
+            catch (Throwable failure) {
+                Vape.logThrowable(failure);
+            }
         }
         return j;
     }
@@ -164,6 +173,11 @@ public class EnchantmentUtil {
             return A;
         }
         EnchantmentRegistryAccess enchantmentRegistryAccess = EnchantmentUtil.z();
+        if (enchantmentRegistryAccess == null) {
+            // 注册表尚未引导（NeoForge 1.21.11 启动早期）：返回空数组，
+            // 不缓存，待游戏引导完成后重试，避免 <clinit> 被异常污染。
+            return new Enchantment[0];
+        }
         EnchantmentRegistry enchantmentRegistry = enchantmentRegistryAccess.lookupOrThrow(ResourceKeyEnchantmentBridge.enchantment());
         Stream<EnchantmentHolder> stream = enchantmentRegistry.listElements();
         Stream<Enchantment> stream2 = stream.map(EnchantmentUtil::lambda$getVanillaEnchantments_54$0);
@@ -213,6 +227,10 @@ public class EnchantmentUtil {
         }
         String string2 = string.contains(":") ? string : "minecraft:" + string;
         EnchantmentRegistryAccess enchantmentRegistryAccess = EnchantmentUtil.z();
+        if (enchantmentRegistryAccess == null) {
+            // 注册表尚未引导（NeoForge 启动早期）：返回 null，稍后重试。
+            return null;
+        }
         EnchantmentRegistry enchantmentRegistry = enchantmentRegistryAccess.lookupOrThrow(ResourceKeyEnchantmentBridge.enchantment());
         Stream<EnchantmentHolder> stream = enchantmentRegistry.listElements();
         Optional<EnchantmentHolder> optional = stream.filter(arg_0 -> EnchantmentUtil.lambda$getEnchantmentByName$2(string2, arg_0)).findFirst();

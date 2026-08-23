@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 JavaVM *g_vm = NULL;
 jvmtiEnv *g_jvmti = NULL;
@@ -1173,6 +1174,165 @@ static jstring JNICALL bridge_gat(JNIEnv *env, jclass bridge) {
     return (*env)->NewStringUTF(env, token);
 }
 
+static jobject JNICALL native_dbg_game_gfj_loader(JNIEnv *env, jclass bridge) {
+    jint class_count = 0;
+    jclass *classes = NULL;
+    jvmtiError error;
+    jint index;
+    jobject result = NULL;
+    jclass class_class = NULL;
+    jmethodID get_class_loader = NULL;
+    (void)bridge;
+    if (g_jvmti == NULL) {
+        return NULL;
+    }
+    error = (*g_jvmti)->GetLoadedClasses(g_jvmti, &class_count, &classes);
+    if (error != JVMTI_ERROR_NONE || classes == NULL) {
+        return NULL;
+    }
+    class_class = (*env)->FindClass(env, "java/lang/Class");
+    get_class_loader = class_class == NULL ? NULL
+            : (*env)->GetMethodID(env, class_class, "getClassLoader",
+                    "()Ljava/lang/ClassLoader;");
+    (*env)->DeleteLocalRef(env, class_class);
+    for (index = 0; index < class_count && result == NULL; ++index) {
+        char *signature = NULL;
+        jfieldID field_a = NULL;
+        jobject value = NULL;
+        if ((*g_jvmti)->GetClassSignature(g_jvmti, classes[index],
+                &signature, NULL) != JVMTI_ERROR_NONE
+                || signature == NULL) {
+            continue;
+        }
+        if (strcmp(signature, "Lgfj;") != 0) {
+            (*g_jvmti)->Deallocate(g_jvmti, (unsigned char *)signature);
+            continue;
+        }
+        (*g_jvmti)->Deallocate(g_jvmti, (unsigned char *)signature);
+        field_a = (*env)->GetStaticFieldID(env, classes[index], "A", "Lgfj;");
+        (*env)->ExceptionClear(env);
+        if (field_a != NULL) {
+            value = (*env)->GetStaticObjectField(env, classes[index], field_a);
+            (*env)->ExceptionClear(env);
+        }
+        if (value != NULL && get_class_loader != NULL) {
+            jobject loader = (*env)->CallObjectMethod(env, classes[index],
+                    get_class_loader);
+            if ((*env)->ExceptionCheck(env)) {
+                (*env)->ExceptionClear(env);
+            } else if (loader != NULL) {
+                result = (*env)->NewGlobalRef(env, loader);
+                (*env)->DeleteLocalRef(env, loader);
+            }
+        }
+        (*env)->DeleteLocalRef(env, value);
+    }
+    (*g_jvmti)->Deallocate(g_jvmti, (unsigned char *)classes);
+    return result;
+}
+
+static jstring JNICALL native_dbg_loaded_gfj(JNIEnv *env, jclass bridge) {
+    jint class_count = 0;
+    jclass *classes = NULL;
+    jvmtiError error;
+    jint index;
+    char buffer[16384];
+    size_t used = 0;
+    (void)bridge;
+    if (g_jvmti == NULL) {
+        return NULL;
+    }
+    error = (*g_jvmti)->GetLoadedClasses(g_jvmti, &class_count, &classes);
+    if (error != JVMTI_ERROR_NONE || classes == NULL) {
+        vape_log(L"dbgLoadedGfj GetLoadedClasses failed: %d", error);
+        return NULL;
+    }
+    buffer[0] = '\0';
+    for (index = 0; index < class_count; ++index) {
+        char *signature = NULL;
+        char *loader_sig = NULL;
+        char *value_sig = NULL;
+        jfieldID field_a = NULL;
+        jobject value = NULL;
+        char line[512];
+        size_t len;
+        if ((*g_jvmti)->GetClassSignature(g_jvmti, classes[index],
+                &signature, NULL) != JVMTI_ERROR_NONE
+                || signature == NULL) {
+            continue;
+        }
+        if (strcmp(signature, "Lgfj;") != 0) {
+            (*g_jvmti)->Deallocate(g_jvmti, (unsigned char *)signature);
+            continue;
+        }
+        (*g_jvmti)->Deallocate(g_jvmti, (unsigned char *)signature);
+        {
+            jobject loader = NULL;
+            jclass class_class = (*env)->FindClass(env, "java/lang/Class");
+            jmethodID get_class_loader = class_class == NULL ? NULL
+                    : (*env)->GetMethodID(env, class_class, "getClassLoader",
+                            "()Ljava/lang/ClassLoader;");
+            (*env)->DeleteLocalRef(env, class_class);
+            if (get_class_loader != NULL) {
+                loader = (*env)->CallObjectMethod(env, classes[index],
+                        get_class_loader);
+                (*env)->ExceptionClear(env);
+            }
+            if (loader != NULL) {
+                jclass loader_class = (*env)->GetObjectClass(env, loader);
+                if (loader_class != NULL) {
+                    (void)(*g_jvmti)->GetClassSignature(g_jvmti, loader_class,
+                            &loader_sig, NULL);
+                    (*env)->DeleteLocalRef(env, loader_class);
+                }
+                (*env)->DeleteLocalRef(env, loader);
+            }
+            field_a = (*env)->GetStaticFieldID(env, classes[index], "A", "Lgfj;");
+            (*env)->ExceptionClear(env);
+            if (field_a != NULL) {
+                value = (*env)->GetStaticObjectField(env, classes[index], field_a);
+                (*env)->ExceptionClear(env);
+            }
+        }
+        if (value != NULL) {
+            jclass value_class = (*env)->GetObjectClass(env, value);
+            if (value_class != NULL) {
+                (void)(*g_jvmti)->GetClassSignature(g_jvmti, value_class,
+                        &value_sig, NULL);
+                (*env)->DeleteLocalRef(env, value_class);
+            }
+            _snprintf(line, sizeof(line),
+                    "gfj copy: loader=%s A=<instance %s>",
+                    loader_sig != NULL ? loader_sig : "null",
+                    value_sig != NULL ? value_sig : "?");
+        } else {
+            _snprintf(line, sizeof(line),
+                    "gfj copy: loader=%s A=<null%s>",
+                    loader_sig != NULL ? loader_sig : "null",
+                    field_a == NULL ? " field-unavailable" : "");
+        }
+        len = strlen(line);
+        if (used + len + 2 < sizeof(buffer)) {
+            memcpy(buffer + used, line, len);
+            used += len;
+            buffer[used++] = '\n';
+            buffer[used] = '\0';
+        }
+        if (loader_sig != NULL) {
+            (*g_jvmti)->Deallocate(g_jvmti, (unsigned char *)loader_sig);
+        }
+        if (value_sig != NULL) {
+            (*g_jvmti)->Deallocate(g_jvmti, (unsigned char *)value_sig);
+        }
+        (*env)->DeleteLocalRef(env, value);
+    }
+    (*g_jvmti)->Deallocate(g_jvmti, (unsigned char *)classes);
+    if (used == 0) {
+        return (*env)->NewStringUTF(env, "no gfj loaded");
+    }
+    return (*env)->NewStringUTF(env, buffer);
+}
+
 jint vape_register_native_bridge(JNIEnv *env, jclass bridge_class) {
     JNINativeMethod methods[] = {
         {"scb", "(Ljava/lang/Class;[B)I", (void *)native_scb},
@@ -1187,6 +1347,8 @@ jint vape_register_native_bridge(JNIEnv *env, jclass bridge_class) {
         {"inv", "(Ljava/lang/reflect/Method;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;",
                 (void *)native_inv},
         {"gat", "()Ljava/lang/String;", (void *)bridge_gat},
+        {"dbgLoadedGfj", "()Ljava/lang/String;", (void *)native_dbg_loaded_gfj},
+        {"dbgGameGfjLoader", "()Ljava/lang/Object;", (void *)native_dbg_game_gfj_loader},
         /* sample-unimplemented natives, stubbed for test robustness */
         {"dsv2", "(ILjava/lang/String;DDIF)I", (void *)native_dsv2},
         {"ss_2", "(Ljava/lang/String;)I", (void *)native_ss_2},

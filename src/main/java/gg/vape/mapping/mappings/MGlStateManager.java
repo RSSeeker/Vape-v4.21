@@ -149,6 +149,17 @@ extends Mapping {
             String string15 = "setFogDensity";
             MGlStateManager mGlStateManager15 = this;
             this.F = this.registerStaticMethod(string15, bl15, clazz15, classArray12);
+            // _blendFunc：1.16.5（LWJGL3 着色器管线）也有此方法；GlStateManager.Y
+            // 在 < 1.21.6 时一律走 MGlStateManager.j -> this.W，必须在这里注册，
+            // 否则 HUD 渲染（flushGuiBatches -> saveAndPrepareGlState）NPE。
+            if (ForgeVersion.MC_1_21_6.v()) {
+                Class[] classArrayW = new Class[]{Integer.TYPE, Integer.TYPE};
+                Class<Void> clazzW = Void.TYPE;
+                boolean blW = false;
+                String stringW = "_blendFunc";
+                MGlStateManager mGlStateManagerW = this;
+                this.W = this.registerStaticMethod(stringW, blW, clazzW, classArrayW);
+            }
             if (GuiComponent.getLegacyComponentState() == null) {
                 MEntityRenderer.c(++n2);
             }
@@ -222,6 +233,16 @@ extends Mapping {
                 this.W = this.registerStaticMethod(string21, bl21, clazz21, classArray18);
             }
         } else {
+            // _blendFunc：1.16.5（非 1.17 分支）也注册，GlStateManager.Y
+            // 在 < 1.21.6 时一律走 MGlStateManager.j -> this.W。
+            if (ForgeVersion.MC_1_21_6.v()) {
+                Class[] classArrayW2 = new Class[]{Integer.TYPE, Integer.TYPE};
+                Class<Void> clazzW2 = Void.TYPE;
+                boolean blW2 = false;
+                String stringW2 = "_blendFunc";
+                MGlStateManager mGlStateManagerW2 = this;
+                this.W = this.registerStaticMethod(stringW2, blW2, clazzW2, classArrayW2);
+            }
             Class[] classArray = new Class[]{Integer.TYPE, Float.TYPE};
             Class<Void> clazz = Void.TYPE;
             boolean bl = true;

@@ -56,7 +56,9 @@ public class ZeusConnectionManager {
             String string = stringArray[0];
             int n = Integer.parseInt(stringArray[1]);
             InetSocketAddress inetSocketAddress = new InetSocketAddress(string, n);
-            eventLoopGroup = new NioEventLoopGroup(1);
+            eventLoopGroup = new NioEventLoopGroup(1,
+                    new io.netty.util.concurrent.DefaultThreadFactory(
+                            "vape-zeus-client", true));
             Bootstrap bootstrap = (Bootstrap)((Bootstrap)((Bootstrap)new Bootstrap().group(eventLoopGroup)).channel(NioSocketChannel.class)).remoteAddress((SocketAddress)inetSocketAddress).handler((ChannelHandler)new ZeusClientChannelInitializer(this));
             Channel channel = bootstrap.connect().sync().channel();
             Thread thread = new Thread(this::lambda$start$0);

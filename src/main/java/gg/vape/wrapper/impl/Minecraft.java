@@ -243,8 +243,14 @@ extends Wrapper {
     }
 
     public static Object i() {
+        // NeoForge 注入可能发生在游戏早期（Minecraft 单例尚未创建），此时
+        // getInstance 返回 null；不能把 null 缓存死，否则后续永远拿不到实例。
         if (L == null) {
-            L = Minecraft.vapeInstance.getMappings().U.J();
+            Object instance = Minecraft.vapeInstance.getMappings().U.J();
+            if (instance != null) {
+                L = instance;
+            }
+            return instance;
         }
         return L;
     }

@@ -31,6 +31,8 @@ extends Event {
     @Override
     public boolean fire() {
         try {
+            // 临时诊断：确认渲染钩子是否被游戏渲染方法调用。
+            gg.vape.Vape.debugLog("ERWPD.fire invoked");
             // 26.2 fabric：注入点（GameRenderer.update 入口）处 GL 上下文可能尚未
             // 绑定。此时执行 initializeFrames（含 glGetString 等 GL 调用）会触发
             // JVM FATAL ERROR（No context is current）。GL 未就绪时跳过本帧，
@@ -47,7 +49,9 @@ extends Event {
             EXECUTOR.runPending();
         }
         catch (Throwable throwable) {
-            // empty catch block
+            // 记录 TBE 任务异常：initializeFrames 等失败会被这里吞掉导致
+            // framesInitialized 永远不置位、注入挂起；先暴露出来便于定位。
+            gg.vape.Vape.logThrowable(throwable);
         }
         return false;
     }

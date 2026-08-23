@@ -2,6 +2,7 @@ package gg.vape.mapping.runtime;
 
 import gg.vape.Vape;
 import gg.vape.mapping.runtime.MemberLookupSignature;
+import gg.vape.runtime.NativeBridge;
 import gg.vape.wrapper.impl.ForgeVersion;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -52,9 +53,20 @@ public class MemberNameRemapTable {
 
     private static String resolveRuntimeName(String sourceName, String runtimeName) {
         int minorVersion = ForgeVersion.c();
-        if ((minorVersion == 35 || minorVersion == 36)
-                && !runtimeName.startsWith("func_") && !runtimeName.startsWith("field_")) {
-            return sourceName;
+        if (minorVersion == 35 || minorVersion == 36) {
+            boolean srgValue = runtimeName.startsWith("func_")
+                    || runtimeName.startsWith("field_");
+            if (NativeBridge.isForgeAbsent()) {
+                // 纯原版 1.16.5：成员保持 Mojang 混淆名，joined.srg 只能翻译
+                // mojmap 名。表值若是 SRG 名（Forge 运行时专用，如
+                // wasTouchingWater -> field_70171_ac），退回源名（mojmap）；
+                // 否则保留表值（mojmap 名，如 fontRenderer -> font）。
+                return srgValue ? sourceName : runtimeName;
+            }
+            // Forge 1.16.x：运行时成员被改名成 SRG 名（field_/func_），
+            // SRG 值直接可用；非 SRG 值（mojmap 名）退回 MCP 源名，
+            // 由 CSV 桥接（MCP <-> SRG）解析。
+            return srgValue ? runtimeName : sourceName;
         }
         return runtimeName;
     }
@@ -66,6 +78,41 @@ public class MemberNameRemapTable {
             return null;
         }
         return mappings.getOrDefault(fieldName, null);
+    }
+
+    /**
+     * 反向查找：某些代码直接用 SRG 名（field_xxx）请求字段，而表里把它
+     * 作为值（如 wasTouchingWater -> field_70171_ac）。纯原版 1.16.5 成员是
+     * Mojang 混淆名，需要把 SRG 名翻译回 mojmap 源名，再由 joined.srg
+     * 继续映射到运行时混淆名。
+     */
+    @Nullable
+    public MemberLookupSignature lookupFieldMappingByRuntimeName(String runtimeName) {
+        for (Map<String, MemberLookupSignature> mappings : this.fieldMappings.values()) {
+            for (Map.Entry<String, MemberLookupSignature> entry : mappings.entrySet()) {
+                MemberLookupSignature signature = entry.getValue();
+                if (signature != null && runtimeName.equals(signature.runtimeName)) {
+                    return new MemberLookupSignature(entry.getKey(),
+                            signature.getMappedMemberOverride(), signature.resolvedType);
+                }
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public MemberLookupSignature lookupMethodMappingByRuntimeName(String runtimeName) {
+        for (Map<String, MemberLookupSignature> mappings : this.methodMappings.values()) {
+            for (Map.Entry<String, MemberLookupSignature> entry : mappings.entrySet()) {
+                MemberLookupSignature signature = entry.getValue();
+                if (signature != null && runtimeName.equals(signature.runtimeName)) {
+                    return new MemberLookupSignature(entry.getKey(),
+                            signature.getMappedMemberOverride(), signature.resolvedType,
+                            signature.parameterTypes);
+                }
+            }
+        }
+        return null;
     }
 
     public void B(Class<?> ownerClass, String sourceName, String runtimeName) {
