@@ -648,7 +648,6 @@ extends Mod {
     }
 
     public static void initializeFrames() {
-        long frameInitStart = System.currentTimeMillis();
         for (FrameStackManager frameStackManager : allStacks) {
             frameStackManager.Y().clear();
         }
@@ -698,8 +697,6 @@ extends Mod {
         frameSnapshot = ImmutableList.copyOf(allFrames);
         ClientSettings.refreshModuleCategoryHeaders();
         VisibleModuleListFrame.e();
-        Vape.debugLog("initializeFrames completed in "
-                + (System.currentTimeMillis() - frameInitStart) + "ms");
         framesInitialized = true;
     }
 

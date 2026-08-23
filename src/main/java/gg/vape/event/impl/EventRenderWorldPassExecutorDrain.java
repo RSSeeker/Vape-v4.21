@@ -31,8 +31,6 @@ extends Event {
     @Override
     public boolean fire() {
         try {
-            // 临时诊断：确认渲染钩子是否被游戏渲染方法调用。
-            gg.vape.Vape.debugLog("ERWPD.fire invoked");
             // 26.2 fabric：注入点（GameRenderer.update 入口）处 GL 上下文可能尚未
             // 绑定。此时执行 initializeFrames（含 glGetString 等 GL 调用）会触发
             // JVM FATAL ERROR（No context is current）。GL 未就绪时跳过本帧，

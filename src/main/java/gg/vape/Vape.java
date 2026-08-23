@@ -757,18 +757,10 @@ public class Vape {
         this.primaryMappingTaskSet.d();
         int opaqueBranch = opaqueSeed;
         EventRenderWorldPassExecutorDrain.EXECUTOR.execute(ClientSettings::initializeFrames);
-        long frameWaitStartedAt = System.currentTimeMillis();
         try {
             while (!ClientSettings.framesInitialized) {
                 try {
                     Thread.sleep(10L);
-                    // 诊断：等待帧初始化超过 5 秒时周期性提示，便于确认注入
-                    // 是仍在等待游戏渲染钩子还是死锁。
-                    long elapsed = System.currentTimeMillis() - frameWaitStartedAt;
-                    if (elapsed > 5000L && elapsed % 5000L < 10L) {
-                        Vape.debugLog("waiting for first frame ("
-                                + (elapsed / 1000L) + "s), render hook not fired yet");
-                    }
                     if (opaqueBranch != 0) return;
                 }
                 catch (InterruptedException interrupted) {
