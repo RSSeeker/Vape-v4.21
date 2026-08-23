@@ -44,6 +44,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import org.lwjgl.opengl.GL11;
 
 public class ItemESP
 extends Mod {
@@ -208,7 +209,17 @@ extends Mod {
                 renderMatrix.multiply(BufferedGuiRenderPrimitives.viewMatrix);
                 renderMatrix.multiply(BufferedGuiRenderPrimitives.matrixStack.peek());
                 if (ForgeVersion.MC_1_20_6.d()) {
-                    fontRenderer.h(line, -halfWidth, lineY, textColor, false, renderMatrix, SharedMonsterAttributes.V());
+                    // 26.x：改用 Vape 平滑字体（StbSmoothFontRenderer）渲染，
+                    // 它经 BufferedRenderPrimitives.queueWorldBatch（世界投影），
+                    // 与背景框共用同一投影，避免 MC 字体回调投影不一致导致的偏移。
+                    gg.vape.ui.font.SmoothFontRenderer smoothFontRenderer =
+                            gg.vape.Vape.INSTANCE.getFontManager().p(1.0);
+                    if (smoothFontRenderer instanceof gg.vape.ui.font.StbSmoothFontRenderer) {
+                        ((gg.vape.ui.font.StbSmoothFontRenderer)smoothFontRenderer)
+                                .c(line, -halfWidth, lineY, textColor, false, true);
+                    } else {
+                        fontRenderer.h(line, -halfWidth, lineY, textColor, false, renderMatrix, SharedMonsterAttributes.V());
+                    }
                 } else {
                     int packedLight = 0xF000F0;
                     fontBuffer = Minecraft.H$src$Lgg_vape_wrapper_impl_VoxelShape_$1dlcquv().getBufferSource();
