@@ -1,5 +1,34 @@
 # 更新日志
 
+## v4.21.22 (2026-08-23)
+
+**1.16.5 实验性支持 + NeoForge 1.21.11 注入修复 + 兼容性调整**
+
+- **新增 1.16.5 原版支持（实验性）**：
+  - 新增 `Vanilla1165Mappings` 独立映射集（1.16.5 专用 Mojang 混淆命名，Minecraft=djz）与重新生成的
+    `vanilla1165/joined.srg`（CL/FD/MD 全量，含无前缀方法行）；探测锚点 djz/C/F/dwt/dzm/dzj/brx → 映射版本 36
+  - 补齐 1.16.5 缺失映射：`MStatusEffect` 无条件注册（修复 PotionRegistry 初始化 NPE）；`MGlStateManager._blendFunc`
+    在两个分支注册（修复 HUD 渲染 NPE）；`MMatrix4f.store(FloatBuffer)`；`MMinecraft.gameSettings` 字段
+  - 修复 1.16.5 GUI 缩放异常（物品栏/准星缩到左上角）：`GuiRenderPrimitives.d()` 判定扩展到 1.16.5（与 1.17+
+    同为 LWJGL3 着色器管线，不走固定管线 glOrtho 路径）
+  - ⚠️ 实验性：部分映射、渲染和模块功能可能无法正常工作（详见 README 兼容性表）
+- **NeoForge 1.21.11 注入修复（重要）**：
+  - 根因：NeoForge 1.21.11 运行时加载官方可读名的 patched jar（`net.minecraft.client.Minecraft` / `instance` /
+    `getInstance`），同时"已认领"的混淆 jar 仍对 AppClassLoader 可见；此前类解析先试混淆名 `gfj`，命中静态单例
+    为 null 的错误拷贝 → `Minecraft.getInstance()` 返回 null、渲染钩子不触发、注入卡在帧等待
+  - 修复：`VanillaSrgMappings.resolveClass` 改为先试规范名（SRG/mojmap）再试混淆名——NeoForge 直接命中游戏
+    真类；原版混淆运行时规范名不存在自动回退，行为不变
+  - 注入时机：等待渲染/客户端线程出现（游戏主循环就绪）后再初始化，避免 ModLauncher 早期注入时类加载器与
+    类身份不稳定
+  - `EnchantmentUtil` 注册表引导容错：NeoForge 启动早期 "Not bootstrapped" 时返回空结果并不缓存，待引导完成
+    后重试，避免类初始化被异常污染
+  - `Minecraft.i()` 不再缓存 null 的 getInstance 结果
+- **1.20.1 / 1.21.1 Fabric 明确不支持**：Fabric Knot 类加载隔离 + 双份 slf4j 冲突为环境级问题，注入时直接
+  中止并提示，避免半可用状态误导（兼容表标注 -）
+- **退出修复**：VapeService 的 Netty 事件循环线程改为守护线程（命名线程工厂），不再阻塞游戏进程退出
+- **错误可见性**：`EventRenderWorldPassExecutorDrain.fire()` 不再吞掉 TBE 任务异常，改用 `Vape.logThrowable`
+  记录（帧初始化失败等会写入日志，便于定位注入挂起）
+
 ## v4.21.21 (2026-08-23)
 
 **动态模糊全版本支持 + 26.2 修复 + 跨版本稳定性**
