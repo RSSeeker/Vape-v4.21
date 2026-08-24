@@ -10,6 +10,7 @@ import gg.vape.event.impl.EventRender3D;
 import gg.vape.friend.FriendEntry;
 import gg.vape.friend.ui.OnlineRadarPreviewState;
 import gg.vape.mapping.MappedClasses;
+import gg.vape.rotation.LocalPlayerRotationUtil;
 import gg.vape.module.Category;
 import gg.vape.module.Mod;
 import gg.vape.module.render.nametags.NameTagsNameState;
@@ -310,7 +311,6 @@ extends Mod {
         int n2 = fontRenderer.getStringWidth((String)object2) / 2;
         int n3 = -(fontRenderer.FONT_HEIGHT((String)object2) - 1);
         if (ForgeVersion.MC_1_16_5.d()) {
-            RenderUtil.f(renderManager);
             if (gameSettings.x() == 0) {
                 OpenGlBackendHolder.backend.translate(d, d2 + (double)renderEntityContext.getHeight() + 0.2, d3);
                 OpenGlBackendHolder.backend.setNormal(0.0f, 1.0f, 0.0f);
@@ -402,7 +402,6 @@ extends Mod {
             }
         }
         if (bl3 && bl7 && bl6) {
-            RenderUtil.f(renderManager);
             if (bl8) {
                 OpenGlBackendHolder.backend.translate(0.0, -8.0, 0.0);
             }
@@ -545,6 +544,12 @@ extends Mod {
         float f = FreeLookHudModule.isActive() ? FreeLookHudModule.getRenderPitch() : eventRender3D.getRenderManager().getPlayerViewX();
         float f2 = FreeLookHudModule.isActive() ? FreeLookHudModule.getRenderYaw() : eventRender3D.getRenderManager().getPlayerViewY();
         GuiRenderPrimitives.U = true;
+        // The world batches queued below (name tag background box) and the
+        // billboard text are positioned by the world projection. Rebuild it with
+        // the real camera matrices right now (instead of relying on the flush
+        // cleanup state), identical to how Search/mineral-border renders, so the
+        // name tags stay aligned at every facing direction.
+        LocalPlayerRotationUtil.updateProjectionMatrix(eventRender3D.getTicks());
         for (OnlineRadarPreviewState onlineRadarPreviewState : arrayList) {
             EntityLivingBase entityLivingBase = (EntityLivingBase)onlineRadarPreviewState.getKey();
             RenderEntityContext renderEntityContext = (RenderEntityContext)onlineRadarPreviewState.getValue();

@@ -44,7 +44,7 @@ public class LocalPlayerRotationUtil {
             return;
         }
         RenderMatrix4f viewRotation;
-        if (ForgeVersion.MC_1_21_10.d() && !ForgeVersion.MC_26_1.d() && LocalPlayerRotationUtil.modelViewMatrix != null) {
+        if (ForgeVersion.MC_1_21_10.d() && LocalPlayerRotationUtil.modelViewMatrix != null) {
             viewRotation = LocalPlayerRotationUtil.modelViewMatrix;
         } else {
             MatrixStack matrixStack = MatrixStack.A();

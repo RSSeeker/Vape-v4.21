@@ -23,6 +23,7 @@ implements InsertedEventCallback {
     private static boolean r;
     private static float D;
     private final MatrixStack y;
+    private final Object modelViewObject;
 
     private static Exception a(Exception exception) {
         return exception;
@@ -31,6 +32,17 @@ implements InsertedEventCallback {
     @Override
     public boolean fire() {
         RenderManager.updateInterpolatedRenderPosition(this.N);
+        // Both the EventRender3D pass and the tracers pass drain world batches,
+        // and each drain's cleanup (resetProjectionMatrix) clears the cached
+        // modelViewMatrix. Re-inject the pure-rotation modelViewMatrix captured
+        // when this callback was built, so updateProjectionMatrix uses the correct
+        // branch for every world batch (NameTags billboards, mineral borders and
+        // tracers) instead of the translated fallback (which only matched -Z).
+        // Gated to 1.21.10+, the versions that use the modelViewMatrix branch;
+        // older versions are left untouched.
+        if (ForgeVersion.MC_1_21_10.d() && this.modelViewObject != null) {
+            LocalPlayerRotationUtil.setModelViewMatrix(this.modelViewObject);
+        }
         boolean bl = EventRender3D.getEventListeners().hasListeners() || EventRenderTracers3D.getEventListeners().hasListeners();
         boolean bl2 = false;
         boolean bl3 = false;
@@ -40,6 +52,14 @@ implements InsertedEventCallback {
         GameSettings gameSettings = Minecraft.gameSettings();
         EntityRenderer entityRenderer = Minecraft.m$src$Lgg_vape_wrapper_impl_EntityRenderer_$13begmf();
         if (EventRenderTracers3D.getEventListeners().hasListeners()) {
+            // The EventRender3D pass above flushed world batches, whose cleanup
+            // (resetProjectionMatrix) cleared the cached modelViewMatrix again.
+            // The tracers pass re-renders the world and drains world batches
+            // (tracers lines), so re-inject the pure-rotation modelViewMatrix so
+            // updateProjectionMatrix uses the correct branch for that pass.
+            if (ForgeVersion.MC_1_21_10.d() && this.modelViewObject != null) {
+                LocalPlayerRotationUtil.setModelViewMatrix(this.modelViewObject);
+            }
             if (ForgeVersion.MC_1_16_5.d()) {
                 try {
                     boolean bl4 = gameSettings.k();
@@ -70,9 +90,11 @@ implements InsertedEventCallback {
     }
 
     public EventRender3DCallback(Object object) {
+        this.modelViewObject = object;
         if (ForgeVersion.MC_26_1.d()) {
             this.y = MatrixStack.A();
             this.y.i(new Matrix4f(object));
+            LocalPlayerRotationUtil.setModelViewMatrix(object);
         } else if (ForgeVersion.MC_1_21_10.d()) {
             this.y = MatrixStack.A();
             this.y.i(new Matrix4f(object));
@@ -89,6 +111,7 @@ implements InsertedEventCallback {
 
     public EventRender3DCallback(float f) {
         this.y = null;
+        this.modelViewObject = null;
         this.N = f;
     }
 }
