@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.21)
 project(Vape421Native VERSION 1.0 LANGUAGES C CXX RC)
 
+# 附件 exe 命名版本号（由 Gradle 以 -DVAPE421_VERSION=... 传入），用于输出
+# Vape-v<VERSION>.exe。未传入时回退默认，避免生成空版本名。
+if(NOT DEFINED VAPE421_VERSION OR VAPE421_VERSION STREQUAL "")
+    set(VAPE421_VERSION "4.21")
+endif()
+
 if(NOT WIN32)
     message(FATAL_ERROR "Vape421Native is a Windows-only test bridge")
 endif()
@@ -133,7 +139,7 @@ set_property(TARGET Vape421Native Vape421LoaderGui
 set_target_properties(Vape421Native PROPERTIES
         OUTPUT_NAME "Vape-v4.21Native")
 set_target_properties(Vape421LoaderGui PROPERTIES
-        OUTPUT_NAME "Vape-v4.21")
+        OUTPUT_NAME "Vape-v${VAPE421_VERSION}")
 
 set_target_properties(Vape421Native Vape421LoaderGui PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dist")

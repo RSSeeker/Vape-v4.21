@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'gg.vape.recovery'
-version = '4.21-recovered'
+version = '4.21.24'
 
 java {
     toolchain {
@@ -324,7 +324,8 @@ tasks.register('configureNative', Exec) {
                 '-B', nativeBuildDirectory.get().asFile.absolutePath,
                 '-A', 'x64',
                 "-DVAPE421_JAVA_HOME=${nativeJavaHome.get()}",
-                "-DVAPE421_PRODUCT_JAR=${recoveredProductJar.get().asFile.absolutePath}"
+                "-DVAPE421_PRODUCT_JAR=${recoveredProductJar.get().asFile.absolutePath}",
+                "-DVAPE421_VERSION=${project.version}"
         ]
         def generator = resolveVsGenerator()
         if (generator != null && !generator.trim().isEmpty()) {
@@ -345,7 +346,7 @@ tasks.register('buildNative', Exec) {
     })
     outputs.files(
             nativeBuildDirectory.map { it.file('dist/Vape-v4.21Native.dll') },
-            nativeBuildDirectory.map { it.file('dist/Vape-v4.21.exe') })
+            nativeBuildDirectory.map { it.file('dist/Vape-v' + project.version + '.exe') })
     doFirst {
         commandLine 'cmake', '--build', nativeBuildDirectory.get().asFile.absolutePath,
                 '--config', 'Release'
@@ -357,13 +358,13 @@ tasks.register('prepareInjectionBundle', Sync) {
     description = 'Creates the single-file GUI injection bundle.'
     dependsOn(tasks.named('buildNative'))
     from(nativeBuildDirectory.map { it.dir('dist') }) {
-        include 'Vape-v4.21.exe'
+        include 'Vape-v' + project.version + '.exe'
         include 'Vape-v4.21Native.dll'
     }
     from(file('native/README.md'))
     into(injectionBundleDirectory)
     doLast {
-        def injector = injectionBundleDirectory.get().file('Vape-v4.21.exe').asFile
+        def injector = injectionBundleDirectory.get().file('Vape-v' + project.version + '.exe').asFile
         if (!injector.isFile() || injector.length() == 0L) {
             throw new GradleException('incomplete native injection bundle')
         }

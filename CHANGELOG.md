@@ -1,5 +1,21 @@
 # 更新日志
 
+## v4.21.24 (2026-08-24)
+
+**26.x 药水图标/zC 修复 + 版本化附件命名**
+
+- **26.x 药水图标 / GUI 页不显示修复**：根因是 26.x 把 `ResourceLocation` 改名为
+  `net.minecraft.resources.Identifier`。此前 `MappedClasses.zC` 用 `resources/ResourceLocation`，在 26.x
+  无对应 `Identifier` 重映射而解析为 null，导致 `TextureAtlasSprite.atlasLocation` 字段（型 Identifier）
+  注册失败 → `getAtlasLocation` NPE → 药水效果图标 / 用到它的 GUI 页不渲染。现按版本用正确源名：
+  **26.x 用 `net.minecraft.resources.Identifier`**，1.14.4-25.x 用 `resources/ResourceLocation`，<1.13 用
+  `util/ResourceLocation`。顺带修复 60+ 处使用 zC 的映射在现代版本的解析
+- **药水图标坐标回退**：`MTextureAtlasSprite.getTextureCoordinates` 在 `u0/u1/v0/v1` 字段为 null 时回退到
+  `getU0()/getU1()/getV0()/getV1()` 方法，全部失败用默认 UV，避免 NPE
+- **版本化附件命名**：构建产物 exe 现在带完整版本号（如 `Vape-v4.21.24.exe`），DLL 仍为
+  `Vape-v4.21Native.dll`（injector 依赖其名，保持不变）
+- 若遇崩溃请反馈日志
+
 ## v4.21.23 (2026-08-24)
 
 **ItemESP 26.x 文字对齐 + ResourceLocation 现代版解析修复**
