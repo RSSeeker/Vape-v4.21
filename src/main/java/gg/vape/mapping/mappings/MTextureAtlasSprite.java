@@ -3,6 +3,7 @@ package gg.vape.mapping.mappings;
 import gg.vape.mapping.MappedClasses;
 import gg.vape.mapping.Mapping;
 import gg.vape.mapping.MappingField;
+import gg.vape.mapping.MappingMethod;
 import gg.vape.mapping.mappings.MTextureManager;
 import gg.vape.wrapper.impl.ForgeVersion;
 
@@ -16,6 +17,10 @@ extends Mapping {
     private MappingField v1Field;
     private MappingField contentsOrAtlasTextureField;
     private MappingField secondaryPositionField;
+    private MappingMethod getU0Method;
+    private MappingMethod getU1Method;
+    private MappingMethod getV0Method;
+    private MappingMethod getV1Method;
 
     public static void setPrimaryPosition(MTextureAtlasSprite mapping, Object sprite, int position) {
         mapping.setPrimaryPosition(sprite, position);
@@ -119,6 +124,13 @@ extends Mapping {
             String string11 = "atlasLocation";
             MTextureAtlasSprite mTextureAtlasSprite11 = this;
             this.atlasLocationField = this.J(string11, bl11, clazz11);
+            // 1.20.6+ TextureAtlasSprite 提供 getU0()/getU1()/getV0()/getV1() 取坐标，
+            // 比直接读 u0/u1/v0/v1 字段更可靠（字段走 native-mapped-member 在部分
+            // 版本上解析不到）。getTextureCoordinates 在字段为 null 时回退到这些方法。
+            this.getU0Method = this.Y("getU0", true, Float.TYPE);
+            this.getU1Method = this.Y("getU1", true, Float.TYPE);
+            this.getV0Method = this.Y("getV0", true, Float.TYPE);
+            this.getV1Method = this.Y("getV1", true, Float.TYPE);
         } else {
             Class<Integer> clazz12 = Integer.TYPE;
             boolean bl12 = true;
@@ -139,6 +151,15 @@ extends Mapping {
     }
 
     private float[] getTextureCoordinates(Object sprite) {
+        if (this.u0Field == null || this.u1Field == null || this.v0Field == null || this.v1Field == null) {
+            // 1.20.6+：u0/u1/v0/v1 字段走 native-mapped-member 解析不到，回退到
+            // getU0()/getU1()/getV0()/getV1() 方法。全部失败则返回默认 UV，避免 NPE。
+            float u0 = this.getU0Method != null ? this.getU0Method.invokeFloat(sprite) : 0.0f;
+            float u1 = this.getU1Method != null ? this.getU1Method.invokeFloat(sprite) : 1.0f;
+            float v0 = this.getV0Method != null ? this.getV0Method.invokeFloat(sprite) : 1.0f;
+            float v1 = this.getV1Method != null ? this.getV1Method.invokeFloat(sprite) : 0.0f;
+            return new float[]{u0, u1, v0, v1};
+        }
         float[] textureCoordinates = new float[]{this.u0Field.getFloat(sprite), this.u1Field.getFloat(sprite), this.v0Field.getFloat(sprite), this.v1Field.getFloat(sprite)};
         return textureCoordinates;
     }
