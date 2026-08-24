@@ -66,11 +66,9 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 - Custom rounded-corner icon embedded into `Vape-v4.21.exe`
 - Chinese-localized injector console with UTF-8 output
 
-**Engineering & stability (v4.21.20+)**
+**Engineering & stability**
 
-- **Performance fix**: removed per-frame high-frequency log writes on the render thread, fixing the "100+ FPS counter but ~30 perceived FPS" stutter
-- **Removed injection timeout fallback**: no longer falsely reports "injection complete" before frame initialization; when GL is not ready the injection stays "in progress" instead of misleading the user
-- **26.2 graphics backend fix**: 26.2 introduces the Vulkan backend; Vape is OpenGL-based, so switch the graphics API to OpenGL before use (see compatibility notes below)
+- **26.2 graphics backend**: 26.2 introduces the Vulkan backend; Vape is OpenGL-based, so switch the graphics API to OpenGL before use (see compatibility notes below)
 - Render-pipeline adaptation for 1.21.0+ / 26.x (end-of-frame `blitToScreen` hook) so post-processing like Motion Blur works across versions
 - Enhanced runtime detection distinguishing Vanilla / Forge / NeoForge / Fabric, avoiding false matches on older Fabric runtimes (except 1.20.1-Fabric, see the compatibility table)
 - Local configuration persistence: module settings, profiles, friends and frame positions saved to `.vapeclient\config.json`, auto-saved plus shutdown fallback
@@ -99,27 +97,8 @@ Injection into Lunar Client and Badlion Client 1.8.9 instances is also supported
 
 Support for Minecraft 1.16.5 is poor; certain mappings, rendering, and module features may not function properly.
 
-**26.1.2 is supported**:
-
-- Vanilla / Forge / NeoForge / Fabric runtimes
-- Rendering fixes: NameTags on 26.1.2 now face the camera (no longer roll about the
-  entity center) and the text stays aligned with the background box; ItemESP / Tracers
-  and the ESP world-projection render correctly
-- If you hit a crash, please report the log.
-
-**1.21.11 is supported**:
-
-- Vanilla / Forge / Fabric runtimes
-- Rendering fixes: Tracers rays and NameTags on 1.21.11 align under the world
-  projection (rays always line up with the crosshair; nametags face the camera and
-  stay aligned with the background box)
-- If you hit a crash, please report the log.
-
 **1.20.1 and 1.21.1 are experimental adaptations and may have the following issues**:
 
-- Some mapping tasks (mouse click events, entity join events, 3D render events,
-  network packet events, scoreboard rendering) may report an "injection error"
-  notification on 1.20.1 / 1.21.1, which only disables those specific features
 - Some HUD overlays (e.g. the health overlay) may be positioned incorrectly
   (rendered offset, such as at the bottom-right corner)
 - If smooth font initialization fails, rendering falls back to the legacy font,
