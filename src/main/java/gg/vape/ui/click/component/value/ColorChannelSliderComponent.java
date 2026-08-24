@@ -88,9 +88,10 @@ extends SliderComponentBase {
             this.handleHoverAnimation.J();
             this.hovered = false;
         }
-        if (this.colorValue.isRainbowEnabled()) {
-            this.colorValue.advanceRainbowHue();
-        }
+        // Rainbow hue is advanced centrally in ColorValue.getMutableColor() when
+        // a module reads the color (time-throttled), so the settings-page slider
+        // no longer needs to advance it. Removing this avoids the doubled speed
+        // you get when the color settings page is open.
     }
 
     private void updateDraggingValue() {

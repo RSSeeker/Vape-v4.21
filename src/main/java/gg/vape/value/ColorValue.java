@@ -21,6 +21,7 @@ extends Value<Object[], ColorValue> {
     private final NumberValue saturationValue;
     public static final int MAX_CHANNEL_VALUE;
     private final List<Value<?, ?>> componentValues;
+    private long lastRainbowAdvance = 0L;
 
     public float getBrightnessRatio() {
         return ((Double)this.brightnessValue.getValue()).floatValue() / (float)this.brightnessValue.getMaximum();
@@ -85,6 +86,18 @@ extends Value<Object[], ColorValue> {
 
     public MutableColor getMutableColor() {
         this.clampChannelValues();
+        // Rainbow hue is advanced whenever a module reads this color, so the
+        // color keeps cycling whether or not the color settings page is open
+        // (originally it only advanced from the settings-page slider UI). It is
+        // throttled by time so many reads in a single frame don't multiply the
+        // rainbowSpeed; ~20 steps/s matches the previous per-frame advance.
+        if (this.isRainbowEnabled()) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - this.lastRainbowAdvance >= 50L) {
+                this.lastRainbowAdvance = currentTime;
+                this.advanceRainbowHue();
+            }
+        }
         int rgb = Color.HSBtoRGB(this.getHueRatio(), this.getSaturationRatio(), this.getBrightnessRatio());
         MutableColor mutableColor = new MutableColor(rgb);
         mutableColor.withAlpha(((Double)this.alphaValue.getValue()).intValue());
