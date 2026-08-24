@@ -1,5 +1,22 @@
 # 更新日志
 
+## v4.21.23 (2026-08-24)
+
+**ItemESP 26.x 文字对齐 + ResourceLocation 现代版解析修复**
+
+- **ItemESP 26.1.2 名字标签文字对齐修复**：世界空间标注的物品名文字此前相对背景框偏移（box 走世界投影
+  shader 批量、文字走 MC 字体回调，投影不一致）。改为用 Vape 平滑字体（`StbSmoothFontRenderer`）经
+  `BufferedRenderPrimitives.queueWorldBatch` 渲染——与背景框共用同一世界投影，文字与背景对齐；功能与
+  其他版本不受影响
+- **ResourceLocation 现代版解析修复**：`MappedClasses.zC`（ResourceLocation 类）此前写死旧源名
+  `net/minecraft/util/ResourceLocation`，在现代版本（1.20.1 起 mojmap）上是
+  `net/minecraft/resources/ResourceLocation`，导致 zC 解析为 null，进而在
+  `registerStaticField("GUI")` 等处触发 `owner=null` NPE（破坏物品图标/GUI 渲染）。现按版本使用正确源名。
+  顺带修复 60+ 处使用 zC 的映射（getTextureLocation/getSprite/getLocationSkin 等）在现代版本的可能为 null
+- **已知外观问题**：1.21.11 的 Tracers 射线中心相对准星有偏移动（仅外观、功能正常，见 README 兼容性表）；
+  26.1.2 的 ItemESP 文字偏移已修复，不再记录
+- 若遇崩溃请反馈日志
+
 ## v4.21.22 (2026-08-23)
 
 **1.16.5 实验性支持 + NeoForge 1.21.11 注入修复 + 兼容性调整**
