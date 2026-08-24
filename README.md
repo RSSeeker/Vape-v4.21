@@ -14,14 +14,14 @@ Vape 4.21 的 Java 层与 Windows x64 原生桥接层研究性恢复工程，附
 
 | 文件 | 说明 |
 | --- | --- |
-| `Vape-v4.21.exe` | GUI 单文件加载器（内嵌完整 DLL 与 Java 载荷 + 图标） |
+| `Vape-v4.21.25.exe` | GUI 单文件加载器（内嵌完整 DLL 与 Java 载荷 + 图标），文件名随版本号变化（如 `Vape-v4.21.25.exe`） |
 
 **可选外部 DLL**：exe 旁放置 `Vape-v4.21Native.dll` 时**优先加载外部 DLL**（便于自行替换/更新原生层）；无外部 DLL 时自动解压内嵌版本，免附带文件。
 
 **使用方式**：
 
 - 双击运行 → GUI 界面（窗口标题「Vape v4」），直接选择 Minecraft 进程注入，无需登录
-- 命令行注入器：`Vape-v4.21.exe -nogui [pid]` —— 不带 pid 弹出进程选择器，带 pid 直接注入
+- 命令行注入器：`Vape-v4.21.25.exe -nogui [pid]` —— 不带 pid 弹出进程选择器，带 pid 直接注入
 - 注入完成后游戏中按 右Shift（默认）打开功能界面
 
 ## 特性
@@ -118,11 +118,13 @@ Vape 4.21 的 Java 层与 Windows x64 原生桥接层研究性恢复工程，附
 **26.1.2 适配说明**：
 
 - 支持 Vanilla / Forge / NeoForge / Fabric 运行时
+- 渲染修复：26.1.2 的 NameTags 名牌已修复（billboard 面向相机、不再绕中心翻滚，文字与背景框对齐），ItemESP / 射线 / 各 ESP 世界投影正常
 - 若遇崩溃请反馈日志
 
 **1.21.11 适配说明**：
 
 - 支持 Vanilla / Forge / Fabric 运行时
+- 渲染修复：Tracers 射线、NameTags 名牌在 1.21.11 上已修复世界投影下的对齐（射线始终对准准星、名牌面向相机并与背景框对齐）
 - 若遇崩溃请反馈日志
 
 **26.2 为实验性适配，可能存在以下问题**：
@@ -203,10 +205,10 @@ VapeService 在游戏内自动启动，默认监听 `127.0.0.1:8080`（HTTP）�
   -PnativeJavaHome="C:\Program Files\Java\jdk1.8.0_301"
 ```
 
-完整测试包输出到 `build/injection/`：
+完整测试包输出到 `build/injection/`（文件名随项目版本号变化，如 `Vape-v4.21.25.exe`）：
 
 ```text
-Vape-v4.21.exe   GUI 单文件加载器（内嵌 DLL 与全部资源）
+Vape-v4.21.25.exe   GUI 单文件加载器（内嵌 DLL 与全部资源）
 README.md
 ```
 

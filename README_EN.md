@@ -14,14 +14,14 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 
 | File | Description |
 | --- | --- |
-| `Vape-v4.21.exe` | GUI single-file loader (embeds the complete DLL, Java payload and icon) |
+| `Vape-v4.21.25.exe` | GUI single-file loader (embeds the complete DLL, Java payload and icon); filename varies with the version (e.g. `Vape-v4.21.25.exe`) |
 
 **Optional external DLL**: if `Vape-v4.21Native.dll` sits next to the exe, it is loaded preferentially (handy for replacing/updating the native layer yourself); otherwise the embedded copy is extracted, so no extra files are required.
 
 **Usage**:
 
 - Double-click to run the GUI (window title "Vape v4"): pick a Minecraft process and inject directly, no login needed
-- Command-line injector: `Vape-v4.21.exe -nogui [pid]` — without a pid it opens the process picker; with a pid it injects directly
+- Command-line injector: `Vape-v4.21.25.exe -nogui [pid]` — without a pid it opens the process picker; with a pid it injects directly
 - After injection, press RIGHT SHIFT (default) in-game to open the module GUI
 
 ## Features
@@ -88,16 +88,32 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 | 1.7.10 | ✓ | ✓ | - |
 | 1.8.9 | ✓ | ✓ | - |
 | 1.12.2 | ✓ | ✓ | - |
-| 1.16.5 | | | |
+| 1.16.5 | △ Experimental | - | - |
 | 1.20.1 | △ Experimental | △ Experimental | - |
 | 1.21.1 | △ Experimental | △ Experimental | - |
 | 1.21.11 | ✓ | ✓ | ✓ |
 | 26.1.2 | ✓ | ✓ | ✓ |
-| 26.2 | ✓ | ✓ | ✓ |
+| 26.2 | △ Experimental | △ Experimental | △ Experimental |
 
 Injection into Lunar Client and Badlion Client 1.8.9 instances is also supported.
 
 Support for Minecraft 1.16.5 is poor; certain mappings, rendering, and module features may not function properly.
+
+**26.1.2 is supported**:
+
+- Vanilla / Forge / NeoForge / Fabric runtimes
+- Rendering fixes: NameTags on 26.1.2 now face the camera (no longer roll about the
+  entity center) and the text stays aligned with the background box; ItemESP / Tracers
+  and the ESP world-projection render correctly
+- If you hit a crash, please report the log.
+
+**1.21.11 is supported**:
+
+- Vanilla / Forge / Fabric runtimes
+- Rendering fixes: Tracers rays and NameTags on 1.21.11 align under the world
+  projection (rays always line up with the crosshair; nametags face the camera and
+  stay aligned with the background box)
+- If you hit a crash, please report the log.
 
 **1.20.1 and 1.21.1 are experimental adaptations and may have the following issues**:
 
@@ -110,7 +126,7 @@ Support for Minecraft 1.16.5 is poor; certain mappings, rendering, and module fe
   which can occasionally cause black edges around the GUI
 - If you hit a crash, please report the log.
 
-**26.1.2 / 26.2 are experimental adaptations and may have the following issues**:
+**26.2 is an experimental adaptation and may have the following issues**:
 
 - The first notification after injection ("Press RSHIFT to open GUI") may render
   as boxes until the ClickGUI is opened (the Minecraft font bridge is not fully
@@ -192,10 +208,10 @@ Main Java artifacts are located in `build/libs/`. To generate IntelliJ IDEA proj
   -PnativeJavaHome="C:\Program Files\Java\jdk1.8.0_301"
 ```
 
-The complete test bundle outputs to `build/injection/`:
+The complete test bundle outputs to `build/injection/` (the filename varies with the project version, e.g. `Vape-v4.21.25.exe`):
 
 ```text
-Vape-v4.21.exe   GUI single-file loader (embeds the DLL and all resources)
+Vape-v4.21.25.exe   GUI single-file loader (embeds the DLL and all resources)
 README.md
 ```
 
