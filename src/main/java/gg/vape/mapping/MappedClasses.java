@@ -721,7 +721,12 @@ public class MappedClasses {
         Dt = MappedClasses.m("net/minecraft/client/renderer/texture/TextureManager");
         qY = MappedClasses.m("net/minecraft/client/resources/IResourceManager");
         ll = MappedClasses.m("net/minecraft/client/shader/Framebuffer");
-        zC = MappedClasses.m("net/minecraft/util/ResourceLocation");
+        // ResourceLocation 在 1.13 被重命名 util->resources，需按版本用源名，
+        // 否则现代版本（1.20.1 等 mojmap）zC 解析为 null，registerStaticField("GUI")
+        // 等会 NPE（owner=null），破坏物品图标/GUI 渲染。
+        zC = ForgeVersion.MC_1_14_4.d()
+                ? MappedClasses.m("net/minecraft/resources/ResourceLocation")
+                : MappedClasses.m("net/minecraft/util/ResourceLocation");
         Fo = MappedClasses.m("net/minecraft/client/shader/ShaderGroup");
         BLOCKS = MappedClasses.m("net/minecraft/init/Blocks");
         qa = MappedClasses.m("net/minecraft/block/BlockGrass");
