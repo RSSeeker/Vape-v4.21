@@ -246,14 +246,13 @@ extends Wrapper {
     }
 
     public int h(String string, double d, double d2, int n, boolean bl, RenderMatrix4f renderMatrix4f, SharedMonsterAttributes sharedMonsterAttributes) {
-        // drawInBatch (used for the world-space text of 1.21.10-1.25.x) reads
+        // drawInBatch (used for world-space text on older versions) reads
         // Minecraft's own RenderSystem projection/model-view, which do NOT carry
-        // the batch's viewRotation. That leaves a world-space billboard's
-        // inverse-camera rotation uncancelled, so the text drifts except when
-        // facing -Z. For those versions render the glyphs through Vape's
-        // world-batch glyph path (same u_Projection/u_View/u_Model as the
-        // surrounding billboard box) so text and box stay aligned at every
-        // facing direction. Older versions keep the vanilla drawInBatch path.
+        // the world batch's viewRotation, causing world-space billboard text to
+        // drift/roll. Route the glyphs through Vape's world-batch glyph path
+        // (same u_Projection/u_View/u_Model as the surrounding billboard box) so
+        // text and box stay aligned at every facing direction on every modern
+        // version (1.21.10+, incl. 26.x), matching ItemESP's approach.
         if (ForgeVersion.MC_1_21_10.d() || ForgeVersion.MC_26_2.d()) {
             SmoothFontRenderer smoothFontRenderer = Vape.INSTANCE.getFontManager().p(1.0);
             if (smoothFontRenderer instanceof StbSmoothFontRenderer) {

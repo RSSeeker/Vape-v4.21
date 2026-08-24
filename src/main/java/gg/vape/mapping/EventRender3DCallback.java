@@ -40,7 +40,7 @@ implements InsertedEventCallback {
         // tracers) instead of the translated fallback (which only matched -Z).
         // Gated to 1.21.10+, the versions that use the modelViewMatrix branch;
         // older versions are left untouched.
-        if (ForgeVersion.MC_1_21_10.d() && this.modelViewObject != null) {
+        if (ForgeVersion.MC_1_21_10.d() && !ForgeVersion.MC_26_1.d() && this.modelViewObject != null) {
             LocalPlayerRotationUtil.setModelViewMatrix(this.modelViewObject);
         }
         boolean bl = EventRender3D.getEventListeners().hasListeners() || EventRenderTracers3D.getEventListeners().hasListeners();
@@ -57,7 +57,7 @@ implements InsertedEventCallback {
             // The tracers pass re-renders the world and drains world batches
             // (tracers lines), so re-inject the pure-rotation modelViewMatrix so
             // updateProjectionMatrix uses the correct branch for that pass.
-            if (ForgeVersion.MC_1_21_10.d() && this.modelViewObject != null) {
+            if (ForgeVersion.MC_1_21_10.d() && !ForgeVersion.MC_26_1.d() && this.modelViewObject != null) {
                 LocalPlayerRotationUtil.setModelViewMatrix(this.modelViewObject);
             }
             if (ForgeVersion.MC_1_16_5.d()) {
@@ -94,7 +94,6 @@ implements InsertedEventCallback {
         if (ForgeVersion.MC_26_1.d()) {
             this.y = MatrixStack.A();
             this.y.i(new Matrix4f(object));
-            LocalPlayerRotationUtil.setModelViewMatrix(object);
         } else if (ForgeVersion.MC_1_21_10.d()) {
             this.y = MatrixStack.A();
             this.y.i(new Matrix4f(object));

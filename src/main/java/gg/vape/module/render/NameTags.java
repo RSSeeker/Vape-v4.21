@@ -544,12 +544,15 @@ extends Mod {
         float f = FreeLookHudModule.isActive() ? FreeLookHudModule.getRenderPitch() : eventRender3D.getRenderManager().getPlayerViewX();
         float f2 = FreeLookHudModule.isActive() ? FreeLookHudModule.getRenderYaw() : eventRender3D.getRenderManager().getPlayerViewY();
         GuiRenderPrimitives.U = true;
-        // The world batches queued below (name tag background box) and the
-        // billboard text are positioned by the world projection. Rebuild it with
-        // the real camera matrices right now (instead of relying on the flush
-        // cleanup state), identical to how Search/mineral-border renders, so the
-        // name tags stay aligned at every facing direction.
-        LocalPlayerRotationUtil.updateProjectionMatrix(eventRender3D.getTicks());
+        // Rebuild the world projection with the real camera matrices right now
+        // (instead of relying on the flush cleanup state), so world-batch name
+        // tags align at every facing direction. 26.x uses a baked camera
+        // projection (identity viewRotation) and its own billboard path, so this
+        // rebuild is only needed for 1.21.10-25.x; skipping it on 26.x avoids
+        // disturbing the projection the NameTags billboard relies on.
+        if (ForgeVersion.MC_1_21_10.d() && !ForgeVersion.MC_26_1.d()) {
+            LocalPlayerRotationUtil.updateProjectionMatrix(eventRender3D.getTicks());
+        }
         for (OnlineRadarPreviewState onlineRadarPreviewState : arrayList) {
             EntityLivingBase entityLivingBase = (EntityLivingBase)onlineRadarPreviewState.getKey();
             RenderEntityContext renderEntityContext = (RenderEntityContext)onlineRadarPreviewState.getValue();
@@ -560,7 +563,7 @@ extends Mod {
             double d11 = d8 + (entityLivingBase.N() - d8) * (double)eventRender3D.getTicks() - d2;
             double d12 = d9 + (entityLivingBase.h() - d9) * (double)eventRender3D.getTicks() - d3;
             float f3 = (float)RotationUtil.y(d10, d11, d12, d4, d5, d6);
-            OpenGlBackendHolder.backend.pushMatrix();
+            RenderUtil.d();
             try {
                 if (entityLivingBase.isInstance(MappedClasses.Yl) && this.renderPlayers.getEffectiveValue().booleanValue()) {
                     this.renderNameTag(eventRender3D.getRenderManager(), eventRender3D.getEntityRenderer(), eventRender3D.getFontRenderer(), entityPlayerSP, f, f2, gameSettings, entityLivingBase, renderEntityContext, d10, d11, d12, f3, this.playersHealth.getEffectiveValue(), this.playersDistance.getEffectiveValue(), this.equipment.getEffectiveValue(), this.strengthIndicator.getEffectiveValue(), this.playersEffects.getEffectiveValue(), eventRender3D.getMatrixStack());
@@ -573,7 +576,7 @@ extends Mod {
             catch (Exception exception) {
                 // empty catch block
             }
-            OpenGlBackendHolder.backend.popMatrix();
+            RenderUtil.Y();
         }
         if (bl) {
             GlStateManager.L();
