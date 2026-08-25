@@ -87,80 +87,98 @@ implements PotionEffectIconRenderBackend {
 
     @Override
     public void capture(PotionEffect effect) {
-        RenderBatchManager.getInstance().flushGuiBatches(0.0f);
         int iconWidth = 18;
         int iconHeight = 18;
+        // Resolve and guard the sprite, its texture and its texture coordinates
+        // BEFORE mutating any GL or shared-batch state. On 1.21.11 these can be
+        // null; resolving them here lets a missing effect return cleanly without
+        // touching the framebuffer/viewport/scissor/matrix the render path uses.
+        // This capture runs in the middle of the HUD/GUI pass, so an early return
+        // must not leave the shared BufferedGuiRenderPrimitives matrices changed.
+        TextureAtlasSprite effectSprite = this.resolveEffectSprite(effect);
+        if (effectSprite == null) {
+            return;
+        }
+        TextureObject texture = PotionEffectIconTexture.getSpriteTexture(effectSprite);
+        float[] textureCoordinates = effectSprite.getTextureCoordinates();
+        int textureId = texture != null ? texture.getId() : -1;
+        if (texture == null || textureId <= 0 || textureCoordinates == null || textureCoordinates.length < 4) {
+            return;
+        }
+        // Save the caller's shared GUI matrices before any flush/draw. Both
+        // flushGuiBatches calls below would otherwise clobber projectionMatrix to
+        // the world projection, which the GUI batch renderer reads at draw time:
+        // that is exactly the legit-mode "设置页集体偏移" (settings page offset),
+        // the truncated potion text and the mis-positioned 2D box. Mirror the
+        // save/restore in Post117EntityModelFramebufferRenderer.
+        RenderMatrix4f previousProjectionMatrix = BufferedGuiRenderPrimitives.projectionMatrix;
+        RenderMatrix4f previousViewMatrix = BufferedGuiRenderPrimitives.viewMatrix;
+        RenderMatrixStack previousMatrixStack = BufferedGuiRenderPrimitives.matrixStack;
+        RenderBatchManager batchManager = RenderBatchManager.getInstance();
+        // Flush any pending GUI batches WITHOUT resetting the shared projection so
+        // the caller's GUI matrices survive the flush untouched.
+        batchManager.flushGuiBatches(0.0f, false);
         int previousFramebufferId = GL11.glGetInteger((int)36006);
         int previousTextureId = GL11.glGetInteger((int)32873);
         boolean scissorEnabled = GL11.glIsEnabled((int)3089);
-        if (scissorEnabled) {
-            GL11.glDisable((int)3089);
-            ByteBuffer viewportBytes = ByteBuffer.allocateDirect(64);
-            viewportBytes.order(ByteOrder.nativeOrder());
-            IntBuffer viewport = viewportBytes.asIntBuffer();
-            gg.vape.wrapper.impl.GL11.X(2978, viewport);
-            this.framebuffer = new GlFramebuffer(iconWidth, iconHeight, true);
-            this.framebuffer.bind(true);
+        ByteBuffer viewportBytes = ByteBuffer.allocateDirect(64);
+        viewportBytes.order(ByteOrder.nativeOrder());
+        IntBuffer viewport = viewportBytes.asIntBuffer();
+        gg.vape.wrapper.impl.GL11.X(2978, viewport);
+        GlScissorRect previousScissorRect = BufferedGuiRenderPrimitives.scissorRect;
+        GlFramebuffer createdFramebuffer = null;
+        boolean matrixPushed = false;
+        boolean framebufferOverrideSet = false;
+        boolean completed = false;
+        try {
+            if (scissorEnabled) {
+                GL11.glDisable((int)3089);
+            }
+            createdFramebuffer = new GlFramebuffer(iconWidth, iconHeight, true);
+            this.framebuffer = createdFramebuffer;
+            createdFramebuffer.bind(true);
             GlStateManager.enableDepth();
             GlStateManager.enableBlend();
             GL11.glClearColor((float)0.0f, (float)0.0f, (float)0.0f, (float)0.0f);
             GL11.glClear((int)16384);
             GL11.glClear((int)256);
             OpenGlBackendHolder.backend.pushMatrix();
+            matrixPushed = true;
             OpenGlBackendHolder.backend.translate(0.0, -2.0, 0.0);
             OpenGlBackendHolder.backend.scale((double)Minecraft.J() / (double)((float)iconWidth * 2.0f), (double)Minecraft.h() / (double)((float)iconWidth * 2.0f), 0.0);
-            TextureAtlasSprite sprite = this.resolveEffectSprite(effect);
-            TextureObject texture = PotionEffectIconTexture.getSpriteTexture(sprite);
-            float[] textureCoordinates = sprite.getTextureCoordinates();
-            GlScissorRect previousScissorRect = BufferedGuiRenderPrimitives.scissorRect;
             BufferedGuiRenderPrimitives.scissorRect = null;
-            RenderBatchBuilder batchBuilder = new RenderBatchBuilder().setTexture(new GlImageTexture(texture.getId())).addTexturedRect(0.0f, -1.0f, iconWidth, iconHeight, iconWidth, iconHeight, textureCoordinates[0], textureCoordinates[2], textureCoordinates[1], textureCoordinates[3], Color.WHITE);
-            RenderBatchManager batchManager = RenderBatchManager.getInstance();
+            RenderBatchBuilder batchBuilder = new RenderBatchBuilder().setTexture(new GlImageTexture(textureId)).addTexturedRect(0.0f, -1.0f, iconWidth, iconHeight, iconWidth, iconHeight, textureCoordinates[0], textureCoordinates[2], textureCoordinates[1], textureCoordinates[3], Color.WHITE);
             batchManager.queueGuiBatch(batchBuilder);
-            batchManager.setFramebufferOverride(this.framebuffer.framebufferId);
-            batchManager.flushGuiBatches(0.0f);
-            batchManager.restoreFramebufferOverride();
+            batchManager.setFramebufferOverride(createdFramebuffer.framebufferId);
+            framebufferOverrideSet = true;
+            batchManager.flushGuiBatches(0.0f, false);
+            createdFramebuffer.bindColorTexture();
+            completed = true;
+        }
+        finally {
             BufferedGuiRenderPrimitives.scissorRect = previousScissorRect;
-            this.framebuffer.bindColorTexture();
-            this.framebuffer.unbind();
-            GL11.glViewport((int)viewport.get(0), (int)viewport.get(1), (int)viewport.get(2), (int)viewport.get(3));
+            if (scissorEnabled) {
+                GL11.glEnable((int)3089);
+            }
+            if (framebufferOverrideSet) {
+                batchManager.restoreFramebufferOverride();
+            }
             GL30.glBindFramebuffer((int)36160, (int)previousFramebufferId);
             GlStateManager.bindTexture(previousTextureId);
-            GL11.glEnable((int)3089);
-            OpenGlBackendHolder.backend.popMatrix();
-            return;
+            GL11.glViewport((int)viewport.get(0), (int)viewport.get(1), (int)viewport.get(2), (int)viewport.get(3));
+            if (matrixPushed) {
+                OpenGlBackendHolder.backend.popMatrix();
+            }
+            if (!completed && createdFramebuffer != null) {
+                createdFramebuffer.delete();
+                this.framebuffer = null;
+            }
+            // Restore the caller's shared GUI matrices so the rest of the GUI
+            // (settings page, subsequent HUD text/elements) renders correctly and
+            // is not left under the world projection.
+            BufferedGuiRenderPrimitives.projectionMatrix = previousProjectionMatrix;
+            BufferedGuiRenderPrimitives.viewMatrix = previousViewMatrix;
+            BufferedGuiRenderPrimitives.matrixStack = previousMatrixStack;
         }
-        ByteBuffer viewportBytes = ByteBuffer.allocateDirect(64);
-        viewportBytes.order(ByteOrder.nativeOrder());
-        IntBuffer viewport = viewportBytes.asIntBuffer();
-        gg.vape.wrapper.impl.GL11.X(2978, viewport);
-        this.framebuffer = new GlFramebuffer(iconWidth, iconHeight, true);
-        this.framebuffer.bind(true);
-        GlStateManager.enableDepth();
-        GlStateManager.enableBlend();
-        GL11.glClearColor((float)0.0f, (float)0.0f, (float)0.0f, (float)0.0f);
-        GL11.glClear((int)16384);
-        GL11.glClear((int)256);
-        OpenGlBackendHolder.backend.pushMatrix();
-        OpenGlBackendHolder.backend.translate(0.0, -2.0, 0.0);
-        OpenGlBackendHolder.backend.scale((double)Minecraft.J() / (double)((float)iconWidth * 2.0f), (double)Minecraft.h() / (double)((float)iconWidth * 2.0f), 0.0);
-        TextureAtlasSprite sprite = this.resolveEffectSprite(effect);
-        TextureObject texture = PotionEffectIconTexture.getSpriteTexture(sprite);
-        float[] textureCoordinates = sprite.getTextureCoordinates();
-        GlScissorRect previousScissorRect = BufferedGuiRenderPrimitives.scissorRect;
-        BufferedGuiRenderPrimitives.scissorRect = null;
-        RenderBatchBuilder batchBuilder = new RenderBatchBuilder().setTexture(new GlImageTexture(texture.getId())).addTexturedRect(0.0f, -1.0f, iconWidth, iconHeight, iconWidth, iconHeight, textureCoordinates[0], textureCoordinates[2], textureCoordinates[1], textureCoordinates[3], Color.WHITE);
-        RenderBatchManager batchManager = RenderBatchManager.getInstance();
-        batchManager.queueGuiBatch(batchBuilder);
-        batchManager.setFramebufferOverride(this.framebuffer.framebufferId);
-        batchManager.flushGuiBatches(0.0f);
-        batchManager.restoreFramebufferOverride();
-        BufferedGuiRenderPrimitives.scissorRect = previousScissorRect;
-        this.framebuffer.bindColorTexture();
-        this.framebuffer.unbind();
-        GL11.glViewport((int)viewport.get(0), (int)viewport.get(1), (int)viewport.get(2), (int)viewport.get(3));
-        GL30.glBindFramebuffer((int)36160, (int)previousFramebufferId);
-        GlStateManager.bindTexture(previousTextureId);
-        OpenGlBackendHolder.backend.popMatrix();
     }
 }

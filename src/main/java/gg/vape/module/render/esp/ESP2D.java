@@ -4,6 +4,7 @@ import gg.vape.Vape;
 import gg.vape.event.EventHandler;
 import gg.vape.event.impl.EventPreRenderLiving;
 import gg.vape.event.impl.EventRender2D;
+import gg.vape.event.impl.EventRender3D;
 import gg.vape.friend.FriendEntry;
 import gg.vape.mapping.MappedClasses;
 import gg.vape.module.Mod;
@@ -13,6 +14,7 @@ import gg.vape.module.render.entity.ProjectedEntityBounds;
 import gg.vape.module.render.entity.RenderEntityContext;
 import gg.vape.module.render.entity.RenderEntityContextCache;
 import gg.vape.render.OffscreenRenderContext;
+import gg.vape.rotation.LocalPlayerRotationUtil;
 import gg.vape.ui.font.SmoothFontRenderer;
 import gg.vape.utils.MutableColor;
 import gg.vape.utils.render.BufferedGuiRenderPrimitives;
@@ -24,6 +26,7 @@ import gg.vape.wrapper.impl.AxisAlignedBB;
 import gg.vape.wrapper.impl.Entity;
 import gg.vape.wrapper.impl.EntityLivingBase;
 import gg.vape.wrapper.impl.GlStateManager;
+import gg.vape.wrapper.impl.RenderManager;
 import gg.vape.wrapper.impl.RenderWorldLastEvent;
 import java.awt.Color;
 import java.util.ArrayList;
@@ -215,28 +218,59 @@ extends SubModule<ESP> {
         if (event.getWorld().isNull()) {
             return;
         }
-        Entity entity = event.getEntity();
-        double renderX = event.getX();
-        double renderY = event.getY();
-        double renderZ = event.getZ();
-        MutableColor color = this.parentEsp.resolveEntityColor(event.getThePlayer(), entity.getObject());
-        if (color == null) {
+        // Only cancel the vanilla name tag here for entities that ESP will re-draw
+        // a name for. Bounds building and the world projection moved to onRender3D:
+        // in onPreRenderLiving the modelViewMatrix is null, so updateProjectionMatrix
+        // falls back to the identity/bare projection (the box that "only aligns in
+        // one direction" symptom), and calling it per-entity was the FPS lag.
+        if (!this.parentEsp.showName.getEffectiveValue().booleanValue()) {
             return;
         }
-        EntityLivingBase entityLivingBase = new EntityLivingBase(entity.getObject());
-        RenderUtil.d();
-        float expansion = entity.b();
-        AxisAlignedBB worldBounds = entity.R$src$Lgg_vape_wrapper_impl_AxisAlignedBB_$r19dfl().expand(expansion, expansion, expansion);
-        AxisAlignedBB relativeBounds = AxisAlignedBB.create(worldBounds.getMinX() - entity.z(), worldBounds.getMinY() - entity.N(), worldBounds.getMinZ() - entity.h(), worldBounds.getMaxX() - entity.z(), worldBounds.getMaxY() - entity.N(), worldBounds.getMaxZ() - entity.h());
-        RenderEntityContext renderEntityContext = RenderEntityContextCache.getOrCreate(entityLivingBase, event.getThePlayer());
-        ProjectedEntityBounds projectedEntityBounds = new ProjectedEntityBounds(renderX, renderY, renderZ, relativeBounds, entity, renderEntityContext, color);
-        if (projectedEntityBounds.onScreen) {
-            this.pendingBounds.add(projectedEntityBounds);
-            if (this.parentEsp.showName.getEffectiveValue().booleanValue()) {
-                event.setCancelled(true);
+        MutableColor color = this.parentEsp.resolveEntityColor(event.getThePlayer(), event.getEntity().getObject());
+        if (color != null) {
+            event.setCancelled(true);
+        }
+    }
+
+
+    @EventHandler
+    public void onRender3D(EventRender3D event) {
+        // Build the world projection here, once per frame, where the modelViewMatrix
+        // is correctly set (or the 26.x camera path is available). onPreRenderLiving
+        // runs per-entity with a null modelViewMatrix, which made updateProjectionMatrix
+        // fall back to a bare/identity view rotation -> the 2D box stayed at a fixed
+        // screen spot, only aligned in one direction and did not track the camera.
+        // Setting it once here also removes the per-entity projection cost (the lag).
+        this.pendingBounds.clear();
+        if (event.getWorld().isNull()) {
+            return;
+        }
+        LocalPlayerRotationUtil.updateProjectionMatrix(event.getTicks());
+        double cameraX = RenderManager.getInterpolatedRenderPosX();
+        double cameraY = RenderManager.getInterpolatedRenderPosY();
+        double cameraZ = RenderManager.getInterpolatedRenderPosZ();
+        for (Object entityHandle : event.getWorld().z()) {
+            MutableColor color = this.parentEsp.resolveEntityColor(event.getThePlayer(), entityHandle);
+            if (color == null) {
+                continue;
+            }
+            Entity entity = new Entity(entityHandle);
+            EntityLivingBase entityLivingBase = new EntityLivingBase(entity.getObject());
+            double previousX = entity.M();
+            double previousY = entity.W();
+            double previousZ = entity.m$src$D$fwnne5();
+            double renderX = previousX + (entity.z() - previousX) * (double)event.getTicks() - cameraX;
+            double renderY = previousY + (entity.N() - previousY) * (double)event.getTicks() - cameraY;
+            double renderZ = previousZ + (entity.h() - previousZ) * (double)event.getTicks() - cameraZ;
+            float expansion = entity.b();
+            AxisAlignedBB worldBounds = entity.R$src$Lgg_vape_wrapper_impl_AxisAlignedBB_$r19dfl().expand(expansion, expansion, expansion);
+            AxisAlignedBB relativeBounds = AxisAlignedBB.create(worldBounds.getMinX() - entity.z(), worldBounds.getMinY() - entity.N(), worldBounds.getMinZ() - entity.h(), worldBounds.getMaxX() - entity.z(), worldBounds.getMaxY() - entity.N(), worldBounds.getMaxZ() - entity.h());
+            RenderEntityContext renderEntityContext = RenderEntityContextCache.getOrCreate(entityLivingBase, event.getThePlayer());
+            ProjectedEntityBounds projectedEntityBounds = new ProjectedEntityBounds(renderX, renderY, renderZ, relativeBounds, entity, renderEntityContext, color);
+            if (projectedEntityBounds.onScreen) {
+                this.pendingBounds.add(projectedEntityBounds);
             }
         }
-        RenderUtil.Y();
     }
 
     public ESP2D(Mod parent, String name) {

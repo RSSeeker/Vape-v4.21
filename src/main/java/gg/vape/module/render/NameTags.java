@@ -131,10 +131,11 @@ extends Mod {
     private void renderEquipment(RenderManager renderManager, EntityRenderer entityRenderer, FontRenderer fontRenderer, EntityLivingBase entityLivingBase, float f, float f2, RenderEntityContext renderEntityContext, double d, MatrixStack matrixStack, @Nullable ItemStack itemStack, @Nullable ItemStack itemStack2, @Nullable ArrayList<ItemStack> arrayList) {
         double d2 = 1.1;
         double d3 = 1.0 / d2;
-        if (ForgeVersion.MC_1_16_5.d()) {
-            OpenGlBackendHolder.backend.rotate(f + 180.0f, 0.0f, -1.0f, 0.0f);
-            OpenGlBackendHolder.backend.rotate(f2, -1.0f, 0.0f, 0.0f);
-        }
+        // The equipment icons must inherit the outer billboard transform (built
+        // above) so they face the camera at every yaw/pitch. These extra rotations
+        // were the leftover conjugate of the removed RenderUtil.f baseline; on
+        // 1.21.10-25.x they no longer cancel anything and rotate the icon out of
+        // the camera-facing plane, so drop them.
         OpenGlBackendHolder.backend.scale(d2, d2, d2);
         boolean bl = ForgeVersion.MC_1_21_10.v();
         if (bl) {
