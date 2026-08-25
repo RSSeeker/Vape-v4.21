@@ -48,10 +48,20 @@ extends SubModule<ESP> {
         if (OffscreenRenderContext.isRenderingOffscreen()) {
             return;
         }
-        // The 2D ESP box is now drawn in the world phase (onRender3D) so it renders
-        // BELOW the game's own HUD. Drawing it here would queue into the deferred
-        // guiBatches list, which is only flushed at end-of-frame (EventPostRenderTick)
-        // — i.e. after the vanilla HUD render — pushing the box on top of the HUD.
+        // Batch path (MC >= 1.16.5, GuiRenderPrimitives.d()==true): the box is drawn in
+        // the world phase (onRender3D) so it sits BELOW the game HUD; drawing here would
+        // queue into the deferred guiBatches list (flushed at end-of-frame ON TOP of the
+        // HUD). Legacy path (pre-1.17, d()==false): onRender3D fills pendingBounds but does
+        // NOT draw the box (the gate is d()), so fall back to the legacy immediate-mode draw
+        // here so the box does not vanish on those versions.
+        if (GuiRenderPrimitives.d()) {
+            return;
+        }
+        if (this.pendingBounds.isEmpty()) {
+            return;
+        }
+        this.drawPendingBounds(Minecraft.h());
+        this.pendingBounds.clear();
     }
 
     private void drawPendingBounds(float displayHeight) {
@@ -305,8 +315,8 @@ extends SubModule<ESP> {
             BufferedGuiRenderPrimitives.projectionMatrix = savedProjection;
             BufferedGuiRenderPrimitives.viewMatrix = savedView;
             BufferedGuiRenderPrimitives.matrixStack = savedMatrixStack;
+            this.pendingBounds.clear();
         }
-        this.pendingBounds.clear();
     }
 
     public ESP2D(Mod parent, String name) {

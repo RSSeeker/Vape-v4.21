@@ -81,8 +81,13 @@ implements PotionEffectIconRenderBackend {
 
     @Override
     public void dispose() {
-        this.framebuffer.delete();
-        this.framebuffer = null;
+        // A capture can leave framebuffer null (sprite/texture not resolvable, or
+        // capture threw after allocating). With always-cache-on-failure such a
+        // renderer is now placed in the cache, so clear() -> dispose() must not NPE.
+        if (this.framebuffer != null) {
+            this.framebuffer.delete();
+            this.framebuffer = null;
+        }
     }
 
     @Override
