@@ -268,6 +268,15 @@ extends SubModule<ESP> {
         double cameraX = RenderManager.getInterpolatedRenderPosX();
         double cameraY = RenderManager.getInterpolatedRenderPosY();
         double cameraZ = RenderManager.getInterpolatedRenderPosZ();
+        // 26.x camera baseline: 26.x never injects modelViewMatrix into LocalPlayerRotationUtil,
+        // so the shared projection (set above) is the bare/identity one with NO camera rotation.
+        // ProjectedEntityBounds -> RenderUtil.W() would therefore stay fixed in one view direction.
+        // Mirror ESP3D / ItemESP / NameTags: push the camera baseline into the MODEL matrix via
+        // RenderUtil.d() so W() (matrixStack.peek() -> view -> projection) tracks the view.
+        // RenderUtil.p() (called by d()) injects the camera yaw/pitch on 26.x and is a NO-OP on
+        // 1.21.10-25.x, so 1.21.11 behavior is unchanged; RenderUtil.Y() pops it back afterwards.
+        RenderUtil.d();
+        try {
         for (Object entityHandle : event.getWorld().z()) {
             MutableColor color = this.parentEsp.resolveEntityColor(event.getThePlayer(), entityHandle);
             if (color == null) {
@@ -289,6 +298,9 @@ extends SubModule<ESP> {
             if (projectedEntityBounds.onScreen) {
                 this.pendingBounds.add(projectedEntityBounds);
             }
+        }
+        } finally {
+            RenderUtil.Y();
         }
         if (GuiRenderPrimitives.d() && !this.pendingBounds.isEmpty() && !OffscreenRenderContext.isRenderingOffscreen()) {
             // Draw + flush the box in the WORLD phase (before the vanilla HUD renders) so it

@@ -132,17 +132,12 @@ extends Mod {
         double d2 = 1.1;
         double d3 = 1.0 / d2;
         // The equipment icons must inherit the outer billboard transform (built above)
-        // so they face the camera at every yaw/pitch. RenderUtil.f is applied per-nametag
-        // as a camera baseline (via RenderUtil.d()/p()); on 1.21.10-25.x (MC_1_21_10.d() &&
-        // !MC_26_1.d()) p() early-returns so that baseline is a NO-OP, and the two rotations
-        // below — being its exact inverse — would rotate the icon out of the camera plane, so
-        // they must NOT be applied there (that is the 1.21.x fix). On 1.16.5 / 1.20.x / 26.x
-        // the baseline IS active, so re-apply its inverse to keep the icons camera-facing.
-        // This mirrors the baseline-activation condition in RenderUtil.p() so the two never drift.
-        if (ForgeVersion.MC_1_16_5.d() && !(ForgeVersion.MC_1_21_10.d() && !ForgeVersion.MC_26_1.d())) {
-            OpenGlBackendHolder.backend.rotate(f + 180.0f, 0.0f, -1.0f, 0.0f);
-            OpenGlBackendHolder.backend.rotate(f2, -1.0f, 0.0f, 0.0f);
-        }
+        // so they face the camera at every yaw/pitch. The two rotations below were the
+        // leftover conjugate of the RenderUtil.f baseline and must NOT be applied on ANY
+        // version: on 1.21.10-25.x the baseline is a no-op (so they'd rotate the icon out
+        // of the camera plane), and on 1.16.5/1.20.x/26.x the billboard already carries the
+        // camera baseline (RenderUtil.d()/Y()), so re-applying them double-rotates and the
+        // equipment icon stops facing the camera (confirmed broken on 26.1.2). Drop them.
         OpenGlBackendHolder.backend.scale(d2, d2, d2);
         boolean bl = ForgeVersion.MC_1_21_10.v();
         if (bl) {
