@@ -86,12 +86,12 @@ A research-oriented recovery project for the Vape 4.21 Java layer and Windows x6
 | 1.7.10 | ✓ | ✓ | - |
 | 1.8.9 | ✓ | ✓ | - |
 | 1.12.2 | ✓ | ✓ | - |
-| 1.16.5 | △ Experimental | - | - |
-| 1.20.1 | △ Experimental | △ Experimental | - |
-| 1.21.1 | △ Experimental | △ Experimental | - |
+| 1.16.5 | ✓ | - | - |
+| 1.20.1 | ✓ | ✓ | - |
+| 1.21.1 | ✓ | ✓ | - |
 | 1.21.11 | ✓ | ✓ | ✓ |
 | 26.1.2 | ✓ | ✓ | ✓ |
-| 26.2 | △ Experimental | △ Experimental | △ Experimental |
+| 26.2 | ✓ | ✓ | ✓ |
 
 Injection into Lunar Client and Badlion Client 1.8.9 instances is also supported.
 
