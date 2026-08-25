@@ -197,6 +197,28 @@ extends SmoothFontRenderer {
                 }
             }
         }
+        // Extend the glyph atlas to cover the full simplified-Chinese set that the
+        // game renders (potion/item/entity names etc.), which is far larger than the
+        // UI-translation chars above (e.g. "迅" in "迅捷", "钻/剑/镐" in tools, "骷/髅"
+        // in skeletons). Decode the GBK (GB2312 superset) double-byte range and add
+        // every CJK ideograph so those Chinese names are not blank in the custom font.
+        try {
+            java.nio.charset.Charset gbkCharset = java.nio.charset.Charset.forName("GBK");
+            for (int gbkHi = 0xA1; gbkHi <= 0xF7; ++gbkHi) {
+                for (int gbkLo = 0xA1; gbkLo <= 0xFE; ++gbkLo) {
+                    String decoded = new String(new byte[]{(byte)gbkHi, (byte)gbkLo}, gbkCharset);
+                    if (decoded.length() == 1) {
+                        char cjkChar = decoded.charAt(0);
+                        if (cjkChar >= '\u4e00' && cjkChar <= '\u9fff') {
+                            hashSet.add((int)cjkChar);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception exception) {
+            Vape.logThrowable(exception);
+        }
         int[] nArray7 = hashSet.stream().mapToInt(Integer::intValue).toArray();
         Arrays.sort(nArray7);
         this.D = n;
