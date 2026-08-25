@@ -20,12 +20,14 @@ import gg.vape.utils.MutableColor;
 import gg.vape.utils.render.BufferedGuiRenderPrimitives;
 import gg.vape.utils.render.GuiRenderPrimitives;
 import gg.vape.utils.render.OpenGlBackendHolder;
+import gg.vape.utils.render.RenderBatchManager;
 import gg.vape.utils.render.RenderUtil;
 import gg.vape.utils.render.RenderUtils;
 import gg.vape.wrapper.impl.AxisAlignedBB;
 import gg.vape.wrapper.impl.Entity;
 import gg.vape.wrapper.impl.EntityLivingBase;
 import gg.vape.wrapper.impl.GlStateManager;
+import gg.vape.wrapper.impl.Minecraft;
 import gg.vape.wrapper.impl.RenderManager;
 import gg.vape.wrapper.impl.RenderWorldLastEvent;
 import java.awt.Color;
@@ -44,6 +46,13 @@ extends SubModule<ESP> {
         if (OffscreenRenderContext.isRenderingOffscreen()) {
             return;
         }
+        // The 2D ESP box is now drawn in the world phase (onRender3D) so it renders
+        // BELOW the game's own HUD. Drawing it here would queue into the deferred
+        // guiBatches list, which is only flushed at end-of-frame (EventPostRenderTick)
+        // — i.e. after the vanilla HUD render — pushing the box on top of the HUD.
+    }
+
+    private void drawPendingBounds(float displayHeight) {
         SmoothFontRenderer fontRenderer = Vape.INSTANCE.getFontManager().W(0.9, true);
         OpenGlBackendHolder.backend.pushMatrix();
         float renderScale = 1.0f;
@@ -55,7 +64,6 @@ extends SubModule<ESP> {
         RenderUtils.g();
         for (ProjectedEntityBounds projectedEntityBounds : this.pendingBounds) {
             double textWidth;
-            float displayHeight = event.getDisplayHeight();
             double left = projectedEntityBounds.minX / (double)coordinateScale / (double)renderScale / (double)renderResolutionMultiplier;
             double right = projectedEntityBounds.maxX / (double)coordinateScale / (double)renderScale / (double)renderResolutionMultiplier;
             double top = ((double)displayHeight - projectedEntityBounds.maxY / (double)renderResolutionMultiplier) / (double)coordinateScale / (double)renderScale;
@@ -209,7 +217,6 @@ extends SubModule<ESP> {
             GlStateManager.disableBlend();
         }
         RenderUtil.Y();
-        this.pendingBounds.clear();
     }
 
 
@@ -271,6 +278,15 @@ extends SubModule<ESP> {
                 this.pendingBounds.add(projectedEntityBounds);
             }
         }
+        if (GuiRenderPrimitives.d() && !this.pendingBounds.isEmpty() && !OffscreenRenderContext.isRenderingOffscreen()) {
+            // Draw + flush in the WORLD phase (before the vanilla HUD renders) so the
+            // box sits BELOW the game HUD. flushGuiBatches(ticks, true) sets the GUI
+            // ortho for the box (resetProjectionMatrix) and restores the world
+            // projection afterward (updateProjectionMatrix).
+            this.drawPendingBounds(Minecraft.h());
+            RenderBatchManager.getInstance().flushGuiBatches(event.getTicks(), true);
+        }
+        this.pendingBounds.clear();
     }
 
     public ESP2D(Mod parent, String name) {

@@ -4,7 +4,6 @@ import gg.vape.utils.render.BufferedGuiRenderPrimitives;
 import gg.vape.utils.render.GlFramebuffer;
 import gg.vape.utils.render.GlImageTexture;
 import gg.vape.utils.render.GlScissorRect;
-import gg.vape.utils.render.OpenGlBackendHolder;
 import gg.vape.utils.render.PotionEffectIconRenderBackend;
 import gg.vape.utils.render.RenderBatchBuilder;
 import gg.vape.utils.render.RenderBatchManager;
@@ -38,6 +37,12 @@ implements PotionEffectIconRenderBackend {
 
     @Override
     public void renderQueued(float x, float y, int width, int height, float opacity, boolean worldSpace) {
+        // A capture can legitimately leave framebuffer null (effect not resolvable
+        // on this version, or capture threw). Guard here so the HUD call site never
+        // NPEs on colorTextureId every frame and logs it (the ~7.7 FPS lag source).
+        if (this.framebuffer == null || this.framebuffer.colorTextureId <= 0) {
+            return;
+        }
         RenderBatchBuilder batchBuilder = new RenderBatchBuilder(VertexCoordinateMode.DEFAULT, worldSpace).setTexture(new GlImageTexture(this.framebuffer.colorTextureId)).addTexturedRect(x, y, width, height, 18.0f, 18.0f, 0.0f, 1.0f, 1.0f, 0.0f, new Color(1.0f, 1.0f, 1.0f, opacity));
         if (worldSpace) {
             RenderBatchManager.getInstance().queueWorldBatch(batchBuilder);
@@ -127,7 +132,6 @@ implements PotionEffectIconRenderBackend {
         gg.vape.wrapper.impl.GL11.X(2978, viewport);
         GlScissorRect previousScissorRect = BufferedGuiRenderPrimitives.scissorRect;
         GlFramebuffer createdFramebuffer = null;
-        boolean matrixPushed = false;
         boolean framebufferOverrideSet = false;
         boolean completed = false;
         try {
@@ -142,12 +146,19 @@ implements PotionEffectIconRenderBackend {
             GL11.glClearColor((float)0.0f, (float)0.0f, (float)0.0f, (float)0.0f);
             GL11.glClear((int)16384);
             GL11.glClear((int)256);
-            OpenGlBackendHolder.backend.pushMatrix();
-            matrixPushed = true;
-            OpenGlBackendHolder.backend.translate(0.0, -2.0, 0.0);
-            OpenGlBackendHolder.backend.scale((double)Minecraft.J() / (double)((float)iconWidth * 2.0f), (double)Minecraft.h() / (double)((float)iconWidth * 2.0f), 0.0);
+            // Mirror Post117ItemIconFramebufferRenderer.capture: put the batch under an
+            // icon-space ortho projection (0..iconWidth x 0..iconHeight) so the sprite
+            // quad fills the whole 18x18 framebuffer. Without this the batch renderer
+            // (which reads BufferedGuiRenderPrimitives.projectionMatrix at flush time,
+            // RenderBatchBuffer.bindResources) draws the quad under the caller's
+            // full-window GUI/world projection and collapses it to a sliver -> empty ring.
+            // The translate/scale on OpenGlBackendHolder.backend does NOT feed the batch
+            // shader, so it never affected the icon (that was a no-op).
+            BufferedGuiRenderPrimitives.projectionMatrix = new RenderMatrix4f().setIdentity().setOrthographic(0.0f, iconWidth, iconHeight, 0.0f, -21000.0f, 21000.0f);
+            BufferedGuiRenderPrimitives.viewMatrix = new RenderMatrix4f().setIdentity();
+            BufferedGuiRenderPrimitives.matrixStack = new RenderMatrixStack();
             BufferedGuiRenderPrimitives.scissorRect = null;
-            RenderBatchBuilder batchBuilder = new RenderBatchBuilder().setTexture(new GlImageTexture(textureId)).addTexturedRect(0.0f, -1.0f, iconWidth, iconHeight, iconWidth, iconHeight, textureCoordinates[0], textureCoordinates[2], textureCoordinates[1], textureCoordinates[3], Color.WHITE);
+            RenderBatchBuilder batchBuilder = new RenderBatchBuilder().setTexture(new GlImageTexture(textureId)).addTexturedRect(0.0f, 0.0f, iconWidth, iconHeight, iconWidth, iconHeight, textureCoordinates[0], textureCoordinates[2], textureCoordinates[1], textureCoordinates[3], Color.WHITE);
             batchManager.queueGuiBatch(batchBuilder);
             batchManager.setFramebufferOverride(createdFramebuffer.framebufferId);
             framebufferOverrideSet = true;
@@ -166,9 +177,6 @@ implements PotionEffectIconRenderBackend {
             GL30.glBindFramebuffer((int)36160, (int)previousFramebufferId);
             GlStateManager.bindTexture(previousTextureId);
             GL11.glViewport((int)viewport.get(0), (int)viewport.get(1), (int)viewport.get(2), (int)viewport.get(3));
-            if (matrixPushed) {
-                OpenGlBackendHolder.backend.popMatrix();
-            }
             if (!completed && createdFramebuffer != null) {
                 createdFramebuffer.delete();
                 this.framebuffer = null;

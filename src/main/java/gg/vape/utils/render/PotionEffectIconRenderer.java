@@ -17,7 +17,10 @@ public class PotionEffectIconRenderer {
         try {
             PotionEffectIconKey cacheKey = new PotionEffectIconKey(effect.C());
             PotionEffectIconRenderer.ensureCached(effect.C());
-            cache.get(cacheKey).renderQueued(x, y, width, height, opacity, worldSpace);
+            PotionEffectIconRenderBackend cachedRenderer = cache.get(cacheKey);
+            if (cachedRenderer != null) {
+                cachedRenderer.renderQueued(x, y, width, height, opacity, worldSpace);
+            }
         }
         catch (Exception exception) {
             Vape.logThrowable(exception);
@@ -53,7 +56,17 @@ public class PotionEffectIconRenderer {
 
     private static void createRenderer(PotionEffect effect, PotionEffectIconKey cacheKey) {
         PotionEffectIconRenderBackend renderer = GuiRenderPrimitives.d() ? new PotionEffectIconTexture() : new PotionEffectIcon();
-        renderer.capture(effect);
+        // Always cache the renderer even when capture fails (throws or early-returns
+        // with a null framebuffer). Otherwise ensureCached() would re-run the expensive
+        // offscreen capture EVERY frame and log an exception every frame, which is the
+        // per-frame lag. renderQueued() null-guards the framebuffer so a failed capture
+        // simply draws nothing instead of crashing/looping.
+        try {
+            renderer.capture(effect);
+        }
+        catch (Exception exception) {
+            Vape.logThrowable(exception);
+        }
         cache.put(cacheKey, renderer);
     }
 
