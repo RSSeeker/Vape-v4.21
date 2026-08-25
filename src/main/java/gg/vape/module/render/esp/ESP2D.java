@@ -21,6 +21,8 @@ import gg.vape.utils.render.BufferedGuiRenderPrimitives;
 import gg.vape.utils.render.GuiRenderPrimitives;
 import gg.vape.utils.render.OpenGlBackendHolder;
 import gg.vape.utils.render.RenderBatchManager;
+import gg.vape.utils.render.RenderMatrix4f;
+import gg.vape.utils.render.RenderMatrixStack;
 import gg.vape.utils.render.RenderUtil;
 import gg.vape.utils.render.RenderUtils;
 import gg.vape.wrapper.impl.AxisAlignedBB;
@@ -279,12 +281,30 @@ extends SubModule<ESP> {
             }
         }
         if (GuiRenderPrimitives.d() && !this.pendingBounds.isEmpty() && !OffscreenRenderContext.isRenderingOffscreen()) {
-            // Draw + flush in the WORLD phase (before the vanilla HUD renders) so the
-            // box sits BELOW the game HUD. flushGuiBatches(ticks, true) sets the GUI
-            // ortho for the box (resetProjectionMatrix) and restores the world
-            // projection afterward (updateProjectionMatrix).
+            // Draw + flush the box in the WORLD phase (before the vanilla HUD renders) so it
+            // sits BELOW the game HUD. We must NOT use flushGuiBatches(ticks, true) here: its
+            // resetProjectionMatrix() clears LocalPlayerRotationUtil.modelViewMatrix, which
+            // breaks the world projection recomputed right after (the world-batch flush used
+            // by the NameTags/other world overlays), collectively shifting them. Instead we
+            // set the same GUI ortho the HUD uses (see LocalPlayerRotationUtil.resetProjectionMatrix)
+            // directly, draw with flushGuiBatches(..., false) (which does not reset the shared
+            // projection/matrixStack), then restore the caller's world matrices so modelViewMatrix
+            // stays intact for the subsequent world-batch flush.
+            RenderMatrix4f savedProjection = BufferedGuiRenderPrimitives.projectionMatrix;
+            RenderMatrix4f savedView = BufferedGuiRenderPrimitives.viewMatrix;
+            RenderMatrixStack savedMatrixStack = BufferedGuiRenderPrimitives.matrixStack;
+            float guiLeft = 0.0f;
+            float guiRight = (float)Minecraft.p().I() / 2.0f;
+            float guiBottom = (float)Minecraft.p().R() / 2.0f;
+            float guiTop = 0.0f;
+            BufferedGuiRenderPrimitives.projectionMatrix = new RenderMatrix4f().setIdentity().setOrthographic(guiLeft, guiRight, guiBottom, guiTop, 21000.0f, -21000.0f);
+            BufferedGuiRenderPrimitives.viewMatrix = new RenderMatrix4f().setIdentity();
+            BufferedGuiRenderPrimitives.matrixStack = new RenderMatrixStack();
             this.drawPendingBounds(Minecraft.h());
-            RenderBatchManager.getInstance().flushGuiBatches(event.getTicks(), true);
+            RenderBatchManager.getInstance().flushGuiBatches(0.0f, false);
+            BufferedGuiRenderPrimitives.projectionMatrix = savedProjection;
+            BufferedGuiRenderPrimitives.viewMatrix = savedView;
+            BufferedGuiRenderPrimitives.matrixStack = savedMatrixStack;
         }
         this.pendingBounds.clear();
     }
