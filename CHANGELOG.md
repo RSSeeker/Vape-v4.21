@@ -1,5 +1,30 @@
 # 更新日志
 
+## v4.21.27 (2026-08-25)
+
+**1.21.11 药水图标 / 2D 框 / 名牌 / 中文字体 全面修复**
+
+- **药水图标空圆环 + 卡顿（~7.7 FPS）+ 文字截断**：
+  - 空圆环根因：`capture` 只调了 `OpenGlBackendHolder.backend.translate/scale`（批处理着色器根本不读它，无效），
+    精灵在调用方全窗口 GUI/WORLD 投影下缩成细条。现改为在 capture 内**设 icon-space 正交投影**
+    （`ortho(0,18,18,0)`）+ 单位 view + 新建 matrixStack，精灵画在 `(0,0,18,18)`，正确填满 18×18 帧缓冲。
+  - 卡顿根因：capture 失败 → 每帧重采集+日志；`renderQueued` 空 framebuffer 每帧 NPE。已加
+    `createRenderer` 总是缓存 + `renderQueued`/`render` 空守卫。
+  - 截断根因：capture 污染共享 `projectionMatrix/viewMatrix/matrixStack`。已加保存/恢复 + icon-space 正交隔离，
+    修复合法模式设置页集体偏移与药水文字截断。
+- **2D ESP 框压在游戏 GUI 之上**：根因是 box 经 `fillRect` 延迟进 `guiBatches`，只有帧尾
+  `EventPostRenderTick` 才 flush（在 HUD 之后）→ 恒盖 HUD。现把 box 绘制+flush 移到世界阶段
+  `onRender3D`（先于原版 HUD），用手动 GUI 正交投影 + `flushGuiBatches(0.0f,false)`，并把投影/矩阵恢复，
+  保住 `modelViewMatrix`（顺带修复名牌集体偏移），box 沉到 HUD 之下。
+- **名牌装备图标不正视镜头**：移除两次多余旋转，让图标继承外层 billboard 变换正视镜头（1.21.10/1.21.11）；
+  并在 1.16.5/1.20.x/26.x 按基线 `RenderUtil.f` 生效条件重新应用其逆旋转，避免这些版本回归。
+- **中文字形缺失（"迅捷"只显"捷"、物品/生物名空白）**：字体图集原只加载 `chinese.properties.txt`
+  （约 1053 个 CJK）+ ASCII，游戏中文文本大量字形缺失回退成空格。现解码 GBK（GB2312 超集）双字节区，
+  把全部 CJK 表意字（约 6763 字）加入图集，覆盖所有游戏简体中文文本。
+- **跨版本/跨模块回归审查**：经子代理逐版本（1.16.5/1.20.x/1.21.10/1.21.11/26.x）与跨模块审查确认
+  无受支持版本回归；对 `dispose()` 空 framebuffer、pre-1.17 box 消失等边界加了防御。
+- 若遇崩溃请反馈日志
+
 ## v4.21.26 (2026-08-25)
 
 **彩色循环（Rainbow）颜色修复 —— 不再依赖打开颜色设置页**
